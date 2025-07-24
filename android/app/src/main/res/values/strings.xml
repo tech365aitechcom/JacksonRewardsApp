@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Jackson</string>
+    <string name="title_activity_main">Jackson</string>
+    <string name="package_name">com.jackson.app</string>
+    <string name="custom_url_scheme">com.jackson.app</string>
+</resources>
