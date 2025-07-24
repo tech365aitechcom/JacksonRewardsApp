@@ -1,5 +1,4 @@
 'use client'
-import React from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
@@ -7,7 +6,7 @@ export default function Home() {
   const router = useRouter()
 
   const handleClick = () => {
-    router.push('/primary-goal')
+    router.push('/select-primary-goal')
   }
 
   return (

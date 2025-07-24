@@ -1,11 +1,18 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import useOnboardingStore from '@/stores/useOnboardingStore'
 
 export default function GenderSelection() {
-  const handleGoalSelect = (goalId) => {
-    console.log('Selected gender:', goalId)
-    // Navigate or store the selected gender
+  const router = useRouter()
+  const { gender, setGender } = useOnboardingStore()
+
+  const handleGoalSelect = (gender) => {
+    setGender(gender)
+    setTimeout(() => {
+      router.push('/select-age')
+    }, 200)
   }
 
   return (
