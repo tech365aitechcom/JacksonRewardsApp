@@ -7,7 +7,7 @@ const STORAGE_KEY = 'onboarding-data'
 const useOnboardingStore = create((set, get) => ({
   goal: null,
   gender: null,
-  ageRange: null,
+  ageRange: '25-30',
   improvement: null,
   earning: null,
 

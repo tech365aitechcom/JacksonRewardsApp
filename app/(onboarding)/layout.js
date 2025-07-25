@@ -3,7 +3,7 @@ import React from 'react'
 
 const OnboardingLayout = ({ children }) => {
   return (
-    <div>
+    <div className='relative w-full h-screen bg-[#272052] overflow-hidden'>
       <OnboardingInitializer>{children}</OnboardingInitializer>
     </div>
   )
