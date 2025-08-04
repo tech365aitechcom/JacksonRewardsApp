@@ -5,20 +5,16 @@ import { Storage } from '@capacitor/storage'
 const STORAGE_KEY = 'onboarding-data'
 
 const useOnboardingStore = create((set, get) => ({
-  goal: null,
+  currentStep: 1,
+  ageRange: null,
   gender: null,
-  ageRange: '25-30',
-  improvement: null,
-  earning: null,
+  gamePreferences: [],
+  gameStyle: null,
+  gameHabit: null,
 
-  setGoal: async (goal) => {
-    set({ goal })
-    await saveToStorage({ ...get(), goal })
-  },
-
-  setGender: async (gender) => {
-    set({ gender })
-    await saveToStorage({ ...get(), gender })
+  setCurrentStep: async (step) => {
+    set({ currentStep: step })
+    await saveToStorage({ ...get(), currentStep: step })
   },
 
   setAgeRange: async (ageRange) => {
@@ -26,21 +22,37 @@ const useOnboardingStore = create((set, get) => ({
     await saveToStorage({ ...get(), ageRange })
   },
 
-  setImprovement: async (improvement) => {
-    set({ improvement })
-    await saveToStorage({ ...get(), improvement })
+  setGender: async (gender) => {
+    set({ gender })
+    await saveToStorage({ ...get(), gender })
   },
 
-  setEarning: async (earning) => {
-    set({ earning })
-    await saveToStorage({ ...get(), earning })
+  setGamePreferences: async (prefs) => {
+    const safePrefs = Array.isArray(prefs) ? prefs : []
+    set({ gamePreferences: safePrefs })
+    await saveToStorage({ ...get(), gamePreferences: safePrefs })
+  },
+
+  setGameStyle: async (gameStyle) => {
+    set({ gameStyle })
+    await saveToStorage({ ...get(), gameStyle })
+  },
+
+  setGameHabit: async (gameHabit) => {
+    set({ gameHabit })
+    await saveToStorage({ ...get(), gameHabit })
   },
 
   loadFromStorage: async () => {
     const result = await Storage.get({ key: STORAGE_KEY })
     if (result.value) {
       const data = JSON.parse(result.value)
-      set(data)
+      set({
+        ...data,
+        gamePreferences: Array.isArray(data.gamePreferences)
+          ? data.gamePreferences
+          : [],
+      })
     }
   },
 
@@ -55,11 +67,12 @@ async function saveToStorage(data) {
   await Storage.set({
     key: STORAGE_KEY,
     value: JSON.stringify({
-      goal: data.goal,
-      gender: data.gender,
+      currentStep: data.currentStep,
       ageRange: data.ageRange,
-      improvement: data.improvement,
-      earning: data.earning,
+      gender: data.gender,
+      gamePreferences: data.gamePreferences,
+      gameStyle: data.gameStyle,
+      gameHabit: data.gameHabit,
     }),
   })
 }

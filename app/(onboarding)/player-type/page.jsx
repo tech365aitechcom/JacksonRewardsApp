@@ -3,50 +3,69 @@ import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Non-binary', value: 'non-binary' },
-  { label: 'Other', value: 'other' },
+const GAME_HABIT_OPTIONS = [
+  {
+    label:
+      'I’ve played reward-based games before and usually play in the evenings',
+    value: 'evening_reward_gamer',
+  },
+  {
+    label: 'I’m new to reward games, but I play casually during breaks',
+    value: 'casual_break_gamer',
+  },
+  {
+    label: 'I’ve tried reward apps but never got paid — I play at night mostly',
+    value: 'night_reward_fail_gamer',
+  },
+  {
+    label: 'I just play for fun, no rewards — anytime I’m bored',
+    value: 'fun_anytime_gamer',
+  },
+  {
+    label: 'I’m a daily gamer looking for high rewards',
+    value: 'daily_high_reward_gamer',
+  },
 ]
 
-export default function GenderSelection() {
+export default function PlayerTypeSelection() {
   const router = useRouter()
-  const { gender, setGender, setCurrentStep } = useOnboardingStore()
+  const { gameHabit, setGameHabit, setCurrentStep } = useOnboardingStore()
 
   useEffect(() => {
-    setCurrentStep(2)
+    setCurrentStep(5)
   }, [setCurrentStep])
 
-  console.log('Gender:', gender)
-
-  const handleGenderSelect = (gender) => {
-    setGender(gender)
+  const handleSelectGameHabit = (habit) => {
+    setGameHabit(habit)
     setTimeout(() => {
-      router.push('/game-preferences')
+      router.push('/signup')
     }, 200)
   }
 
   return (
     <div className='relative w-full h-screen bg-[#272052] overflow-hidden flex flex-col'>
+      {/* Background blur */}
       <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
 
+      {/* Header content */}
       <div className='relative z-10 px-6 pt-20 font-poppins'>
         <h1 className='text-white text-4xl font-light leading-tight mb-4'>
-          Select your gender
+          Which of these sounds most like you?
         </h1>
+
         <p className='text-white/70 text-base font-light'>
-          This will help to make your training plan more relevant
+          Select one to help us match the right games & rewards.
         </p>
       </div>
 
+      {/* Selection buttons */}
       <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
-        {GENDER_OPTIONS.map((option) => {
-          const isSelected = gender === option.value
+        {GAME_HABIT_OPTIONS.map((option) => {
+          const isSelected = gameHabit === option.value
           return (
             <button
               key={option.value}
-              onClick={() => handleGenderSelect(option.value)}
+              onClick={() => handleSelectGameHabit(option.value)}
               className='relative w-full h-16 group focus:outline-none'
             >
               <div
@@ -55,7 +74,7 @@ export default function GenderSelection() {
                 }`}
               />
               <div
-                className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex items-center justify-center bg-white group-hover:translate-y-0.5 ${
+                className={`absolute inset-x-0 top-0 h-16 p-5 rounded-full transition-all duration-300 flex items-center justify-center bg-white group-hover:translate-y-0.5 ${
                   isSelected ? 'scale-105 shadow-lg shadow-[#AF7DE6]/50' : ''
                 }`}
               >

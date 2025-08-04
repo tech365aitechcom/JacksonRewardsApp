@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter()
 
   const handleClick = () => {
-    router.push('/select-primary-goal')
+    router.push('/select-age')
   }
 
   return (

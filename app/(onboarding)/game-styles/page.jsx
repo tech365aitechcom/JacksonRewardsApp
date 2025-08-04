@@ -3,50 +3,65 @@ import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Non-binary', value: 'non-binary' },
-  { label: 'Other', value: 'other' },
+const GAME_STYLE_OPTIONS = [
+  {
+    label: 'Quick & casual',
+    description: 'fast games with smaller rewards',
+    value: 'quick_casual',
+  },
+  {
+    label: 'Medium sessions',
+    description: 'a bit of challenge, balanced rewards',
+    value: 'medium_sessions',
+  },
+  {
+    label: 'Deeper & strategic',
+    description: 'longer games with higher rewards',
+    value: 'deeper_strategic',
+  },
 ]
 
-export default function GenderSelection() {
+export default function GameStyleSelection() {
   const router = useRouter()
-  const { gender, setGender, setCurrentStep } = useOnboardingStore()
+  const { gameStyle, setGameStyle, setCurrentStep } = useOnboardingStore()
+
+  console.log('Game Style:', gameStyle)
 
   useEffect(() => {
-    setCurrentStep(2)
+    setCurrentStep(4)
   }, [setCurrentStep])
 
-  console.log('Gender:', gender)
-
-  const handleGenderSelect = (gender) => {
-    setGender(gender)
+  const handleSelectGameStyle = (style) => {
+    setGameStyle(style)
     setTimeout(() => {
-      router.push('/game-preferences')
+      router.push('/player-type')
     }, 200)
   }
 
   return (
     <div className='relative w-full h-screen bg-[#272052] overflow-hidden flex flex-col'>
+      {/* Background blur */}
       <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
 
+      {/* Header content */}
       <div className='relative z-10 px-6 pt-20 font-poppins'>
         <h1 className='text-white text-4xl font-light leading-tight mb-4'>
-          Select your gender
+          What kind of games do you prefer?
         </h1>
+
         <p className='text-white/70 text-base font-light'>
-          This will help to make your training plan more relevant
+          Choose the pace and reward style you like.
         </p>
       </div>
 
+      {/* Selection buttons */}
       <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
-        {GENDER_OPTIONS.map((option) => {
-          const isSelected = gender === option.value
+        {GAME_STYLE_OPTIONS.map((option) => {
+          const isSelected = gameStyle === option.value
           return (
             <button
               key={option.value}
-              onClick={() => handleGenderSelect(option.value)}
+              onClick={() => handleSelectGameStyle(option.value)}
               className='relative w-full h-16 group focus:outline-none'
             >
               <div
