@@ -1,31 +1,8 @@
 'use client'
+import { GAME_HABIT_OPTIONS } from '@/constants/onboardingOptions'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-
-const GAME_HABIT_OPTIONS = [
-  {
-    label:
-      'I’ve played reward-based games before and usually play in the evenings',
-    value: 'evening_reward_gamer',
-  },
-  {
-    label: 'I’m new to reward games, but I play casually during breaks',
-    value: 'casual_break_gamer',
-  },
-  {
-    label: 'I’ve tried reward apps but never got paid — I play at night mostly',
-    value: 'night_reward_fail_gamer',
-  },
-  {
-    label: 'I just play for fun, no rewards — anytime I’m bored',
-    value: 'fun_anytime_gamer',
-  },
-  {
-    label: 'I’m a daily gamer looking for high rewards',
-    value: 'daily_high_reward_gamer',
-  },
-]
 
 export default function PlayerTypeSelection() {
   const router = useRouter()
@@ -48,7 +25,7 @@ export default function PlayerTypeSelection() {
       <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
 
       {/* Header content */}
-      <div className='relative z-10 px-6 pt-20 font-poppins'>
+      <div className='relative z-10 px-6 pt-28 font-poppins'>
         <h1 className='text-white text-4xl font-light leading-tight mb-4'>
           Which of these sounds most like you?
         </h1>
@@ -59,7 +36,7 @@ export default function PlayerTypeSelection() {
       </div>
 
       {/* Selection buttons */}
-      <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
+      <div className='relative z-10 pt-12 flex flex-col justify-center px-6 space-y-6'>
         {GAME_HABIT_OPTIONS.map((option) => {
           const isSelected = gameHabit === option.value
           return (

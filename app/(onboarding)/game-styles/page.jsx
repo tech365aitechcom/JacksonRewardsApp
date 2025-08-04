@@ -1,25 +1,8 @@
 'use client'
+import { GAME_STYLE_OPTIONS } from '@/constants/onboardingOptions'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-
-const GAME_STYLE_OPTIONS = [
-  {
-    label: 'Quick & casual',
-    description: 'fast games with smaller rewards',
-    value: 'quick_casual',
-  },
-  {
-    label: 'Medium sessions',
-    description: 'a bit of challenge, balanced rewards',
-    value: 'medium_sessions',
-  },
-  {
-    label: 'Deeper & strategic',
-    description: 'longer games with higher rewards',
-    value: 'deeper_strategic',
-  },
-]
 
 export default function GameStyleSelection() {
   const router = useRouter()
@@ -44,7 +27,7 @@ export default function GameStyleSelection() {
       <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
 
       {/* Header content */}
-      <div className='relative z-10 px-6 pt-20 font-poppins'>
+      <div className='relative z-10 px-6 pt-28 font-poppins'>
         <h1 className='text-white text-4xl font-light leading-tight mb-4'>
           What kind of games do you prefer?
         </h1>
@@ -55,7 +38,7 @@ export default function GameStyleSelection() {
       </div>
 
       {/* Selection buttons */}
-      <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
+      <div className='relative z-10 pt-12 flex flex-col justify-center px-6 space-y-6'>
         {GAME_STYLE_OPTIONS.map((option) => {
           const isSelected = gameStyle === option.value
           return (

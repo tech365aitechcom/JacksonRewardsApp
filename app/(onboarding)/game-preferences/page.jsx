@@ -1,18 +1,8 @@
 'use client'
+import { GAME_OPTIONS } from '@/constants/onboardingOptions'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-
-const GAME_OPTIONS = [
-  { label: 'Puzzle & Brain', value: 'puzzle_brain' },
-  { label: 'Strategy', value: 'strategy' },
-  { label: 'Arcade', value: 'arcade' },
-  { label: 'Simulation', value: 'simulation' },
-  { label: 'Card & Casino', value: 'card_casino' },
-  { label: 'Sports & Racing', value: 'sports_racing' },
-  { label: 'Word & Trivia', value: 'word_trivia' },
-  { label: 'Role Playing / Adventure', value: 'role_playing_adventure' },
-]
 
 export default function GamePreferencesSelection() {
   const router = useRouter()

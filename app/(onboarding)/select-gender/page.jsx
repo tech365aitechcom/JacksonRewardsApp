@@ -1,14 +1,8 @@
 'use client'
+import { GENDER_OPTIONS } from '@/constants/onboardingOptions'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Non-binary', value: 'non-binary' },
-  { label: 'Other', value: 'other' },
-]
 
 export default function GenderSelection() {
   const router = useRouter()
@@ -17,8 +11,6 @@ export default function GenderSelection() {
   useEffect(() => {
     setCurrentStep(2)
   }, [setCurrentStep])
-
-  console.log('Gender:', gender)
 
   const handleGenderSelect = (gender) => {
     setGender(gender)
@@ -31,7 +23,7 @@ export default function GenderSelection() {
     <div className='relative w-full h-screen bg-[#272052] overflow-hidden flex flex-col'>
       <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
 
-      <div className='relative z-10 px-6 pt-20 font-poppins'>
+      <div className='relative z-10 px-6 pt-28 font-poppins'>
         <h1 className='text-white text-4xl font-light leading-tight mb-4'>
           Select your gender
         </h1>
@@ -40,7 +32,7 @@ export default function GenderSelection() {
         </p>
       </div>
 
-      <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
+      <div className='relative z-10 pt-12 flex flex-col justify-center px-6 space-y-6'>
         {GENDER_OPTIONS.map((option) => {
           const isSelected = gender === option.value
           return (

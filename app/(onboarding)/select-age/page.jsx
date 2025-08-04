@@ -3,14 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import useOnboardingStore from '@/stores/useOnboardingStore'
-
-const AGE_OPTIONS = [
-  { label: 'Under 18', value: 'Under 18' },
-  { label: '18-24', value: '18-24' },
-  { label: '25-34', value: '25-34' },
-  { label: '35-44', value: '35-44' },
-  { label: '45+', value: '45+' },
-]
+import { AGE_OPTIONS } from '@/constants/onboardingOptions'
 
 export default function AgeSelection() {
   const router = useRouter()
