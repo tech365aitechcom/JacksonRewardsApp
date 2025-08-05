@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { Storage } from '@capacitor/storage'
+import { Preferences } from '@capacitor/preferences'
 
 const STORAGE_KEY = 'onboarding-data'
 
@@ -44,7 +44,7 @@ const useOnboardingStore = create((set, get) => ({
   },
 
   loadFromStorage: async () => {
-    const result = await Storage.get({ key: STORAGE_KEY })
+    const result = await Preferences.get({ key: STORAGE_KEY })
     if (result.value) {
       const data = JSON.parse(result.value)
       set({
@@ -59,12 +59,12 @@ const useOnboardingStore = create((set, get) => ({
   resetOnboarding: async () => {
     const reset = { goal: null, gender: null, ageRange: null }
     set(reset)
-    await Storage.remove({ key: STORAGE_KEY })
+    await Preferences.remove({ key: STORAGE_KEY })
   },
 }))
 
 async function saveToStorage(data) {
-  await Storage.set({
+  await Preferences.set({
     key: STORAGE_KEY,
     value: JSON.stringify({
       currentStep: data.currentStep,

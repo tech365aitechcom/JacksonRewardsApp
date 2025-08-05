@@ -3,6 +3,21 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.jackson.app"
     compileSdk rootProject.ext.compileSdkVersion
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    signingConfigs {
+        release {
+            keyAlias 'jackson-key'
+            keyPassword 'jackson123'
+            storeFile file('../jackson-release-key.keystore')
+            storePassword 'jackson123'
+        }
+    }
+
     defaultConfig {
         applicationId "com.jackson.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -20,6 +35,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
