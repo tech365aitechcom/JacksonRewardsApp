@@ -1,16 +1,25 @@
 'use client'
 import React, { useState } from 'react'
 import Image from "next/image"
-import { signIn, getSession } from 'next-auth/react'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState("jatin@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { signIn, signInWithProvider, isLoading } = useAuth();
 
-  const handleSignIn = () => {
-    // Handle sign in logic
-    console.log("Sign in clicked");
+  const handleSignIn = async () => {
+    if (!email || !password) return;
+    
+    try {
+      const result = await signIn(email, password);
+      if (result?.ok) {
+        window.location.href = '/homepage';
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -20,25 +29,20 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider) => {
     try {
-      const result = await signIn(provider, {
-        redirect: false,
-        callbackUrl: '/'
-      })
+      const result = await signInWithProvider(provider);
       
       if (result?.ok) {
-        // Redirect to home or dashboard
-        window.location.href = '/'
+        window.location.href = '/homepage';
       } else {
-        console.error('Login failed:', result?.error)
+        console.error('Login failed:', result?.error);
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error:', error);
     }
   };
 
   const handleSignUp = () => {
-    // Handle sign up navigation
-    console.log("Sign up clicked");
+    window.location.href = '/signup';
   };
 
   return (
