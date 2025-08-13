@@ -80,14 +80,14 @@ import Image from "next/image";
 
         <form
           onSubmit={handleSubmit}
-          className="w-[315px] absolute top-[274px] left-[45px] flex flex-col items-start gap-3"
+          className="w-[314px] absolute top-[274px] left-[50px] flex flex-col items-start gap-3"
         >
           <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
             <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
               Name
             </label>
 
-            <div className="relative w-[316px] h-[55px] mr-[-1.00px]">
+            <div className="relative w-[314px] h-[55px]">
               <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
                 <Image
                   className="absolute w-[17px] h-[17px] top-5 left-5"
@@ -113,7 +113,7 @@ import Image from "next/image";
               Email
             </label>
 
-            <div className="relative w-[316px] h-[55px] mr-[-1.00px]">
+            <div className="relative w-[314px] h-[55px]">
               <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card-1@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
                 <Image
                   className="absolute w-[17px] h-[17px] top-5 left-5"
@@ -139,7 +139,7 @@ import Image from "next/image";
               Mobile Number
             </label>
 
-            <div className="relative w-[316px] h-[55px] mr-[-1.00px]">
+            <div className="relative w-[314px] h-[55px]">
               <div className="relative w-[314px] h-[55px]">
                 <div className="absolute w-[314px] h-[55px] top-0 left-0">
                   <Image
@@ -288,7 +288,7 @@ import Image from "next/image";
 
       <button
         onClick={handleSubmit}
-        className="all-[unset] box-border absolute w-[316px] h-[50px] top-[881px] left-[31px] cursor-pointer"
+        className="all-[unset] box-border absolute w-[314px] h-[50px] top-[881px] left-[50px] cursor-pointer"
         type="submit"
       >
         <div className="relative w-[314px] h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
@@ -311,10 +311,10 @@ import Image from "next/image";
 
 
       <Image
-        className="absolute w-[313px] h-[70px] top-[787px] left-[31px]"
+        className="absolute w-[314px] h-[70px] top-[787px] left-[50px]"
         alt="Captcha verification"
         src="https://c.animaapp.com/bkGH9LUL/img/image-4040@2x.png"
-        width={313}
+        width={314}
         height={70}
       />
     </div>
