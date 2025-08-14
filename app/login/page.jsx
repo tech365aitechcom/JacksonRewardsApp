@@ -1,24 +1,24 @@
-'use client'
-import React, { useState } from 'react'
-import Image from "next/image"
-import { useAuth } from '../../contexts/AuthContext'
+"use client";
+import React, { useState } from "react";
+import Image from "next/image";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("jatin@gmail.com");
+  const [email, setEmail] = useState("jatin@gmail.");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signInWithProvider, isLoading } = useAuth();
 
   const handleSignIn = async () => {
     if (!email || !password) return;
-    
+
     try {
       const result = await signIn(email, password);
       if (result?.ok) {
-        window.location.href = '/homepage';
+        window.location.href = "/homepage";
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
@@ -30,19 +30,19 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider) => {
     try {
       const result = await signInWithProvider(provider);
-      
+
       if (result?.ok) {
-        window.location.href = '/homepage';
+        window.location.href = "/homepage";
       } else {
-        console.error('Login failed:', result?.error);
+        console.error("Login failed:", result?.error);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
   const handleSignUp = () => {
-    window.location.href = '/signup';
+    window.location.href = "/signup";
   };
 
   return (
@@ -137,37 +137,35 @@ export default function LoginPage() {
           </label>
 
           <button
-            className="absolute top-[581px] left-[457px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[11.3px] tracking-[0] leading-[normal] cursor-pointer"
+            className="absolute top-[560px] left-[457px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[11.3px] tracking-[0] leading-[normal] cursor-pointer z-50"
             onClick={handleForgotPassword}
             type="button"
           >
             Forgot Password?
           </button>
 
-          <div className="absolute w-[314px] h-[55px] top-[497px] left-[247px] ">
-            <Image
-              className="absolute w-[314px] h-[55px] top-0 left-0"
-              alt="Password field background"
-              src="https://c.animaapp.com/2Y7fJDnh/img/password@2x.png"
-              width={314}
-              height={55}
-            />
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px]"
-              placeholder="Enter your password"
-              aria-label="Password"
-            />
-            {/* <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-[17px] right-[20px] text-neutral-400 cursor-pointer"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? "👁" : "👁"}
-            </button> */}
+          <div className="absolute w-[314px] h-[55px] top-[497px] left-[247px]">
+            <div className="relative w-[314px] h-[55px] bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card@2x.png)] bg-[100%_100%]">
+              <div className="absolute w-[17px] h-[17px] top-5 left-5">
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path
+                    d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z"
+                    stroke="#d3d3d3"
+                    strokeWidth="1"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px] z-50"
+                placeholder="Enter your password"
+                aria-label="Password"
+                style={{ position: "relative" }}
+              />
+            </div>
           </div>
 
           <div className="absolute w-[216px] h-[65px] top-[289px] left-[302px]">
@@ -230,37 +228,30 @@ export default function LoginPage() {
 
               <div className="inline-flex items-center gap-5 relative flex-[0_0_auto]">
                 <button
-                  className="relative w-[58.1px] h-11 bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card-1@2x.png)] bg-[100%_100%] cursor-pointer"
+                  className="relative w-[58.1px] h-11 bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card-1@2x.png)] bg-[100%_100%] cursor-pointer flex items-center justify-center"
                   onClick={() => handleSocialLogin("google")}
                   type="button"
                   aria-label="Sign in with Google"
                 >
-                  <div className="relative w-[19px] h-[19px] top-[13px] left-[17px] bg-[url(https://c.animaapp.com/2Y7fJDnh/img/vector-1.svg)] bg-[100%_100%]">
-                    <div className="absolute w-[18px] h-3 top-2 left-px">
-                      <Image
-                        className="absolute w-[15px] h-2 top-1 left-0"
-                        alt="Google logo part"
-                        src="https://c.animaapp.com/2Y7fJDnh/img/vector-2.svg"
-                        width={15}
-                        height={2}
+                  <div className="w-[20px] h-[20px] flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M19.99 10.1871C19.99 9.36767 19.9246 8.76973 19.7839 8.14966H10.2041V11.848H15.8276C15.7201 12.7667 15.0977 14.1144 13.7747 15.0813L13.7539 15.2051L16.7747 17.4969L16.9913 17.5173C18.9478 15.7789 19.99 13.2211 19.99 10.1871Z"
+                        fill="#4285F4"
                       />
-
-                      <Image
-                        className="absolute w-2.5 h-[9px] top-0 left-[9px]"
-                        alt="Google logo part"
-                        src="https://c.animaapp.com/2Y7fJDnh/img/vector-3.svg"
-                        width={10}
-                        height={9}
+                      <path
+                        d="M10.2041 19.9313C12.9592 19.9313 15.2429 19.0454 16.9913 17.5173L13.7747 15.0813C12.8849 15.6682 11.7239 16.0779 10.2041 16.0779C7.50474 16.0779 5.24951 14.3395 4.39989 11.9366L4.27989 11.9465L1.13052 14.3273L1.08789 14.4391C2.82606 17.8945 6.25071 19.9313 10.2041 19.9313Z"
+                        fill="#34A853"
                       />
-                    </div>
-
-                    <Image
-                      className="absolute w-[15px] h-2 top-0  left-px"
-                      alt="Google logo part"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/vector-4.svg"
-                      width={15}
-                      height={2}
-                    />
+                      <path
+                        d="M4.39989 11.9366C4.19405 11.3165 4.07251 10.6521 4.07251 9.96565C4.07251 9.27909 4.19405 8.61473 4.38608 7.99463L4.38037 7.86244L1.19677 5.44366L1.08789 5.49214C0.397541 6.84305 0.000976562 8.36002 0.000976562 9.96565C0.000976562 11.5713 0.397541 13.0882 1.08789 14.4391L4.39989 11.9366Z"
+                        fill="#FBBC04"
+                      />
+                      <path
+                        d="M10.2041 3.85336C12.1276 3.85336 13.406 4.66168 14.1425 5.33718L17.0207 2.59107C15.2375 0.984447 12.9592 0 10.2041 0C6.25071 0 2.82606 2.03672 1.08789 5.49214L4.38608 7.99463C5.24951 5.59166 7.50474 3.85336 10.2041 3.85336Z"
+                        fill="#EB4335"
+                      />
+                    </svg>
                   </div>
                 </button>
 
@@ -332,7 +323,6 @@ export default function LoginPage() {
               </p>
             </div>
           </div>
-
 
           <Image
             className="absolute w-[312px] h-[70px] top-[589px] left-[247px]"
