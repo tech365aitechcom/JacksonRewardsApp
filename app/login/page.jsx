@@ -15,7 +15,7 @@ export default function LoginPage() {
     try {
       const result = await signIn(email, password);
       if (result?.ok) {
-        window.location.href = "/homepage";
+        window.location.href = "/login/phone";
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -32,7 +32,7 @@ export default function LoginPage() {
       const result = await signInWithProvider(provider);
 
       if (result?.ok) {
-        window.location.href = "/homepage";
+        window.location.href = "/login/phone";
       } else {
         console.error("Login failed:", result?.error);
       }
@@ -43,6 +43,10 @@ export default function LoginPage() {
 
   const handleSignUp = () => {
     window.location.href = "/signup";
+  };
+
+  const handlePhoneLogin = () => {
+    window.location.href = "/login/phone";
   };
 
   return (
