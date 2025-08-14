@@ -4,9 +4,9 @@ import Image from "next/image";
 
  const SignUp = () => {
   const [formData, setFormData] = useState({
-    name: "Jatin",
-    email: "jatin@gmail.com",
-    mobile: "+33  |  9876579976",
+    name: "",
+    email: "",
+    mobile: "",
     otp: "",
     password: "",
     confirmPassword: "",
@@ -35,10 +35,13 @@ import Image from "next/image";
   };
 
   return (
-    <div
-      className="relative w-full h-[1061px] bg-[#272052] overflow-hidden"
-      data-model-id="1322:2980"
-    >
+    <div className="min-h-screen w-full bg-[#272052] overflow-x-hidden">
+      <div
+        className="relative w-full min-h-screen bg-[#272052] flex justify-center"
+        data-model-id="1322:2980"
+      >
+      <div className="relative w-[375px] h-[1061px] bg-[#272052] overflow-hidden"
+      >
       <div className="absolute w-[470px] h-[883px] -top-32 -left-3.5">
         <div className="absolute w-[358px] h-[358px] top-0 left-7 bg-[#af7de6] rounded-[179px] blur-[250px]" />
 
@@ -102,7 +105,7 @@ import Image from "next/image";
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                  placeholder="Jatin"
+                  placeholder="Enter your name"
                 />
               </div>
             </div>
@@ -128,7 +131,7 @@ import Image from "next/image";
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                  placeholder="jatin@gmail.com"
+                  placeholder="Enter your email"
                 />
               </div>
             </div>
@@ -174,7 +177,7 @@ import Image from "next/image";
                   value={formData.mobile}
                   onChange={(e) => handleInputChange("mobile", e.target.value)}
                   className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                  placeholder="+33  |  9876579976"
+                  placeholder="Enter mobile number"
                 />
               </div>
             </div>
@@ -213,28 +216,28 @@ import Image from "next/image";
               Password
             </label>
 
-            <div className="relative w-[314px] h-[55px]">
-              <Image
-                className="absolute w-[314px] h-[55px] top-0 left-0"
-                alt="Password input background"
-                src="https://c.animaapp.com/bkGH9LUL/img/password@2x.png"
-                width={314}
-                height={55}
-              />
+            <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+              <div className="absolute w-[17px] h-[17px] top-5 left-5">
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                </svg>
+              </div>
               <input
-                type={showPassword ? "text" : "password"}
+                type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px]"
-                placeholder="Enter password"
+                placeholder=""
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-[17px] right-[20px] text-[#d3d3d3] text-[14.3px]"
+                className="absolute top-[17px] right-[20px] w-[17px] h-[17px]"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {/* {showPassword ? "👁" : "👁"} */}
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path d="M8.5 3C12 3 15 6 15 8.5S12 14 8.5 14 2 11 2 8.5 5 3 8.5 3zM8.5 6C7 6 5.5 7.5 5.5 8.5S7 11 8.5 11 11.5 9.5 11.5 8.5 10 6 8.5 6z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -244,32 +247,32 @@ import Image from "next/image";
               Confirm Password
             </label>
 
-            <div className="relative w-[314px] h-[55px]">
-              <Image
-                className="absolute w-[314px] h-[55px] top-0 left-0"
-                alt="Confirm password input background"
-                src="https://c.animaapp.com/bkGH9LUL/img/password-1@2x.png"
-                width={314}
-                height={55}
-              />
+            <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+              <div className="absolute w-[17px] h-[17px] top-5 left-5">
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                </svg>
+              </div>
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type="password"
                 value={formData.confirmPassword}
                 onChange={(e) =>
                   handleInputChange("confirmPassword", e.target.value)
                 }
                 className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px]"
-                placeholder="Confirm password"
+                placeholder=""
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute top-[17px] right-[20px] text-[#d3d3d3] text-[14.3px]"
+                className="absolute top-[17px] right-[20px] w-[17px] h-[17px]"
                 aria-label={
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
               >
-                {/* {showConfirmPassword ? "👁" : "👁"} */}
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path d="M8.5 3C12 3 15 6 15 8.5S12 14 8.5 14 2 11 2 8.5 5 3 8.5 3zM8.5 6C7 6 5.5 7.5 5.5 8.5S7 11 8.5 11 11.5 9.5 11.5 8.5 10 6 8.5 6z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -317,6 +320,8 @@ import Image from "next/image";
         width={314}
         height={70}
       />
+      </div>
+      </div>
     </div>
   );
 };
