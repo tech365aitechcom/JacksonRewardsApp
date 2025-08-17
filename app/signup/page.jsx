@@ -12,9 +12,10 @@ import Image from "next/image";
     confirmPassword: "",
   });
 
-  const [otpTimer, setOtpTimer] = useState(50);
+  const [otpTimer, setOtpTimer] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [canSendOtp, setCanSendOtp] = useState(true);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -32,6 +33,27 @@ import Image from "next/image";
   const handleSignInClick = () => {
     // Handle sign in navigation
     console.log("Navigate to sign in");
+  };
+
+  const handleSendOtp = () => {
+    if (formData.mobile && formData.mobile.length >= 10) {
+      console.log("Sending OTP to:", formData.mobile);
+      setOtpTimer(60);
+      setCanSendOtp(false);
+      // Start timer countdown
+      const timer = setInterval(() => {
+        setOtpTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setCanSendOtp(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      alert("Please enter a valid mobile number");
+    }
   };
 
   return (
@@ -206,8 +228,22 @@ import Image from "next/image";
               />
             </div>
 
-            <div className="relative w-[149px] [font-family:'Poppins',Helvetica] font-medium text-white text-[14.3px] tracking-[0] leading-[normal]">
-              00:{otpTimer.toString().padStart(2, "0")} sec remaining
+            <div className="flex items-center justify-between w-full">
+              <div className="[font-family:'Poppins',Helvetica] font-medium text-white text-[14.3px] tracking-[0] leading-[normal]">
+                {otpTimer > 0 ? `00:${otpTimer.toString().padStart(2, "0")} sec remaining` : "OTP expired"}
+              </div>
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={otpTimer > 0 && !canSendOtp}
+                className={`px-4 py-2 rounded-lg [font-family:'Poppins',Helvetica] font-medium text-sm transition-all ${
+                  otpTimer > 0 && !canSendOtp
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] text-white hover:opacity-90 cursor-pointer"
+                }`}
+              >
+                {otpTimer > 0 && !canSendOtp ? "Resend OTP" : "Send OTP"}
+              </button>
             </div>
           </div>
 
