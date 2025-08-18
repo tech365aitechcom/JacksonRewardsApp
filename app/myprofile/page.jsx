@@ -2,8 +2,15 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function MyProfile() {
+  const router = useRouter();
+  
+  const handleEditProfile = () => {
+    router.push("/edit-profile");
+  };
+
   // Data for achievements
   const achievements = [
     {
@@ -141,6 +148,7 @@ export default function MyProfile() {
               />
 
               <button
+                onClick={handleEditProfile}
                 className="absolute w-[43px] h-[43px] top-[79px] left-[77px] bg-darkgray-2 rounded-[21.73px] border-[5px] border-solid border-darkgray-1"
                 aria-label="Edit profile"
               >

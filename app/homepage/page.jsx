@@ -1,17 +1,19 @@
 import React from "react";
+import { HomeIndicator } from "../../components/HomeIndicator";
 
 const Homepage = () => {
   return (
-    <div className="relative w-full max-w-[375px] mx-auto h-[2528px] bg-black overflow-hidden" data-model-id="972:9945">
-      <MainContentSection />
-      <div className="absolute w-[375px] h-[49px] top-0 left-0">
+    <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
+      <div className="absolute w-[375px] h-[49px] top-0 left-0 z-10">
         {/* <div className="absolute w-[375px] h-11 top-0 left-0 bg-[url(https://c.animaapp.com/xCaMzUYh/img/iphone-x--11-pro---black.svg)] bg-[100%_100%]" /> */}
         <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
         </div>
       </div>
       <HeaderSection />
-      <NavigationSection />
+      <MainContentSection />
+      
+      <HomeIndicator activeTab="home" />
     </div>
   );
 };
@@ -150,7 +152,7 @@ const MainContentSection = () => {
   ];
 
   return (
-    <div className="flex flex-col w-[375px] h-[2232px] items-center gap-8 absolute top-36 left-0">
+    <div className="flex flex-col w-[375px] items-center gap-8 pt-36 relative">
       <div className="relative w-[335px] h-[135px] shadow-[2.48px_2.48px_18.58px_#3b3b3b80,-1.24px_-1.24px_16.1px_#825700]">
         <div className="relative w-[337px] h-[135px]">
           <div className="absolute w-[337px] h-[135px] top-0 left-0">
@@ -672,130 +674,5 @@ const MainContentSection = () => {
   );
 };
 
-const NavigationSection = () => {
-  const navigationItems = [
-    {
-      id: "home",
-      icon: "https://c.animaapp.com/xCaMzUYh/img/home.svg",
-      label: "Home",
-      isActive: true,
-    },
-    {
-      id: "games",
-      icon: "https://c.animaapp.com/xCaMzUYh/img/games.svg",
-      label: "My Games",
-      isActive: false,
-      iconWidth: "w-[35px]",
-      iconHeight: "h-[16.28px]",
-    },
-    {
-      id: "wallet",
-      icon: "https://c.animaapp.com/xCaMzUYh/img/wallet@2x.png",
-      label: "My Wallet",
-      isActive: false,
-      customIcon: true,
-    },
-    {
-      id: "cash-coach",
-      icon: "https://c.animaapp.com/xCaMzUYh/img/money.svg",
-      label: "Cash Coach",
-      isActive: false,
-    },
-  ];
-
-  return (
-    <nav className="fixed w-full max-w-[375px] h-[116px] top-[2418px] left-1/2 transform -translate-x-1/2" role="navigation" aria-label="Main navigation">
-      <div className="absolute w-[375px] h-[37px] top-[79px] left-0 bg-black">
-        <div className="relative w-[135px] h-[5px] top-[15px] left-[120px] bg-white rounded-[100px]" />
-      </div>
-      <div className="absolute w-[375px] h-20 -top-px left-0">
-        <div className="relative h-[113px] -top-5">
-          <img
-            className="absolute w-[375px] h-[103px] top-2.5 left-0"
-            alt=""
-            src="https://c.animaapp.com/xCaMzUYh/img/botton-nav@2x.png"
-            role="presentation"
-          />
-          <button
-            className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-4 cursor-pointer"
-            aria-label="Home"
-            aria-current={navigationItems[0].isActive ? "page" : undefined}
-          >
-            <img
-              className="relative w-6 h-6"
-              alt=""
-              src={navigationItems[0].icon}
-              role="presentation"
-            />
-            <span className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] tracking-[-0.17px] leading-[normal]">
-              {navigationItems[0].label}
-            </span>
-            {navigationItems[0].isActive && (
-              <div
-                className="absolute w-1 h-1 top-[51px] left-7 bg-[#8b92de] rounded-sm"
-                aria-hidden="true"
-              />
-            )}
-          </button>
-          <button
-            className="flex flex-col w-[60px] items-center gap-3 absolute top-[43px] left-[87px] cursor-pointer"
-            aria-label="My Games"
-          >
-            <img
-              className="relative w-[35px] h-[16.28px]"
-              alt=""
-              src={navigationItems[1].icon}
-              role="presentation"
-            />
-            <span className="relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] text-center tracking-[-0.17px] leading-[normal]">
-              {navigationItems[1].label}
-            </span>
-          </button>
-          <button
-            className="absolute w-[62px] h-[62px] top-0 left-40 cursor-pointer"
-            aria-label="Center action button"
-          >
-            <img
-              className="w-full h-full"
-              alt=""
-              src="https://c.animaapp.com/xCaMzUYh/img/my-games.svg"
-              role="presentation"
-            />
-          </button>
-          <button
-            className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-[229px] cursor-pointer"
-            aria-label="My Wallet"
-          >
-            <div className="relative w-6 h-6">
-              <img
-                className="absolute w-5 h-[18px] top-[3px] left-0.5"
-                alt=""
-                src={navigationItems[2].icon}
-                role="presentation"
-              />
-            </div>
-            <span className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] text-center tracking-[-0.17px] leading-[normal]">
-              {navigationItems[2].label}
-            </span>
-          </button>
-          <button
-            className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-[300px] cursor-pointer"
-            aria-label="Cash Coach"
-          >
-            <img
-              className="relative w-6 h-6"
-              alt=""
-              src={navigationItems[3].icon}
-              role="presentation"
-            />
-            <span className="relative w-fit ml-[-0.50px] mr-[-0.50px] [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] text-center tracking-[-0.17px] leading-[13px] whitespace-nowrap">
-              {navigationItems[3].label}
-            </span>
-          </button>
-        </div>
-      </div>
-    </nav>
-  );
-};
 
 export default Homepage;

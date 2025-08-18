@@ -3,11 +3,12 @@ import React from "react";
 import Image from "next/image";
 import { AccountOverviewSection } from "./components/AccountOverviewSection";
 import { GameListSection } from "./components/GameListSection";
+import { HomeIndicator } from "../../components/HomeIndicator";
 
 export default function GamesPage() {
   return (
     <div
-      className="relative w-[375px] h-[2274px] bg-black"
+      className="relative w-[375px] min-h-screen bg-black pb-[170px]"
       data-model-id="289:1500"
     >
       
@@ -29,6 +30,8 @@ export default function GamesPage() {
 
       <GameListSection />
       <AccountOverviewSection />
+      
+      <HomeIndicator activeTab="games" />
     </div>
   );
 }
