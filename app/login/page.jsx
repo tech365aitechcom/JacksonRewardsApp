@@ -1,31 +1,47 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRouter } from "next/navigation"; // Use Next.js router
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("jatin@gmail.");
+  const [emailOrMobile, setEmailOrMobile] = useState(""); // Changed initial state
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const { signIn, signInWithProvider, isLoading } = useAuth();
-  const router = useRouter();
+  const [error, setError] = useState(null); // State for login errors
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for loading
+  const { signIn } = useAuth();
+  const router = useRouter(); // Initialize router
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSignIn = async () => {
-    if (!email || !password) return;
+    if (!emailOrMobile || !password) {
+      setError("Please enter both email/mobile and password.");
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
 
     try {
-      const result = await signIn(email, password);
+      const result = await signIn(emailOrMobile, password);
       if (result?.ok) {
-        window.location.href = "/login/phone";
+        // On successful login, redirect to a protected route like a dashboard
+        router.push("/dashboard");
+      } else {
+        // Use the error message from the API response
+        setError(result?.error || "Invalid credentials. Please try again.");
       }
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleForgotPassword = () => {
-    router.push("/forgot-password");
+    // Redirect to the first step of the password recovery flow
+
   };
 
   const handleSocialLogin = async (provider) => {
@@ -98,8 +114,12 @@ export default function LoginPage() {
               />
             </div>
           </div>
-
-          <button
+          {error && (
+            <div className="absolute top-[340px] left-[246px] w-[316px] text-center text-red-400 [font-family:'Poppins',Helvetica] text-sm">
+              {error}
+            </div>
+          )}
+          {/* <button
             className="absolute w-[316px] h-[50px] top-[685px] left-[246px] cursor-pointer"
             onClick={handleSignIn}
             type="button"
@@ -108,6 +128,19 @@ export default function LoginPage() {
             <div className="relative w-[314px] h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
               <div className="absolute top-[11px] left-[126px] [font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
                 Sign in
+              </div>
+            </div>
+          </button> */}
+          <button
+            className="absolute w-[316px] h-[50px] top-[685px] left-[246px] cursor-pointer disabled:opacity-50"
+            onClick={handleSignIn}
+            disabled={isSubmitting} // Disable button while submitting
+            type="button"
+            aria-label="Sign in"
+          >
+            <div className="relative w-[314px] h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
+              <div className="absolute top-[11px] left-[126px] [font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </div>
             </div>
           </button>
@@ -123,12 +156,12 @@ export default function LoginPage() {
               />
 
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text" // Allow both email and text for phone number
+                value={emailOrMobile}
+                onChange={(e) => setEmailOrMobile(e.target.value)}
                 className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                placeholder="jatin@gmail.com"
-                aria-label="Email or Phone Number"
+                placeholder="Email or Mobile Number"
+                aria-label="Email or Mobile Number"
               />
             </div>
           </div>

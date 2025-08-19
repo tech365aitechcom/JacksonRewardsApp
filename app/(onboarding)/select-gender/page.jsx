@@ -1,31 +1,44 @@
 'use client'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Non-binary', value: 'non-binary' },
-  { label: 'Other', value: 'other' },
-]
+import { useEffect, useState } from 'react'
+import { getOnboardingOptions } from '@/lib/api'
 
 export default function GenderSelection() {
   const router = useRouter()
   const { gender, setGender, setCurrentStep } = useOnboardingStore()
 
+  const [genderOptions, setGenderOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    setCurrentStep(2)
-  }, [setCurrentStep])
+    setCurrentStep(2);
 
-  console.log('Gender:', gender)
+    const fetchOptions = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getOnboardingOptions('gender');
+        if (data && Array.isArray(data.options)) {
+          setGenderOptions(data.options);
+        }
+      } catch (err) {
+        setError("Could not load gender options. Please try again.");
+        console.error("Failed to fetch gender options:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleGenderSelect = (gender) => {
-    setGender(gender)
+    fetchOptions();
+  }, [setCurrentStep]);
+
+  const handleGenderSelect = async (selectedGender) => {
+    await setGender(selectedGender);
     setTimeout(() => {
-      router.push('/game-preferences')
-    }, 200)
-  }
+      router.push('/game-preferences');
+    }, 200);
+  };
 
   return (
     <div className='relative w-full h-screen bg-[#272052] overflow-hidden flex flex-col'>
@@ -41,36 +54,40 @@ export default function GenderSelection() {
       </div>
 
       <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
-        {GENDER_OPTIONS.map((option) => {
-          const isSelected = gender === option.value
+        {isLoading && (
+          <p className="text-white text-center font-poppins">Loading options...</p>
+        )}
+        {error && (
+          <p className="text-red-400 text-center font-poppins">{error}</p>
+        )}
+
+        {!isLoading && !error && genderOptions.map((option) => {
+          const isSelected = gender === option.id; // Use `option.id` from API
           return (
             <button
-              key={option.value}
-              onClick={() => handleGenderSelect(option.value)}
+              key={option.id} // Use `option.id` as the key
+              onClick={() => handleGenderSelect(option.id)} // Pass `option.id` as the value
               className='relative w-full h-16 group focus:outline-none'
             >
               <div
-                className={`absolute inset-x-0 top-0 h-18 bg-[#D8D5E9] rounded-full transition-transform duration-300 ${
-                  isSelected ? 'scale-105' : ''
-                }`}
+                className={`absolute inset-x-0 top-0 h-18 bg-[#D8D5E9] rounded-full transition-transform duration-300 ${isSelected ? 'scale-105' : ''
+                  }`}
               />
               <div
-                className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex items-center justify-center bg-white group-hover:translate-y-0.5 ${
-                  isSelected ? 'scale-105 shadow-lg shadow-[#AF7DE6]/50' : ''
-                }`}
+                className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex items-center justify-center bg-white group-hover:translate-y-0.5 ${isSelected ? 'scale-105 shadow-lg shadow-[#AF7DE6]/50' : ''
+                  }`}
               >
                 <span
-                  className={`text-base font-semibold font-poppins tracking-wide transition-colors duration-200 ${
-                    isSelected ? 'text-[#272052]' : 'text-[#2D2D2D]'
-                  }`}
+                  className={`text-base font-semibold font-poppins tracking-wide transition-colors duration-200 ${isSelected ? 'text-[#272052]' : 'text-[#2D2D2D]'
+                    }`}
                 >
-                  {option.label}
+                  {option.label} {/* Use `option.label` from API */}
                 </span>
               </div>
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

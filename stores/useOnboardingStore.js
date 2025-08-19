@@ -1,80 +1,79 @@
-'use client'
-import { create } from 'zustand'
-import { Preferences } from '@capacitor/preferences'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { updateOnboardingData } from "@/lib/api";
 
-const STORAGE_KEY = 'onboarding-data'
+const useOnboardingStore = create(
+  persist(
+    (set, get) => ({
+      // Data for Onboarding Steps
+      mobile: null,
+      currentStep: 1,
+      ageRange: null,
+      gender: null,
+      gamePreferences: [],
+      gameStyle: null,
+      gameHabit: null, // UI state, not sent to API
 
-const useOnboardingStore = create((set, get) => ({
-  currentStep: 1,
-  ageRange: null,
-  gender: null,
-  gamePreferences: [],
-  gameStyle: null,
-  gameHabit: null,
+      // Additional Fields for Signup API
+      improvementArea: "budgeting",
+      dailyEarningGoal: 100,
 
-  setCurrentStep: async (step) => {
-    set({ currentStep: step })
-    await saveToStorage({ ...get(), currentStep: step })
-  },
+      // Actions
+      setCurrentStep: (step) => set({ currentStep: step }),
+      setMobile: (mobile) => set({ mobile }),
 
-  setAgeRange: async (ageRange) => {
-    set({ ageRange })
-    await saveToStorage({ ...get(), ageRange })
-  },
+      // Async Setters that call the "save-as-you-go" API
+      setAgeRange: async (age) => {
+        set({ ageRange: age });
+        const mobile = get().mobile;
+        if (mobile) {
+          try {
+            await updateOnboardingData("ageRange", age, mobile);
+          } catch (error) {
+            console.error("Failed to save age range:", error.message);
+          }
+        }
+      },
 
-  setGender: async (gender) => {
-    set({ gender })
-    await saveToStorage({ ...get(), gender })
-  },
+      setGender: async (gender) => {
+        set({ gender });
+        const mobile = get().mobile;
+        if (mobile) {
+          try {
+            await updateOnboardingData("gender", gender, mobile);
+          } catch (error) {
+            console.error("Failed to save gender:", error.message);
+          }
+        }
+      },
 
-  setGamePreferences: async (prefs) => {
-    const safePrefs = Array.isArray(prefs) ? prefs : []
-    set({ gamePreferences: safePrefs })
-    await saveToStorage({ ...get(), gamePreferences: safePrefs })
-  },
+      // Setters that only update local state
+      setGamePreferences: (preferences) =>
+        set({ gamePreferences: preferences }),
+      setGameStyle: (style) => set({ gameStyle: style }),
+      setGameHabit: (habit) => set({ gameHabit: habit }),
 
-  setGameStyle: async (gameStyle) => {
-    set({ gameStyle })
-    await saveToStorage({ ...get(), gameStyle })
-  },
+      // Reset the store after a successful signup
+      resetOnboarding: () =>
+        set({
+          mobile: null,
+          currentStep: 1,
+          ageRange: null,
+          gender: null,
+          gamePreferences: [],
+          gameStyle: null,
+          gameHabit: null,
+          improvementArea: "budgeting",
+          dailyEarningGoal: 100,
+        }),
 
-  setGameHabit: async (gameHabit) => {
-    set({ gameHabit })
-    await saveToStorage({ ...get(), gameHabit })
-  },
-
-  loadFromStorage: async () => {
-    const result = await Preferences.get({ key: STORAGE_KEY })
-    if (result.value) {
-      const data = JSON.parse(result.value)
-      set({
-        ...data,
-        gamePreferences: Array.isArray(data.gamePreferences)
-          ? data.gamePreferences
-          : [],
-      })
-    }
-  },
-
-  resetOnboarding: async () => {
-    const reset = { goal: null, gender: null, ageRange: null }
-    set(reset)
-    await Preferences.remove({ key: STORAGE_KEY })
-  },
-}))
-
-async function saveToStorage(data) {
-  await Preferences.set({
-    key: STORAGE_KEY,
-    value: JSON.stringify({
-      currentStep: data.currentStep,
-      ageRange: data.ageRange,
-      gender: data.gender,
-      gamePreferences: data.gamePreferences,
-      gameStyle: data.gameStyle,
-      gameHabit: data.gameHabit,
+      loadFromStorage: () => Promise.resolve(),
     }),
-  })
-}
+    {
+      name: "onboarding-storage",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
 
-export default useOnboardingStore
+export default useOnboardingStore;
