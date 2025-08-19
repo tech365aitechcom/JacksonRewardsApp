@@ -1,9 +1,94 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+
 export const GameListSection = () => {
-  // Downloaded games data
+  const [userGames, setUserGames] = useState([]);
+  const [userStats, setUserStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // API functions
+  const fetchUserGames = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/game`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserGames(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user games:', error);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/profile/stats`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserStats(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch user stats:', error);
+    }
+  };
+
+  const startNewGame = async (gameId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/game/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId }),
+      });
+      if (response.ok) {
+        await fetchUserGames(); // Refresh games list
+      }
+    } catch (error) {
+      console.error('Failed to start new game:', error);
+    }
+  };
+
+  const updateGameScore = async (gameId, score) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/game/score`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId, score }),
+      });
+      if (response.ok) {
+        await fetchUserGames(); // Refresh games list
+      }
+    } catch (error) {
+      console.error('Failed to update game score:', error);
+    }
+  };
+
+  const completeGame = async (gameId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/game/complete`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId }),
+      });
+      if (response.ok) {
+        await fetchUserGames(); // Refresh games list
+      }
+    } catch (error) {
+      console.error('Failed to complete game:', error);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchUserGames(), fetchUserStats()]);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  // Downloaded games data (keeping static data as fallback)
   const downloadedGames = [
     {
       id: 1,
@@ -363,6 +448,79 @@ export const GameListSection = () => {
         </div>
       </div>
 
+      {/* User Games from API */}
+      {userGames.length > 0 && (
+        <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
+          <div className="flex flex-col w-[335px] items-start gap-[49px] relative flex-[0_0_auto]">
+            <div className="inline-flex items-center gap-0.5 relative flex-[0_0_auto]">
+              <Image
+                className="relative w-5 h-5"
+                alt="Badge check"
+                src="https://c.animaapp.com/3mn7waJw/img/badgecheck.svg"
+                width={20}
+                height={20}
+              />
+              <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-[#4bba56] text-base tracking-[0] leading-[normal]">
+                My Games Progress
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
+            {userGames.map((game, index) => (
+              <div
+                key={game._id}
+                className={`flex items-center justify-between pt-0 pb-4 px-0 relative self-stretch w-full flex-[0_0_auto] ${index < userGames.length - 1 ? "border-b [border-bottom-style:solid] border-[#4d4d4d]" : ""}`}
+              >
+                <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
+                  <div className="relative w-[55px] h-[55px] rounded-[27.5px] bg-[linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)]" />
+
+                  <div className="flex-col w-[139px] items-start flex relative">
+                    <div className="relative self-stretch mb-1 [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0] leading-tight">
+                      {game.gameId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </div>
+                    <div className="relative self-stretch mb-1 [font-family:'Poppins',Helvetica] font-normal text-white text-xs tracking-[0] leading-tight">
+                      (Puzzle)
+                    </div>
+                    <div className="relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[#bdbdbd] text-[13px] tracking-[0] leading-[normal]">
+                      {game.completed ? 'Completed' : 'In Progress'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative w-[62px] h-[55px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)]">
+                  <div className="top-2 left-[3px] text-base leading-5 absolute [font-family:'Poppins',Helvetica] font-medium text-white tracking-[0] whitespace-nowrap">
+                    {game.score}
+                  </div>
+                  <Image
+                    className="absolute w-[19px] h-[19px] top-[9px] left-[37px]"
+                    alt="Coin"
+                    src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
+                    width={19}
+                    height={19}
+                  />
+                  <div className="top-[33px] left-1.5 text-xs leading-4 absolute [font-family:'Poppins',Helvetica] font-medium text-white tracking-[0] whitespace-nowrap">
+                    +{Math.floor(game.score * 0.1)}
+                  </div>
+                  <Image
+                    className="absolute w-[17px] h-[13px] top-[34px] left-[39px]"
+                    alt="Pic"
+                    src="https://c.animaapp.com/3mn7waJw/img/pic.svg"
+                    width={17}
+                    height={13}
+                  />
+                </div>
+
+                {!game.completed && (
+                  <div className="absolute w-2 h-2 top-[26px] left-[253px] bg-[#8b92de] rounded" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+
       <div className="flex flex-col w-[335px] h-[455px] items-start gap-4 relative">
         <div className="flex flex-col h-[532px] items-start gap-2.5 self-stretch w-full mb-[-77.00px] relative overflow-x-scroll">
           <div className="w-[334px] h-[455px] rounded-[20px] overflow-hidden bg-[linear-gradient(103deg,rgba(121,32,207,1)_0%,rgba(205,73,153,1)_80%)] relative overflow-x-scroll">
@@ -384,7 +542,7 @@ export const GameListSection = () => {
 
               <div className="absolute w-[304px] h-[75px] top-[138px] left-[15px] border-b [border-bottom-style:solid] border-[#cacaca80]">
                 <div className="absolute w-[154px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
-                  3/5 Games Played
+                  {userStats ? `${userStats.gamesPlayed}/5 Games Played` : "3/5 Games Played"}
                 </div>
                 <Image
                   className="absolute w-36 h-[11px] top-[41px] left-[5px]"
@@ -396,10 +554,10 @@ export const GameListSection = () => {
                 <div className="w-[78px] top-0 left-[226px] absolute h-14 rounded overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group@2x.png)] bg-[100%_100%]">
                     <div className="top-2 left-2.5 font-medium text-base leading-5 absolute [font-family:'Poppins',Helvetica] text-white tracking-[0] whitespace-nowrap">
-                      1000
+                      {userStats ? userStats.xp : "0"}
                     </div>
                     <div className="top-[30px] left-2.5 font-medium text-sm leading-5 absolute [font-family:'Poppins',Helvetica] text-white tracking-[0] whitespace-nowrap">
-                      +500
+                      +{userStats ? userStats.balance : "0"}
                     </div>
                     <Image
                       className="absolute w-[17px] h-[13px] top-[34px] left-[52px]"
@@ -414,7 +572,7 @@ export const GameListSection = () => {
 
               <div className="top-[229px] border-b [border-bottom-style:solid] border-[#cacaca80] absolute w-[304px] h-[99px] left-[15px]">
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
-                  100/900 Coins Earned (Daily)
+                  {userStats ? `${userStats.balance}/900 Coins Earned (Daily)` : "100/900 Coins Earned (Daily)"}
                 </div>
                 <Image
                   className="absolute w-[177px] h-[11px] top-[71px] left-[5px]"
@@ -426,10 +584,10 @@ export const GameListSection = () => {
                 <div className="w-[69px] top-[7px] left-[230px] absolute h-14 rounded overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group-1@2x.png)] bg-[100%_100%]">
                     <div className="left-3 absolute top-2 [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-5 whitespace-nowrap">
-                      100
+                      {userStats ? userStats.balance : "0"}
                     </div>
                     <div className="left-[11px] absolute top-[30px] [font-family:'Poppins',Helvetica] font-medium text-white text-sm tracking-[0] leading-5 whitespace-nowrap">
-                      +50
+                      +{userStats ? Math.floor(userStats.balance * 0.5) : "0"}
                     </div>
                     <Image
                       className="absolute w-[17px] h-[13px] top-[34px] left-[43px]"
@@ -444,7 +602,7 @@ export const GameListSection = () => {
 
               <div className="top-[344px] absolute w-[304px] h-[99px] left-[15px]">
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
-                  0/3 Challenges Finished (Daily)
+                  {userStats ? `${userStats.surveysCompleted + userStats.racesCompleted}/3 Challenges Finished (Daily)` : "0/3 Challenges Finished (Daily)"}
                 </div>
                 <Image
                   className="absolute w-[177px] h-[11px] top-[71px] left-[5px]"
@@ -478,7 +636,7 @@ export const GameListSection = () => {
                 <div className="relative w-[87px] h-[30px]">
                   <div className="relative h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
                     <div className="top-0 left-2.5 font-semibold text-lg leading-[normal] absolute [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                      1200
+                      {userStats ? userStats.xp + userStats.balance : "1200"}
                     </div>
                     <Image
                       className="w-[23px] h-6 top-px left-[54px] absolute"
@@ -495,7 +653,7 @@ export const GameListSection = () => {
                 <div className="relative w-[87px] h-[30px]">
                   <div className="relative w-20 h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
                     <div className="top-0 left-2.5 font-semibold text-lg leading-[normal] absolute [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                      600
+                      {userStats ? userStats.balance : "600"}
                     </div>
                     <Image
                       className="absolute w-[23px] h-[18px] top-[5px] left-12"
