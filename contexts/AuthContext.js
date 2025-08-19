@@ -118,6 +118,12 @@ export function AuthProvider({ children }) {
     console.log("➡️ Redirected to /login");
   };
 
+  // In AuthContext.js
+  const updateUserInContext = (newUserData) => {
+    setUser(newUserData);
+    localStorage.setItem("user", JSON.stringify(newUserData));
+  };
+
   const value = {
     user,
     token,
@@ -126,6 +132,7 @@ export function AuthProvider({ children }) {
     signIn,
     signUpAndSignIn,
     signOut,
+    updateUserInContext,
   };
 
   console.log("📡 [AuthProvider] Context Value:", value);

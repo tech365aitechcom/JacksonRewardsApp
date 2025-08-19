@@ -1,6 +1,10 @@
-import React from "react";
-import { HomeIndicator } from "../../components/HomeIndicator";
-
+"use client"; // <-- THIS IS THE ONLY LINE YOU NEED TO ADD
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
+import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
+import { HomeIndicator } from "../../components/HomeIndicator"; // 
 const Homepage = () => {
   return (
     <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
@@ -12,13 +16,153 @@ const Homepage = () => {
       </div>
       <HeaderSection />
       <MainContentSection />
-      
+
       <HomeIndicator activeTab="home" />
     </div>
   );
 };
 
+
+const RewardProgress = ({ stats }) => {
+  const rewardGoal = 6000;
+
+  const currentProgress = stats?.currentXP ?? 0;
+  const pointsNeeded = Math.max(0, rewardGoal - currentProgress);
+
+  const progressPercentage = Math.min((currentProgress / rewardGoal) * 100, 100);
+
+  return (
+    <div className="relative w-[335px] h-[135px] shadow-[2.48px_2.48px_18.58px_#3b3b3b80,-1.24px_-1.24px_16.1px_#825700]">
+      <div className="relative w-[335px] h-[135px] bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289468@2x.png)] bg-cover bg-center">
+        {/* Texts */}
+        <div className="absolute w-[299px] h-[42px] top-[19px] left-5">
+          <p className="absolute w-full top-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[-0.37px] leading-[27.2px] whitespace-nowrap">
+            Hurry! Earn {pointsNeeded} more & Claim
+          </p>
+          <p className="absolute w-full top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] whitespace-nowrap">
+            {pointsNeeded} Points until your next reward
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
+          <div className="relative w-full h-full bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289352@2x.png)] bg-cover bg-center">
+            {/* Dynamic Progress Fill */}
+            <div className="absolute h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+
+            {/* Static background and icons */}
+            <img className="absolute w-[29px] h-[30px] top-1 left-[3px]" alt="Ellipse" src="https://c.animaapp.com/xCaMzUYh/img/ellipse-35.svg" />
+            <div className="absolute w-2 top-2 left-3 text-[#815c23] text-[14.9px] tracking-[0.02px] font-semibold leading-[normal]">{stats?.tier ?? 1}</div>
+
+            {/* Progress Text */}
+            <p className="absolute w-auto top-2.5 left-[101px] opacity-80 font-semibold text-transparent text-[14.9px]">
+              <span className="text-[#685512]">{currentProgress}</span>
+              <span className="text-[#8d741b80]">/{rewardGoal}</span>
+            </p>
+
+            {/* Next Level Icon */}
+            <div className="absolute w-8 h-[30px] top-[3px] right-[-10px] opacity-50">...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const XpTierTracker = ({ stats }) => {
+  // Define XP goals for each tier. These would ideally come from a config or API.
+  const tierGoals = { junior: 0, mid: 5000, senior: 10000 };
+  const currentXp = stats?.currentXP ?? 0;
+  const totalXpGoal = tierGoals.senior;
+
+  const progressPercentage = Math.min((currentXp / totalXpGoal) * 100, 100);
+
+  return (
+    <div className="relative w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700 p-4 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center gap-3">
+          <img className="w-10 h-8" alt="Trophy Icon" src="https://c.animaapp.com/xCaMzUYh/img/pic.svg" />
+          <p className="font-semibold text-white text-base">You're off to a great start!</p>
+        </div>
+
+        <div className="flex justify-between w-full mt-4 text-white text-xs px-1">
+          <span>Junior</span>
+          <span>Mid-level</span>
+          <span>Senior</span>
+        </div>
+      </div>
+
+      <div>
+        {/* Custom Progress Bar with Slider */}
+        <div className="relative w-full h-1.5 flex items-center">
+          {/* Track Background */}
+          <div className="w-full h-full bg-neutral-800 rounded-full"></div>
+          {/* Achieved Progress Track */}
+          <div className="absolute top-0 left-0 h-full bg-neutral-400 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+          {/* Slider Thumb */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-400 rounded-full border-2 border-black shadow-lg"
+            style={{ left: `calc(${progressPercentage}% - 8px)` }} // Offset by half the thumb's width
+          ></div>
+        </div>
+
+        {/* Current Progress Text */}
+        <div className="flex items-center mt-3">
+          <img className="w-5 h-[18px]" alt="XP Icon" src="https://c.animaapp.com/xCaMzUYh/img/pic-1.svg" />
+          <div className="ml-2 font-medium text-[#d2d2d2] text-sm">{currentXp.toLocaleString()}</div>
+          <div className="ml-1 font-medium text-[#dddddd] text-sm">out of {totalXpGoal.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <img className="absolute w-5 h-5 bottom-3 left-1/2 -translate-x-1/2" alt="Arrow" src="https://c.animaapp.com/xCaMzUYh/img/arrow.svg" />
+    </div>
+  );
+};
+// --- THIS IS THE FULLY IMPLEMENTED HEADER COMPONENT ---
 const HeaderSection = () => {
+  const router = useRouter();
+  const { user, token } = useAuth();
+
+  const [profile, setProfile] = useState(null);
+  const [balance, setBalance] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      const fetchData = async () => {
+        try {
+          // Fetch profile and balance in parallel
+          const [profileData, walletData] = await Promise.all([
+            getProfile(token),
+            getProfileStats(token)
+          ]);
+          setProfile(profileData);
+          setBalance(walletData.balance);
+        } catch (error) {
+          console.error("Failed to fetch header data:", error);
+          // Set to empty objects to use fallbacks
+          setProfile({});
+          setBalance(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
+    } else if (user) {
+      // Handle case where auth is loaded but no token (should not happen in protected routes)
+      setIsLoading(false);
+    }
+  }, [token, user]);
+
+  const handleProfileClick = () => router.push('/my-profile');
+  const handleWalletClick = () => router.push('/wallet'); // Example route, adjust as needed
+
+
+
+  // Use fetched first name or fallback from user context or a generic greeting
+  const firstName = profile?.firstName || user?.firstName || 'there';
+  const greeting = `Hi ${firstName}! 👋`;
+
   return (
     <header className="inline-flex items-center gap-12 absolute top-[66px] left-5 bg-transparent">
       <div className="inline-flex items-center gap-3 relative flex-[0_0_auto]">
@@ -29,7 +173,7 @@ const HeaderSection = () => {
         />
         <div className="flex flex-col w-[140px] items-start gap-1 relative">
           <div className="relative self-stretch h-4 [font-family:'Poppins',Helvetica] font-normal text-[#ffffff99] text-sm tracking-[-0.17px] leading-[18px] whitespace-nowrap">
-            Welcome Back
+            Welcome Back  {greeting}
           </div>
         </div>
       </div>
@@ -37,7 +181,7 @@ const HeaderSection = () => {
         <div className="relative w-[87px] h-[39px] mt-[-1.50px] mb-[-1.50px]">
           <div className="relative h-9 top-px rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
             <div className="top-1 left-2.5 text-white text-lg tracking-[0] absolute [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
-              1200
+              {balance || 0}
             </div>
             <img
               className="w-[23px] h-6 top-[5px] left-[54px] absolute aspect-[0.97]"
@@ -51,7 +195,30 @@ const HeaderSection = () => {
   );
 };
 
+
 const MainContentSection = () => {
+
+  const { token } = useAuth();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      const fetchData = async () => {
+        try {
+          const data = await getHomeDashboard(token);
+          setDashboardData(data);
+        } catch (error) {
+          console.error("Failed to fetch dashboard data for main content:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [token]);
+
+
   const mostPlayedGames = [
     {
       id: 1,
@@ -151,115 +318,21 @@ const MainContentSection = () => {
     },
   ];
 
+  // SKELETON LOADER FOR THE MAIN CONTENT
+  if (isLoading) {
+    return (
+      <div className="flex flex-col w-[375px] items-center gap-8 pt-36 px-5">
+        <div className="w-[335px] h-[135px] bg-gray-800 rounded-lg animate-pulse"></div>
+        <div className="w-[335px] h-[169px] bg-gray-800 rounded-lg animate-pulse"></div>
+        {/* Add more skeleton loaders for other sections as needed */}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-[375px] items-center gap-8 pt-36 relative">
-      <div className="relative w-[335px] h-[135px] shadow-[2.48px_2.48px_18.58px_#3b3b3b80,-1.24px_-1.24px_16.1px_#825700]">
-        <div className="relative w-[337px] h-[135px]">
-          <div className="absolute w-[337px] h-[135px] top-0 left-0">
-            <div className="relative w-[335px] h-[135px] bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289468@2x.png)] bg-[100%_100%]">
-              <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
-                <div className="absolute w-[302px] h-[37px] top-0 left-0">
-                  <div className="w-[304px] h-[37px]">
-                    <div className="relative w-[302px] h-[37px] bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289352@2x.png)] bg-[100%_100%]">
-                      <img
-                        className="absolute w-[29px] h-[30px] top-1 left-[3px]"
-                        alt="Ellipse"
-                        src="https://c.animaapp.com/xCaMzUYh/img/ellipse-35.svg"
-                      />
-                      <div className="w-2 top-2 left-3 text-[#815c23] text-[14.9px] tracking-[0.02px] absolute [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
-                        2
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p className="absolute w-[86px] top-2.5 left-[101px] opacity-80 [font-family:'Poppins',Helvetica] font-semibold text-transparent text-[14.9px] tracking-[0.02px] leading-[normal]">
-                  <span className="text-[#685512] tracking-[0]">5200</span>
-                  <span className="text-[#8d741b80] tracking-[0]">/6000</span>
-                </p>
-              </div>
-              <div className="absolute w-[299px] h-[42px] top-[19px] left-5">
-                <div className="relative w-[301px] h-[42px]">
-                  <div className="absolute w-[301px] h-[21px] top-0 left-0">
-                    <p className="absolute w-[299px] top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[-0.37px] leading-[27.2px] whitespace-nowrap">
-                      Hurry! Earn 500 more & Claim
-                    </p>
-                  </div>
-                  <p className="absolute w-[235px] top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] whitespace-nowrap">
-                    500 Points until your next reward
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute w-8 h-[30px] top-[77px] left-72 opacity-50">
-            <div className="relative w-[30px] h-[30px]">
-              <div className="absolute w-[30px] h-[30px] top-0 left-0">
-                <div className="h-[30px] bg-[url(https://c.animaapp.com/xCaMzUYh/img/ellipse-35-1.svg)] bg-[100%_100%]">
-                  <div className="relative w-[15px] h-3.5 top-2 left-2 overflow-hidden">
-                    <img
-                      className="absolute w-[15px] h-3.5 top-[-380px] left-[11330px]"
-                      alt="Vector"
-                      src="/img/vector.png"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="w-[9px] top-1 left-2.5 text-[#815c23] text-[14.9px] tracking-[0.02px] absolute [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
-                3
-              </div>
-            </div>
-          </div>
-          <img
-            className="absolute w-3 h-[11px] top-[85px] left-[99px]"
-            alt="Vector"
-            src="https://c.animaapp.com/xCaMzUYh/img/vector.svg"
-          />
-        </div>
-      </div>
-      <div className="relative w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
-        <img
-          className="absolute w-[304px] h-6 top-[84px] left-3.5"
-          alt="Progress bar"
-          src="https://c.animaapp.com/xCaMzUYh/img/progress-bar.svg"
-        />
-        <p className="w-[210px] h-6 top-4 left-[62px] font-semibold text-white text-base leading-6 absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-          You're off to a great start!
-        </p>
-        <img
-          className="absolute w-10 h-8 top-[15px] left-4"
-          alt="Pic"
-          src="https://c.animaapp.com/xCaMzUYh/img/pic.svg"
-        />
-        <div className="absolute w-[153px] h-[21px] top-[113px] left-[18px]">
-          <div className="h-[21px] -top-px left-[65px] font-medium text-[#dddddd] text-sm text-right leading-[normal] absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-            out of 10,000
-          </div>
-          <div className="h-[21px] -top-px left-0 font-medium text-[#d2d2d2] text-sm leading-[normal] absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-            2,592
-          </div>
-          <img
-            className="absolute w-5 h-[18px] top-[3px] left-[41px]"
-            alt="Pic"
-            src="https://c.animaapp.com/xCaMzUYh/img/pic-1.svg"
-          />
-        </div>
-        <div className="absolute w-[303px] h-[15px] top-[63px] left-4">
-          <div className="h-3.5 -top-px left-0 font-normal text-white text-sm leading-[14px] whitespace-nowrap absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-            Junior
-          </div>
-          <div className="h-3.5 -top-px left-[114px] font-normal text-white text-sm leading-[14px] whitespace-nowrap absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-            Mid-level
-          </div>
-          <div className="h-3.5 -top-px left-[259px] font-normal text-white text-sm leading-[14px] whitespace-nowrap absolute [font-family:'Poppins',Helvetica] tracking-[0]">
-            Senior
-          </div>
-        </div>
-        <img
-          className="absolute w-5 h-5 top-36 left-[157px]"
-          alt="Arrow"
-          src="https://c.animaapp.com/xCaMzUYh/img/arrow.svg"
-        />
-      </div>
+      {dashboardData?.stats && <RewardProgress stats={dashboardData.stats} />}
+      {dashboardData?.stats && <XpTierTracker stats={dashboardData.stats} />}
       <div className="flex flex-col items-start gap-2.5 pl-5 pr-0 py-0 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex w-[335px] items-center justify-between relative flex-[0_0_auto]">
           <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-base tracking-[0] leading-[normal]">

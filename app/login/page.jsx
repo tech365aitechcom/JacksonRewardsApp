@@ -26,7 +26,7 @@ export default function LoginPage() {
       const result = await signIn(emailOrMobile, password);
       if (result?.ok) {
         // On successful login, redirect to a protected route like a dashboard
-        router.push("/dashboard");
+        router.push("/homepage");
       } else {
         // Use the error message from the API response
         setError(result?.error || "Invalid credentials. Please try again.");
@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    // Redirect to the first step of the password recovery flow
+    router.push("/forgot-password");
 
   };
 
@@ -215,6 +215,7 @@ export default function LoginPage() {
               Welcome Back!
             </h1>
           </div>
+
 
           <Image
             className="absolute w-[52px] h-[43px] top-[315px] left-[519px]"

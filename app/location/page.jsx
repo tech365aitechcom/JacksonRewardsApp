@@ -23,22 +23,18 @@ export default function LocationPage() {
 
     // Use the browser's Geolocation API
     navigator.geolocation.getCurrentPosition(
-      // SUCCESS CALLBACK (User clicked "Allow")
+      // SUCCESS: User grants permission
       async (position) => {
         const { latitude, longitude } = position.coords;
-        console.log("Location permission granted:", { latitude, longitude });
-
         try {
-          // 1. Update permission status on the backend
-          await updateLocationSettings(user.mobile, "granted", "while_using");
-          console.log("Location settings updated to 'granted'");
-
-          // 2. Send the actual coordinates to the backend
-          await updateLocation({ latitude, longitude }, token);
-          console.log("User's current location sent to backend");
+          // Update backend settings and location in parallel for efficiency
+          await Promise.all([
+            updateLocationSettings(user.mobile, "granted", "while_using"),
+            updateLocation({ latitude, longitude }, token)
+          ]);
 
           // 3. Navigate to the dashboard
-          router.push("/dashboard");
+          router.push("/homepage");
         } catch (apiError) {
           console.error("Failed to update location on backend:", apiError);
           setError(apiError.message || "Could not save your location. Please try again.");

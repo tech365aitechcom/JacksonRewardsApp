@@ -1,44 +1,122 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // Import Image for the preview
+import { useAuth } from "@/contexts/AuthContext";
+import { getProfile, updateProfile, uploadAvatar } from "@/lib/api";
 
 export const EditProfile = () => {
-  const [formData, setFormData] = useState({
-    userName: "",
-    emailAddress: "",
-    phoneNumber: "",
-    socialTag: "",
-  });
   const router = useRouter();
+  const { user, token, updateUserInContext } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [originalAvatar, setOriginalAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null); // For immediate
+  const fileInputRef = useRef(null);
+
+
+  // 1. Fetch profile data to pre-fill the form
+  useEffect(() => {
+    if (token && user) {
+      const fetchProfileData = async () => {
+        try {
+          const profileData = await getProfile(token);
+          setFormData({
+            firstName: profileData.firstName,
+            lastName: profileData.lastName,
+          });
+          setAvatarPreview(profileData.profile.avatar);
+          setOriginalAvatar(profileData.profile.avatar); // Store the original
+        } catch (err) {
+          setError("Could not load your profile data.");
+          console.error("Failed to load profile for editing:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchProfileData();
+    }
+  }, [token, user]);
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveChanges = () => {
-    console.log("Saving changes:", formData);
-    // Here you would typically save to backend/context
-    // For now, just navigate back to profile or previous page
-    router.back();
+  // 2. Handle saving changes to the backend
+  const handleSaveChanges = async (e) => {
+    e.preventDefault(); // Prevent default form submission
+    if (!token) {
+      setError("Session expired. Please log in again.");
+      return;
+    }
+    if (!formData.firstName) {
+      setError("First name cannot be empty.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    const dataToUpdate = {
+      firstName: formData.firstName,
+      lastName: formData.lastName || "-",
+      status: "active",
+    };
+
+    try {
+      await updateProfile(dataToUpdate, token);
+      if (updateUserInContext) {
+        updateUserInContext({ ...user, ...dataToUpdate });
+      }
+      router.push('/myprofile');
+    } catch (err) {
+      setError(err.message || "Failed to save profile.");
+      console.error("Failed to save profile:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleCancel = () => {
-    console.log("Cancelling changes");
-    router.back();
+  const handleProfilePictureChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // A. Optimistic UI: Show a local preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // B. Upload the file to the backend
+    if (token) {
+      const upload = async () => {
+        try {
+          const response = await uploadAvatar(file, token);
+          setAvatarPreview(response.avatar);
+          setOriginalAvatar(response.avatar);
+          alert("Avatar updated successfully!");
+        } catch (err) {
+          setError(err.message || "Failed to upload avatar.");
+          setAvatarPreview(originalAvatar);
+          console.error("Failed to upload avatar:", err);
+        }
+      };
+      upload();
+    }
   };
 
-  const handleClose = () => {
-    console.log("Closing edit profile");
-    router.back();
-  };
+  const triggerFileInput = () => fileInputRef.current.click();
+  const handleClose = () => router.back();
 
-  const handleProfilePictureChange = () => {
-    console.log("Change profile picture");
-    // Handle profile picture upload logic
-  };
+  if (isLoading) {
+    return <div className="bg-[#272052] flex h-screen justify-center items-center text-white">Loading Editor...</div>;
+  }
 
   return (
     <div className="bg-[#272052] flex h-screen flex-row justify-center w-full relative overflow-hidden">
@@ -76,18 +154,29 @@ export const EditProfile = () => {
 
         <div className="absolute w-[132px] h-[124px] top-[140px] left-1/2 transform -translate-x-1/2">
           <div className="relative w-full h-full">
-            <img
-              className="w-[132px] h-[120px]"
-              alt="Profile avatar background"
-              src="https://c.animaapp.com/mFM2C37Z/img/component-1.svg"
+            <Image
+              src={"https://c.animaapp.com/mFM2C37Z/img/component-1.svg"}
+              alt="Profile avatar preview"
+              width={132}
+              height={120}
+              className="object-cover rounded-full"
             />
-
             <div className="absolute w-[45px] h-[45px] bottom-0 right-0">
               <div className="relative w-[43px] h-[45px]">
                 <div className="w-[43px] h-[43px] bg-darkgray-2 rounded-[21.73px] border-[5px] border-solid border-darkgray-1" />
 
+                {/* Hidden file input for avatar upload */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleProfilePictureChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+
                 <button
-                  onClick={handleProfilePictureChange}
+                  type="button" // Important: prevent form submission
+                  onClick={triggerFileInput}
                   className="absolute inset-0 flex items-center justify-center font-medium text-xl [font-family:'Poppins',Helvetica] text-white tracking-[0] leading-[normal] cursor-pointer"
                   aria-label="Change profile picture"
                 >
@@ -98,27 +187,44 @@ export const EditProfile = () => {
           </div>
         </div>
 
-        <form className="absolute top-[280px] left-0 w-full px-8 space-y-6">
+        <form onSubmit={handleSaveChanges} className="absolute top-[280px] left-0 w-full px-8 space-y-6">
           <div className="w-full">
             <label
-              htmlFor="userName"
+              htmlFor="firstName"
               className="block [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal] mb-2"
             >
-              User Name
+              First Name
             </label>
             <div className="relative w-full">
-              <img
-                className="w-full h-[54px]"
-                alt="Input background"
-                src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png"
-              />
+              <img className="w-full h-[54px]" alt="Input background" src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png" />
               <input
-                id="userName"
+                id="firstName"
                 type="text"
-                value={formData.userName}
-                onChange={(e) => handleInputChange("userName", e.target.value)}
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
                 className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-                placeholder="Enter your name"
+                placeholder="Enter your first name"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="w-full">
+            <label
+              htmlFor="lastName"
+              className="block [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal] mb-2"
+            >
+              Last Name
+            </label>
+            <div className="relative w-full">
+              <img className="w-full h-[54px]" alt="Input background" src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png" />
+              <input
+                id="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                placeholder="Enter your last name"
               />
             </div>
           </div>
@@ -131,20 +237,14 @@ export const EditProfile = () => {
               Email Address
             </label>
             <div className="relative w-full">
-              <img
-                className="w-full h-[54px]"
-                alt="Input background"
-                src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png"
-              />
+              <img className="w-full h-[54px]" alt="Input background" src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png" />
               <input
                 id="emailAddress"
                 type="email"
-                value={formData.emailAddress}
-                onChange={(e) =>
-                  handleInputChange("emailAddress", e.target.value)
-                }
-                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-                placeholder="Enter your email"
+                readOnly
+                value={user?.email || ''}
+
+                className="absolute inset-0 bg-transparent px-4 py-3 text-gray-400 [font-family:'Poppins',Helvetica] text-sm cursor-not-allowed"
               />
             </div>
           </div>
@@ -157,60 +257,33 @@ export const EditProfile = () => {
               Phone Number
             </label>
             <div className="relative w-full">
-              <img
-                className="w-full h-[54px]"
-                alt="Input background"
-                src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png"
-              />
+              <img className="w-full h-[54px]" alt="Input background" src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png" />
               <input
                 id="phoneNumber"
                 type="tel"
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-                placeholder="Enter your phone number"
+                readOnly
+                value={user?.mobile || ''}
+                className="absolute inset-0 bg-transparent px-4 py-3 text-gray-400 [font-family:'Poppins',Helvetica] text-sm cursor-not-allowed"
               />
             </div>
           </div>
 
-          <div className="w-full">
-            <label
-              htmlFor="socialTag"
-              className="block [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal] mb-3"
-            >
-              Social Tag
-            </label>
-            <div className="relative w-full">
-              <img
-                className="w-full h-[54px]"
-                alt="Input background"
-                src="https://c.animaapp.com/mFM2C37Z/img/card-4@2x.png"
-              />
-              <input
-                id="socialTag"
-                type="text"
-                value={formData.socialTag}
-                onChange={(e) => handleInputChange("socialTag", e.target.value)}
-                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-                placeholder="Enter your social tag"
-              />
-            </div>
-          </div>
+          {error && <p className="text-red-500 text-center text-sm -mt-2">{error}</p>}
 
           <div className="w-full pt-4 space-y-3">
             <button
-              type="button"
-              onClick={handleSaveChanges}
-              className="w-full h-[42px] rounded-lg bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center"
+              type="submit"
+              disabled={isSaving}
+              className="w-full h-[42px] rounded-lg bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm tracking-[0] leading-[normal]">
-                Save Changes
+                {isSaving ? "Saving..." : "Save Changes"}
               </span>
             </button>
 
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={handleClose}
               className="w-full h-[42px] bg-[#2c2c2c] rounded-lg hover:bg-[#3c3c3c] transition-colors cursor-pointer flex items-center justify-center"
             >
               <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm tracking-[0] leading-[normal]">

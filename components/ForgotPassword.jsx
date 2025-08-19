@@ -13,7 +13,7 @@ export const ForgotPassword = () => {
       const newCode = [...verificationCode];
       newCode[index] = value;
       setVerificationCode(newCode);
-      
+
       // Auto-focus next input
       if (value && index < 3) {
         const nextInput = document.getElementById(`code-${index + 1}`);
@@ -56,7 +56,7 @@ export const ForgotPassword = () => {
         <div className="bg-[#272052] overflow-hidden w-full max-w-[375px] relative">
           {/* Background blur effects */}
           <div className="absolute w-[358px] h-[358px] top-0 left-[9px] bg-[#af7de6] rounded-[179px] blur-[250px]" />
-          
+
           {/* Background overlay */}
           <div className="absolute inset-0 bg-[#20202033] backdrop-blur-[5px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(5px)_brightness(100%)]" />
 
@@ -136,7 +136,7 @@ export const ForgotPassword = () => {
       <div className="bg-[#272052] overflow-hidden w-full max-w-[375px] relative">
         {/* Background blur effects */}
         <div className="absolute w-[358px] h-[358px] top-0 left-[9px] bg-[#af7de6] rounded-[179px] blur-[250px]" />
-        
+
         {/* Background overlay */}
         <div className="absolute inset-0 bg-[#20202033] backdrop-blur-[5px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(5px)_brightness(100%)]" />
 
