@@ -198,7 +198,11 @@ export default function MyProfile() {
         {/* Header */}
         <header className="flex flex-col w-[375px] items-start gap-2 px-5 py-3 absolute top-[54px] left-0">
           <div className="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto] rounded-[32px]">
-            <button className="relative w-6 h-6" aria-label="Go back">
+            <button 
+              className="relative w-6 h-6" 
+              aria-label="Go back"
+              onClick={() => router.back()}
+            >
               <Image
                 width={24}
                 height={24}

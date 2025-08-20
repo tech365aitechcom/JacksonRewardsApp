@@ -154,7 +154,10 @@ const HeaderSection = () => {
     }
   }, [token, user]);
 
-  const handleProfileClick = () => router.push('/my-profile');
+  const handleProfileClick = () => {
+    console.log('Profile clicked, navigating to /myprofile');
+    router.push('/myprofile');
+  };
   const handleWalletClick = () => router.push('/wallet'); // Example route, adjust as needed
 
 
@@ -165,12 +168,24 @@ const HeaderSection = () => {
 
   return (
     <header className="inline-flex items-center gap-12 absolute top-[66px] left-5 bg-transparent">
-      <div className="inline-flex items-center gap-3 relative flex-[0_0_auto]">
-        <img
-          className="relative w-12 h-12"
-          alt="Group"
-          src="https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
-        />
+      <div className="inline-flex items-center gap-3 relative  flex-[0_0_auto]">
+        <div
+          className="relative w-12 h-12 cursor-pointer hover:opacity-80 z-50 transition-opacity duration-200"
+          onClick={handleProfileClick}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleProfileClick();
+            }
+          }}
+        >
+          <img
+            className="w-full h-full"
+            alt="Group"
+            src="https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
+          />
+        </div>
         <div className="flex flex-col w-[140px] items-start gap-1 relative">
           <div className="relative self-stretch h-4 [font-family:'Poppins',Helvetica] font-normal text-[#ffffff99] text-sm tracking-[-0.17px] leading-[18px] whitespace-nowrap">
             Welcome Back  {greeting}
