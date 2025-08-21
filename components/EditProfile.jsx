@@ -73,7 +73,7 @@ export const EditProfile = () => {
       if (updateUserInContext) {
         updateUserInContext({ ...user, ...dataToUpdate });
       }
-      router.push('/myprofile');
+      router.replace('/myprofile');
     } catch (err) {
       setError(err.message || "Failed to save profile.");
       console.error("Failed to save profile:", err);
@@ -112,7 +112,7 @@ export const EditProfile = () => {
   };
 
   const triggerFileInput = () => fileInputRef.current.click();
-  const handleClose = () => router.back();
+  const handleClose = () => router.replace('/myprofile');
 
   if (isLoading) {
     return <div className="bg-[#272052] flex h-screen justify-center items-center text-white">Loading Editor...</div>;

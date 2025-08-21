@@ -1,9 +1,24 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
-export const HomeIndicator = ({ activeTab = "games" }) => {
+export const HomeIndicator = ({ activeTab }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Auto-detect active tab based on current pathname if not explicitly provided
+  const getActiveTab = () => {
+    if (activeTab) return activeTab;
+    
+    if (pathname === "/homepage") return "home";
+    if (pathname === "/games") return "games";
+    if (pathname === "/wallet") return "wallet";
+    if (pathname === "/cash-coach") return "cash";
+    
+    return "home"; // default fallback
+  };
+  
+  const currentActiveTab = getActiveTab();
 
   const navigationItems = [
     {
@@ -47,12 +62,23 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 w-full max-w-[375px] mx-auto h-[157px] z-50"
+      className="fixed bottom-0 left-0 right-0 w-full max-w-[375px] mx-auto h-[157px] z-[9999] bg-black"
       data-model-id="730:32095"
       role="navigation"
       aria-label="Main navigation"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 9999,
+        backgroundColor: 'black'
+      }}
     >
-      <div className="relative h-[120px] -top-px">
+      {/* Background overlay to prevent content bleed */}
+      <div className="absolute inset-0 bg-black w-full h-full"></div>
+      
+      <div className="relative h-[120px] -top-px z-10">
         <div
           className="absolute w-[135px] h-[5px] top-[115px] left-[120px] bg-white rounded-[100px]"
           role="presentation"
@@ -82,11 +108,11 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
                 role="presentation"
               />
 
-              <span className={`relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[10px] tracking-[-0.17px] leading-[normal] ${activeTab === "home" ? "text-white" : "text-[#ffffffb2]"}`}>
+              <span className={`relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[10px] tracking-[-0.17px] leading-[normal] ${currentActiveTab === "home" ? "text-white" : "text-[#ffffffb2]"}`}>
                 Home
               </span>
 
-              {activeTab === "home" && (
+              {currentActiveTab === "home" && (
                 <div
                   className="absolute w-1 h-1 top-[51px] left-[26px] bg-[#8b92de] rounded-sm"
                   role="presentation"
@@ -99,7 +125,7 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
               className="flex flex-col w-[60px] items-center gap-3 absolute top-[43px] left-[87px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg p-1"
               onClick={() => handleTabClick("games", "/games")}
               aria-label="Navigate to My Games"
-              aria-current={activeTab === "games" ? "page" : undefined}
+              aria-current={currentActiveTab === "games" ? "page" : undefined}
               tabIndex={0}
             >
               <img
@@ -109,11 +135,11 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
                 role="presentation"
               />
 
-              <span className={`relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${activeTab === "games" ? "text-white" : "text-[#ffffffb2]"}`}>
+              <span className={`relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${currentActiveTab === "games" ? "text-white" : "text-[#ffffffb2]"}`}>
                 My Games
               </span>
 
-              {activeTab === "games" && (
+              {currentActiveTab === "games" && (
                 <div
                   className="absolute w-1 h-1 top-[47px] left-[26px] bg-[#8b92de] rounded-sm"
                   role="presentation"
@@ -151,11 +177,11 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
                 />
               </div>
 
-              <span className={`relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${activeTab === "wallet" ? "text-white" : "text-[#ffffffb2]"}`}>
+              <span className={`relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${currentActiveTab === "wallet" ? "text-white" : "text-[#ffffffb2]"}`}>
                 My Wallet
               </span>
 
-              {activeTab === "wallet" && (
+              {currentActiveTab === "wallet" && (
                 <div
                   className="absolute w-1 h-1 top-[51px] left-[26px] bg-[#8b92de] rounded-sm"
                   role="presentation"
@@ -177,11 +203,11 @@ export const HomeIndicator = ({ activeTab = "games" }) => {
                 role="presentation"
               />
 
-              <span className={`relative w-fit ml-[-0.50px] mr-[-0.50px] [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[13px] whitespace-nowrap ${activeTab === "cash" ? "text-white" : "text-[#ffffffb2]"}`}>
+              <span className={`relative w-fit ml-[-0.50px] mr-[-0.50px] [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[13px] whitespace-nowrap ${currentActiveTab === "cash" ? "text-white" : "text-[#ffffffb2]"}`}>
                 Cash Coach
               </span>
 
-              {activeTab === "cash" && (
+              {currentActiveTab === "cash" && (
                 <div
                   className="absolute w-1 h-1 top-[51px] left-[26px] bg-[#8b92de] rounded-sm"
                   role="presentation"

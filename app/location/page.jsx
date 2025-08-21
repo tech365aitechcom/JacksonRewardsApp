@@ -187,7 +187,7 @@ export default function LocationPage() {
                 disabled={isLoading || isSkipping}
                 className="w-full mt-4 [font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center tracking-[0] leading-[normal] hover:text-white transition-colors duration-200 disabled:opacity-50"
               >
-                {isSkipping ? "Updating..." : "Skip for now"}
+                {isSkipping ? "Updating..." : "Skip for now (Jackson won't work)"}
               </button>
             </>
           ) : (

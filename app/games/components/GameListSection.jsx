@@ -190,11 +190,11 @@ export const GameListSection = () => {
     },
     {
       id: 6,
-      name: "Commado",
+      name: "Commando",
       genre: "Action",
       subtitle: "Hey Jatin!",
       image: null,
-      overlayImage: null,
+      overlayImage: "https://c.animaapp.com/V1uc3arn/img/rectangle-24@2x.png",
       score: "10.1",
       bonus: "+30",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
@@ -209,7 +209,7 @@ export const GameListSection = () => {
       genre: "Action",
       subtitle: "Hey Jatin!",
       image: null,
-      overlayImage: null,
+      overlayImage: "https://c.animaapp.com/V1uc3arn/img/rectangle-25@2x.png",
       score: "9.2",
       bonus: "+10",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
@@ -354,6 +354,15 @@ export const GameListSection = () => {
                 src={game.overlayImage}
                 width={55}
                 height={52}
+              />
+            )}
+            {game.overlayImage && game.hasBlur && (
+              <Image
+                className="absolute w-[55px] h-[55px] top-0 left-0 object-cover rounded-[27.5px] z-10"
+                alt="Game icon"
+                src={game.overlayImage}
+                width={55}
+                height={55}
               />
             )}
           </div>
@@ -569,28 +578,31 @@ export const GameListSection = () => {
                 <div className="absolute w-[154px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.gamesPlayed}/5 Games Played` : "3/5 Games Played"}
                 </div>
-                <Image
-                  className="absolute w-36 h-[11px] top-[41px] left-[5px]"
-                  alt="Progress bar"
-                  src="https://c.animaapp.com/3mn7waJw/img/progress-bar.svg"
-                  width={144}
-                  height={11}
-                />
-                <div className="w-[78px] top-0 left-[226px] absolute h-14 rounded overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
-                  <div className="relative h-14 bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group@2x.png)] bg-[100%_100%]">
-                    <div className="top-2 left-2.5 font-medium text-base leading-5 absolute [font-family:'Poppins',Helvetica] text-white tracking-[0] whitespace-nowrap">
-                      {userStats ? userStats.xp : "0"}
+                <div className="absolute w-36 h-[20px] top-[38px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                  <div className="w-[60%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                </div>
+                <div className="w-[78px] top-0 left-[226px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
+                  <div className="relative h-14 flex flex-col justify-center items-center px-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-base leading-5 [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        {userStats ? userStats.xp : "1000"}
+                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="Coin"
+                        src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
+                        width={16}
+                        height={16}
+                      />
                     </div>
-                    <div className="top-[30px] left-2.5 font-medium text-sm leading-5 absolute [font-family:'Poppins',Helvetica] text-white tracking-[0] whitespace-nowrap">
-                      +{userStats ? userStats.balance : "0"}
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        +{userStats ? Math.floor(userStats.xp * 0.5) : "500"}
+                      </div>
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        XP
+                      </div>
                     </div>
-                    <Image
-                      className="absolute w-[17px] h-[13px] top-[34px] left-[52px]"
-                      alt="Pic"
-                      src="https://c.animaapp.com/3mn7waJw/img/pic-4.svg"
-                      width={17}
-                      height={13}
-                    />
                   </div>
                 </div>
               </div>
@@ -599,28 +611,31 @@ export const GameListSection = () => {
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.balance}/900 Coins Earned (Daily)` : "100/900 Coins Earned (Daily)"}
                 </div>
-                <Image
-                  className="absolute w-[177px] h-[11px] top-[71px] left-[5px]"
-                  alt="Progress bar"
-                  src="https://c.animaapp.com/3mn7waJw/img/progress-bar-1.svg"
-                  width={177}
-                  height={11}
-                />
-                <div className="w-[69px] top-[7px] left-[230px] absolute h-14 rounded overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
-                  <div className="relative h-14 bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group-1@2x.png)] bg-[100%_100%]">
-                    <div className="left-3 absolute top-2 [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-5 whitespace-nowrap">
-                      {userStats ? userStats.balance : "0"}
+                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                  <div className="w-[25%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                </div>
+                <div className="w-[69px] top-[7px] left-[230px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
+                  <div className="relative h-14 flex flex-col justify-center items-center px-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-base leading-5 [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        {userStats ? userStats.balance : "100"}
+                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="Coin"
+                        src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
+                        width={16}
+                        height={16}
+                      />
                     </div>
-                    <div className="left-[11px] absolute top-[30px] [font-family:'Poppins',Helvetica] font-medium text-white text-sm tracking-[0] leading-5 whitespace-nowrap">
-                      +{userStats ? Math.floor(userStats.balance * 0.5) : "0"}
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        +{userStats ? Math.floor(userStats.balance * 0.5) : "50"}
+                      </div>
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        Coin
+                      </div>
                     </div>
-                    <Image
-                      className="absolute w-[17px] h-[13px] top-[34px] left-[43px]"
-                      alt="Pic"
-                      src="https://c.animaapp.com/3mn7waJw/img/pic-5.svg"
-                      width={17}
-                      height={13}
-                    />
                   </div>
                 </div>
               </div>
@@ -629,28 +644,31 @@ export const GameListSection = () => {
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.surveysCompleted + userStats.racesCompleted}/3 Challenges Finished (Daily)` : "0/3 Challenges Finished (Daily)"}
                 </div>
-                <Image
-                  className="absolute w-[177px] h-[11px] top-[71px] left-[5px]"
-                  alt="Progress bar"
-                  src="https://c.animaapp.com/3mn7waJw/img/progress-bar-2.svg"
-                  width={177}
-                  height={11}
-                />
-                <div className="w-14 top-2 left-[245px] absolute h-14 rounded overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
-                  <div className="relative w-16 h-14 -left-2 bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group-2@2x.png)] bg-[100%_100%]">
-                    <div className="left-[22px] absolute top-2 [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-5 whitespace-nowrap">
-                      10
+                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                  <div className="w-[10%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                </div>
+                <div className="w-14 top-2 left-[245px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
+                  <div className="relative h-14 flex flex-col justify-center items-center px-1">
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-base leading-5 [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        10
+                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="Coin"
+                        src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
+                        width={16}
+                        height={16}
+                      />
                     </div>
-                    <div className="left-[19px] absolute top-[30px] [font-family:'Poppins',Helvetica] font-medium text-white text-sm tracking-[0] leading-5 whitespace-nowrap">
-                      +5
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        +5
+                      </div>
+                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        XP
+                      </div>
                     </div>
-                    <Image
-                      className="absolute w-4 h-[13px] top-[34px] left-10"
-                      alt="Pic"
-                      src="https://c.animaapp.com/3mn7waJw/img/pic-6.svg"
-                      width={16}
-                      height={13}
-                    />
                   </div>
                 </div>
               </div>
@@ -659,34 +677,38 @@ export const GameListSection = () => {
 
               <div className="left-36 flex w-[87px] h-[30px] items-center gap-[169px] absolute top-[87px]">
                 <div className="relative w-[87px] h-[30px]">
-                  <div className="relative h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
-                    <div className="top-0 left-2.5 font-semibold text-lg leading-[normal] absolute [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                      {userStats ? userStats.xp + userStats.balance : "1200"}
+                  <div className="relative h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-center px-2">
+                    <div className="flex items-center gap-1">
+                      <div className="font-semibold text-lg leading-[normal] [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        {userStats ? userStats.xp + userStats.balance : "1200"}
+                      </div>
+                      <Image
+                        className="w-[20px] h-[20px]"
+                        alt="Coin"
+                        src="https://c.animaapp.com/3mn7waJw/img/image-3937-4@2x.png"
+                        width={20}
+                        height={20}
+                      />
                     </div>
-                    <Image
-                      className="w-[23px] h-6 top-px left-[54px] absolute"
-                      alt="Image"
-                      src="https://c.animaapp.com/3mn7waJw/img/image-3937-4@2x.png"
-                      width={23}
-                      height={24}
-                    />
                   </div>
                 </div>
               </div>
 
               <div className="left-[236px] flex w-[87px] h-[30px] items-center gap-[169px] absolute top-[87px]">
                 <div className="relative w-[87px] h-[30px]">
-                  <div className="relative w-20 h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
-                    <div className="top-0 left-2.5 font-semibold text-lg leading-[normal] absolute [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                      {userStats ? userStats.balance : "600"}
+                  <div className="relative w-20 h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-center px-2">
+                    <div className="flex items-center gap-1">
+                      <div className="font-semibold text-lg leading-[normal] [font-family:'Poppins',Helvetica] text-white tracking-[0]">
+                        {userStats ? userStats.balance : "600"}
+                      </div>
+                      <Image
+                        className="w-[18px] h-[18px]"
+                        alt="XP"
+                        src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                        width={18}
+                        height={18}
+                      />
                     </div>
-                    <Image
-                      className="absolute w-[23px] h-[18px] top-[5px] left-12"
-                      alt="Pic"
-                      src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
-                      width={23}
-                      height={18}
-                    />
                   </div>
                 </div>
               </div>
@@ -867,6 +889,9 @@ export const GameListSection = () => {
           </div>
         </div>
       </div>
+      
+      {/* Extra spacing to ensure content isn't hidden behind navigation */}
+      <div className="h-[150px]"></div>
     </div>
   );
 };
