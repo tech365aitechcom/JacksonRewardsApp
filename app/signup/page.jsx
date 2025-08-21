@@ -22,6 +22,7 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
+  const [countryCode, setCountryCode] = useState("+91");
 
 
   const handleInputChange = (field, value) => {
@@ -41,8 +42,11 @@ const SignUp = () => {
       setError("Please fill all the required fields.");
       return;
     }
-    if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+    if (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile)) {
       setError("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    } else if (countryCode !== "+91" && formData.mobile.length < 7) {
+      setError("Please enter a valid mobile number.");
       return;
     }
     if (formData.password.length < 8) {
@@ -55,7 +59,7 @@ const SignUp = () => {
     }
 
     setIsLoading(true);
-    const fullMobile = `+91${formData.mobile}`;
+    const fullMobile = `${countryCode}${formData.mobile}`;
 
     try {
       const [firstName, ...lastNameParts] = formData.name.trim().split(' ');
@@ -185,7 +189,7 @@ const SignUp = () => {
                   Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card-1@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="Email icon"
@@ -210,17 +214,7 @@ const SignUp = () => {
                   Mobile Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
-                  <div className="relative w-[314px] h-[55px]">
-                    <div className="absolute w-[314px] h-[55px] top-0 left-0">
-                      <Image
-                        className="absolute w-[314px] h-[55px] top-[5459px] left-[1637px]"
-                        alt="Rectangle"
-                        src="/img/rectangle-3.svg"
-                        width={314}
-                        height={55}
-                      />
-                      <div className="absolute top-0 left-0 bg-[url(https://c.animaapp.com/bkGH9LUL/img/rectangle-1.svg)] w-[314px] h-[55px] bg-[100%_100%]" />
-                    </div>
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="Phone icon"
@@ -228,12 +222,22 @@ const SignUp = () => {
                       width={17}
                       height={17}
                     />
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="absolute top-[17px] left-[50px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] bg-transparent border-none outline-none w-[50px]"
+                    >
+                      <option value="+91" className="bg-[#272052] text-[#d3d3d3]">+91</option>
+                      <option value="+1" className="bg-[#272052] text-[#d3d3d3]">+1</option>
+                      <option value="+44" className="bg-[#272052] text-[#d3d3d3]">+44</option>
+                      <option value="+61" className="bg-[#272052] text-[#d3d3d3]">+61</option>
+                    </select>
                     <input
                       type="tel"
                       value={formData.mobile}
                       onChange={(e) => handleInputChange("mobile", e.target.value.replace(/\D/g, ''))}
                       maxLength={10}
-                      className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
+                      className="absolute top-[17px] left-[105px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[190px]"
                       placeholder="Enter mobile number"
                       required
                     />
@@ -285,7 +289,18 @@ const SignUp = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute top-[17px] right-[20px] w-[17px] h-[17px]"
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                  />
+                  >
+                    {showPassword ? (
+                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1"/>
+                      </svg>
+                    ) : (
+                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -315,7 +330,18 @@ const SignUp = () => {
                     aria-label={
                       showConfirmPassword ? "Hide password" : "Show password"
                     }
-                  />
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1"/>
+                      </svg>
+                    ) : (
+                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
               </div>
 
