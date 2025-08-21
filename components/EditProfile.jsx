@@ -124,12 +124,12 @@ export const EditProfile = () => {
         className="relative w-full max-w-[390px] h-full bg-[#272052] mx-auto"
         data-model-id="2739:7886"
       >
-        <header className="absolute w-full h-24 top-[44px] left-0 px-4">
+        <header className="absolute w-full h-24 top-[10px] left-0 px-6 pt-4">
           <div className="relative w-full h-full flex items-center justify-between">
             <div
-              className="w-[58px] h-[58px] font-semibold text-[40px] [font-family:'Poppins',Helvetica] text-white tracking-[0] leading-[normal] flex items-center justify-center"
+              className="w-[48px] h-[48px] font-semibold text-[32px] [font-family:'Poppins',Helvetica] text-white tracking-[0] leading-[normal] flex items-center justify-center"
               role="img"
-              aria-label="Sun icon"
+              aria-label="Theme toggle"
             >
               ☀
             </div>
@@ -151,6 +151,9 @@ export const EditProfile = () => {
             </button>
           </div>
         </header>
+
+        {/* White divider below header */}
+        <div className="absolute w-full h-[3px] top-[96px] left-0 bg-white"></div>
 
         <div className="absolute w-[132px] h-[124px] top-[140px] left-1/2 transform -translate-x-1/2">
           <div className="relative w-full h-full">

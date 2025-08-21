@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { getOnboardingOptions } from '@/lib/api'
@@ -11,6 +11,9 @@ export default function AgeSelection() {
   const [ageOptions, setAgeOptions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const wheelRef = useRef(null)
+  const itemHeight = 50
 
   useEffect(() => {
     setCurrentStep(1)
@@ -20,6 +23,10 @@ export default function AgeSelection() {
         const data = await getOnboardingOptions('age_range')
         if (data && Array.isArray(data.options)) {
           setAgeOptions(data.options)
+          // Set initial selected index to middle option
+          if (data.options.length > 0) {
+            setSelectedIndex(Math.floor(data.options.length / 2))
+          }
         } else {
           setError('Could not parse age options.')
         }
@@ -34,12 +41,42 @@ export default function AgeSelection() {
     fetchOptions()
   }, [setCurrentStep])
 
+  // Center the wheel on the selected item when options are loaded
+  useEffect(() => {
+    if (ageOptions.length > 0 && wheelRef.current) {
+      const initialIndex = Math.floor(ageOptions.length / 2)
+      wheelRef.current.scrollTop = initialIndex * itemHeight
+    }
+  }, [ageOptions, itemHeight])
+
 
   const handleSelectAge = async (ageOptionId) => {
     await setAgeRange(ageOptionId)
     setTimeout(() => {
       router.push('/select-gender')
     }, 200)
+  }
+
+  const handleScroll = (e) => {
+    if (!ageOptions.length) return
+    
+    const scrollTop = e.target.scrollTop
+    const index = Math.round(scrollTop / itemHeight)
+    const clampedIndex = Math.max(0, Math.min(index, ageOptions.length - 1))
+    
+    if (clampedIndex !== selectedIndex) {
+      setSelectedIndex(clampedIndex)
+    }
+  }
+
+  const handleWheelClick = (index) => {
+    setSelectedIndex(index)
+    if (wheelRef.current) {
+      wheelRef.current.scrollTop = index * itemHeight
+    }
+    if (ageOptions[index]) {
+      handleSelectAge(ageOptions[index].id)
+    }
   }
 
 
@@ -59,42 +96,66 @@ export default function AgeSelection() {
 
       <div className='absolute inset-0 w-full flex items-center justify-center'>
         <div className='relative w-full mx-4'>
-          <div className='relative h-[250px] rounded-xl bg-transparent'>
-            <div className='absolute inset-0 rounded-xl overflow-hidden'>
-              <div className='flex flex-col items-center py-2'>
-                {isLoading && (
-                  <div className='text-white text-lg p-4'>Loading...</div>
-                )}
-                {error && (
-                  <div className='text-red-400 text-lg p-4'>{error}</div>
-                )}
-                {!isLoading &&
-                  !error &&
-                  ageOptions.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => handleSelectAge(option.id)}
-                      className={`items-center gap-3 px-3 py-2 w-full flex justify-center relative self-stretch rounded-xl ${ageRange === option.id ? 'bg-white' : 'bg-transparent'
-                        }`}
+          {isLoading && (
+            <div className='text-white text-lg text-center p-4'>Loading...</div>
+          )}
+          {error && (
+            <div className='text-red-400 text-lg text-center p-4'>{error}</div>
+          )}
+          {!isLoading && !error && (
+            <div className='relative h-[250px] rounded-xl bg-[rgba(255,255,255,0.1)] backdrop-blur-sm'>
+              {/* Wheel picker container */}
+              <div 
+                ref={wheelRef}
+                className='h-full overflow-y-scroll scrollbar-hide'
+                onScroll={handleScroll}
+                style={{
+                  scrollSnapType: 'y mandatory',
+                  scrollBehavior: 'smooth'
+                }}
+              >
+                {/* Padding items for centering */}
+                <div style={{ height: `${itemHeight * 2}px` }} />
+                
+                {ageOptions.map((option, index) => (
+                  <div
+                    key={option.id}
+                    onClick={() => handleWheelClick(index)}
+                    className={`flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                      selectedIndex === index 
+                        ? 'bg-white rounded-lg mx-4 shadow-lg transform scale-105' 
+                        : 'bg-transparent hover:bg-white/10'
+                    }`}
+                    style={{ 
+                      height: `${itemHeight}px`,
+                      scrollSnapAlign: 'center'
+                    }}
+                  >
+                    <div
+                      className={`[font-family:'Poppins',Helvetica] text-lg text-center tracking-[0] leading-6 transition-all duration-200 ${
+                        selectedIndex === index 
+                          ? 'text-[#6433aa] font-semibold' 
+                          : 'text-white font-normal opacity-60'
+                      }`}
                     >
-                      <div
-                        className={`[font-family:'Poppins-${ageRange === option.id ? 'SemiBold' : 'Regular'
-                          }',Helvetica] ${ageRange === option.id
-                            ? 'text-[#6433aa]'
-                            : 'text-white'
-                          } font-${ageRange === option.id ? 'semibold' : 'normal'
-                          } text-lg text-center tracking-[0] leading-6`}
-                      >
-                        {option.label}
-                      </div>
-                    </button>
-                  ))}
-
-                <div className='h-9 relative self-stretch w-full' />
+                      {option.label}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Padding items for centering */}
+                <div style={{ height: `${itemHeight * 2}px` }} />
               </div>
+              
+              {/* Center selection indicator */}
+              <div className='pointer-events-none absolute inset-0 flex items-center justify-center'>
+                <div className='w-full h-[50px] border-t-2 border-b-2 border-white/30 bg-white/5' />
+              </div>
+              
+              {/* Fade overlay */}
+              <div className='pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-b from-[rgba(39,32,82,0.8)] via-transparent to-[rgba(39,32,82,0.8)]' />
             </div>
-          </div>
-          <div className='pointer-events-none absolute w-full h-[210px] top-0 left-0 rounded-xl bg-[linear-gradient(180deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0.2)_20%,rgba(255,255,255,0)_50%,rgba(255,255,255,0.2)_80%,rgba(255,255,255,0.4)_100%)]' />
+          )}
         </div>
       </div>
 

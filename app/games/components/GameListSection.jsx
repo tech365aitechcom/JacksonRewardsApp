@@ -427,13 +427,13 @@ export const GameListSection = () => {
       </div>
 
       <div
-        className={`relative ${game.scoreWidth || "w-[62px]"} h-[55px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)]`}
+        className={`relative ${game.scoreWidth || "w-[70px]"} h-[55px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)]`}
       >
         <div className="top-2 left-[3px] text-base leading-5 absolute [font-family:'Poppins',Helvetica] font-medium text-white tracking-[0] whitespace-nowrap">
           {game.score.includes(".") ? game.score : ` ${game.score}`}
         </div>
         <Image
-          className="absolute w-[19px] h-[19px] top-[9px] left-[37px]"
+          className="absolute w-[19px] h-[19px] top-[9px] left-[43px]"
           alt="Coin"
           src={game.coinIcon}
           width={19}
@@ -443,7 +443,7 @@ export const GameListSection = () => {
           {game.bonus}
         </div>
         <Image
-          className="absolute w-[17px] h-[13px] top-[34px] left-[39px]"
+          className="absolute w-[17px] h-[13px] top-[34px] left-[45px]"
           alt="Pic"
           src={game.picIcon}
           width={17}
@@ -452,7 +452,7 @@ export const GameListSection = () => {
       </div>
 
       {game.hasStatusDot && (
-        <div className="absolute w-2 h-2 top-[26px] left-[253px] bg-[#8b92de] rounded" />
+        <div className="absolute w-2 h-2 top-[26px] left-[261px] bg-[#8b92de] rounded" />
       )}
     </div>
   );
@@ -522,12 +522,12 @@ export const GameListSection = () => {
                   </div>
                 </div>
 
-                <div className="relative w-[62px] h-[55px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)]">
+                <div className="relative w-[70px] h-[55px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)]">
                   <div className="top-2 left-[3px] text-base leading-5 absolute [font-family:'Poppins',Helvetica] font-medium text-white tracking-[0] whitespace-nowrap">
                     {game.score}
                   </div>
                   <Image
-                    className="absolute w-[19px] h-[19px] top-[9px] left-[37px]"
+                    className="absolute w-[19px] h-[19px] top-[9px] left-[43px]"
                     alt="Coin"
                     src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
                     width={19}
@@ -537,7 +537,7 @@ export const GameListSection = () => {
                     +{Math.floor(game.score * 0.1)}
                   </div>
                   <Image
-                    className="absolute w-[17px] h-[13px] top-[34px] left-[39px]"
+                    className="absolute w-[17px] h-[13px] top-[34px] left-[45px]"
                     alt="Pic"
                     src="https://c.animaapp.com/3mn7waJw/img/pic.svg"
                     width={17}
@@ -546,7 +546,7 @@ export const GameListSection = () => {
                 </div>
 
                 {!game.completed && (
-                  <div className="absolute w-2 h-2 top-[26px] left-[253px] bg-[#8b92de] rounded" />
+                  <div className="absolute w-2 h-2 top-[26px] left-[261px] bg-[#8b92de] rounded" />
                 )}
               </div>
             ))}
