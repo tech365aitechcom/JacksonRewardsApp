@@ -192,14 +192,14 @@ export default function MyProfile() {
   return (
     <div className="min-h-screen bg-black flex justify-center">
       <div
-        className="relative w-[375px] h-[2177px] bg-black overflow-hidden"
+        className="relative w-[375px] min-h-screen bg-black pb-8"
         data-model-id="2035:8508"
       >
         {/* Header */}
         <header className="flex flex-col w-[375px] items-start gap-2 px-5 py-3 absolute top-[54px] left-0">
-          <div className="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto] rounded-[32px]">
+          <div className="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto]">
             <button 
-              className="relative w-6 h-6" 
+              className="relative w-6 h-6 flex-shrink-0" 
               aria-label="Go back"
               onClick={() => router.back()}
             >
@@ -212,9 +212,11 @@ export default function MyProfile() {
               />
             </button>
 
-            <h1 className="relative w-[271px] [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[0] leading-5">
+            <h1 className="flex-1 text-center [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[0] leading-5">
               My Profile
             </h1>
+            
+            <div className="w-6 h-6"></div>
           </div>
         </header>
 
@@ -423,7 +425,7 @@ export default function MyProfile() {
                   src="https://c.animaapp.com/V1uc3arn/img/trophy@2x.png"
                 />
 
-                <h3 className="relative w-fit [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-base tracking-[0] leading-[normal]">
+                <h3 className="relative w-fit [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
                   Achievements
                 </h3>
               </div>
@@ -604,7 +606,7 @@ export default function MyProfile() {
 
           {/* Leadership Section */}
           <section className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-            <h3 className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-base tracking-[0] leading-[normal]">
+            <h3 className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
               Leadership
             </h3>
 
@@ -783,7 +785,7 @@ export default function MyProfile() {
 
           {/* Settings Section */}
           <section className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-            <h3 className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-base tracking-[0] leading-[normal]">
+            <h3 className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
               Settings
             </h3>
             <div className="flex flex-col gap-4 w-full">
@@ -835,7 +837,7 @@ export default function MyProfile() {
           </section>
         </main>
 
-        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-[10px] tracking-[0] leading-3 whitespace-nowrap">
+        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
         </div>
       </div>

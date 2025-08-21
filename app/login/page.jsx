@@ -146,7 +146,7 @@ export default function LoginPage() {
           </button>
 
           <div className="absolute w-[316px] h-[55px] top-[403px] left-[246px]">
-            <div className="relative w-[314px] h-[55px] bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card@2x.png)] bg-[100%_100%]">
+            <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
               <Image
                 className="absolute w-[17px] h-[17px] top-5 left-5"
                 alt="Email icon"
@@ -170,7 +170,7 @@ export default function LoginPage() {
             Email/ Phone Number
           </label>
 
-          <label className="absolute top-[489px] left-[246px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
+          <label className="absolute top-[473px] left-[246px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal] z-10">
             Password
           </label>
 
@@ -183,7 +183,7 @@ export default function LoginPage() {
           </button>
 
           <div className="absolute w-[314px] h-[55px] top-[497px] left-[247px]">
-            <div className="relative w-[314px] h-[55px] bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card@2x.png)] bg-[100%_100%]">
+            <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
               <div className="absolute w-[17px] h-[17px] top-5 left-5">
                 <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
                   <path
@@ -203,6 +203,25 @@ export default function LoginPage() {
                 aria-label="Password"
                 style={{ position: "relative" }}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-[17px] right-[20px] w-[17px] h-[17px] cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5Z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                    <circle cx="8.5" cy="8.5" r="3" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                  </svg>
+                ) : (
+                  <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                    <path d="M16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                    <line x1="2" y1="2" x2="15" y2="15" stroke="#d3d3d3" strokeWidth="1"/>
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
 
@@ -267,7 +286,7 @@ export default function LoginPage() {
 
               <div className="inline-flex items-center gap-5 relative flex-[0_0_auto]">
                 <button
-                  className="relative w-[58.1px] h-11 bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card-1@2x.png)] bg-[100%_100%] cursor-pointer flex items-center justify-center"
+                  className="relative w-[58.1px] h-11 rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={() => handleSocialLogin("google")}
                   type="button"
                   aria-label="Sign in with Google"
@@ -295,7 +314,7 @@ export default function LoginPage() {
                 </button>
 
                 <button
-                  className="bg-[url(https://c.animaapp.com/2Y7fJDnh/img/card-2@2x.png)] bg-[100%_100%] relative w-[58.1px] h-11 cursor-pointer"
+                  className="relative w-[58.1px] h-11 rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={() => handleSocialLogin("apple")}
                   type="button"
                   aria-label="Sign in with Apple"
@@ -310,18 +329,16 @@ export default function LoginPage() {
                 </button>
 
                 <button
-                  className="relative w-[58.1px] h-11 cursor-pointer"
+                  className="relative w-[58.1px] h-11 rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={() => handleSocialLogin("facebook")}
                   type="button"
                   aria-label="Sign in with Facebook"
                 >
-                  <Image
-                    className="w-full h-full"
-                    alt="Facebook login button"
-                    src="https://c.animaapp.com/2Y7fJDnh/img/buttons@2x.png"
-                    width={58.1}
-                    height={44}
-                  />
+                  <div className="w-[20px] h-[20px] flex items-center justify-center">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M20 10C20 4.477 15.523 0 10 0S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" fill="#1877F2"/>
+                    </svg>
+                  </div>
                 </button>
               </div>
             </div>

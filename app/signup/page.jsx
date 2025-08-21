@@ -110,7 +110,7 @@ const SignUp = () => {
         className="relative w-full min-h-screen bg-[#272052] flex justify-center"
         data-model-id="1322:2980"
       >
-        <div className="relative w-[375px] h-[1061px] bg-[#272052] overflow-hidden"
+        <div className="relative w-[375px] min-h-[1061px] bg-[#272052] overflow-hidden"
         >
           <div className="absolute w-[470px] h-[883px] -top-32 -left-3.5">
             <div className="absolute w-[358px] h-[358px] top-0 left-7 bg-[#af7de6] rounded-[179px] blur-[250px]" />
@@ -153,11 +153,11 @@ const SignUp = () => {
 
             <form
               onSubmit={handleSubmit}
-              className="w-[314px] absolute top-[274px] left-[50px] flex flex-col items-start gap-3"
+              className="w-[314px] absolute top-[274px] left-[50px] flex flex-col items-start gap-5"
             >
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Name
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
                   <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
@@ -182,7 +182,7 @@ const SignUp = () => {
 
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Email
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
                   <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card-1@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
@@ -207,7 +207,7 @@ const SignUp = () => {
 
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Mobile Number
+                  Mobile Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
                   <div className="relative w-[314px] h-[55px]">
@@ -265,7 +265,7 @@ const SignUp = () => {
 
               <div className="flex flex-col items-start gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
                   <div className="absolute w-[17px] h-[17px] top-5 left-5">
@@ -291,9 +291,14 @@ const SignUp = () => {
 
               <div className="flex flex-col items-start gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Confirm Password
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                  <div className="absolute w-[17px] h-[17px] top-5 left-5">
+                    <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                      <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                    </svg>
+                  </div>
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
@@ -313,6 +318,51 @@ const SignUp = () => {
                   />
                 </div>
               </div>
+
+              {/* Error Message Display */}
+              {error && (
+                <div className="w-full text-center">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              {/* CAPTCHA */}
+              <div className="w-full flex justify-center mt-4">
+                <Image
+                  className="w-[314px] h-[70px]"
+                  alt="Captcha verification"
+                  src="https://c.animaapp.com/bkGH9LUL/img/image-4040@2x.png"
+                  width={314}
+                  height={70}
+                />
+              </div>
+
+              {/* Sign Up Button */}
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="all-[unset] box-border w-full h-[50px] cursor-pointer disabled:opacity-50 mt-4"
+                type="submit"
+              >
+                <div className="relative w-full h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
+                  <div className="absolute top-[11px] left-1/2 transform -translate-x-1/2 [font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
+                    {isLoading ? "Signing Up..." : "Sign up"}
+                  </div>
+                </div>
+              </button>
+
+              {/* Sign In Link */}
+              <div className="w-full text-center mt-8">
+                <p className="[font-family:'Poppins',Helvetica] font-medium text-sm tracking-[0] leading-[normal]">
+                  <span className="text-white">Already have an account? </span>
+                  <button
+                    onClick={handleSignInClick}
+                    className="text-[#9098f2] cursor-pointer bg-transparent border-none outline-none [font-family:'Poppins',Helvetica] font-medium text-sm"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </div>
             </form>
 
             <div className="absolute w-[305px] h-[65px] top-[179px] left-[50px]">
@@ -325,39 +375,6 @@ const SignUp = () => {
             </div>
           </div>
 
-          {/* Error Message Display */}
-          {error && <p className="absolute top-[750px] left-0 right-0 w-[314px] mx-auto text-center text-red-400 text-sm">{error}</p>}
-
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="all-[unset] box-border absolute w-[314px] h-[50px] top-[881px] left-[50px] cursor-pointer disabled:opacity-50"
-            type="submit"
-          >
-            <div className="relative w-[314px] h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
-              <div className="absolute top-[11px] left-[122px] [font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
-                {isLoading ? "Signing Up..." : "Sign up"}
-              </div>
-            </div>
-          </button>
-
-          <p className="absolute top-[960px] left-[70px] [font-family:'Poppins',Helvetica] font-medium text-transparent text-sm tracking-[0] leading-[normal]">
-            <span className="text-white">Already have an account? </span>
-            <button
-              onClick={handleSignInClick}
-              className="text-[#9098f2] cursor-pointer bg-transparent border-none outline-none [font-family:'Poppins',Helvetica] font-medium text-sm"
-            >
-              Sign In
-            </button>
-          </p>
-
-          <Image
-            className="absolute w-[314px] h-[70px] top-[787px] left-[50px]"
-            alt="Captcha verification"
-            src="https://c.animaapp.com/bkGH9LUL/img/image-4040@2x.png"
-            width={314}
-            height={70}
-          />
         </div>
       </div>
     </div>

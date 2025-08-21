@@ -10,7 +10,7 @@ const Homepage = () => {
     <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
       <div className="absolute w-[375px] h-[49px] top-0 left-0 z-10">
         {/* <div className="absolute w-[375px] h-11 top-0 left-0 bg-[url(https://c.animaapp.com/xCaMzUYh/img/iphone-x--11-pro---black.svg)] bg-[100%_100%]" /> */}
-        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-[10px] tracking-[0] leading-3 whitespace-nowrap">
+        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
         </div>
       </div>
@@ -52,11 +52,11 @@ const RewardProgress = ({ stats }) => {
 
             {/* Static background and icons */}
             <img className="absolute w-[29px] h-[30px] top-1 left-[3px]" alt="Ellipse" src="https://c.animaapp.com/xCaMzUYh/img/ellipse-35.svg" />
-            <div className="absolute w-2 top-2 left-3 text-[#815c23] text-[14.9px] tracking-[0.02px] font-semibold leading-[normal]">{stats?.tier ?? 1}</div>
+            <div className="absolute w-2 top-2 left-3 text-white text-[14.9px] tracking-[0.02px] font-semibold leading-[normal]">{stats?.tier ?? 1}</div>
 
             {/* Progress Text */}
             <p className="absolute w-auto top-2.5 left-[101px] opacity-80 font-semibold text-transparent text-[14.9px]">
-              <span className="text-[#685512]">{currentProgress}</span>
+              <span className="text-white">{currentProgress}</span>
               <span className="text-[#8d741b80]">/{rewardGoal}</span>
             </p>
 
@@ -187,7 +187,7 @@ const HeaderSection = () => {
           />
         </div>
         <div className="flex flex-col w-[140px] items-start gap-1 relative">
-          <div className="relative self-stretch h-4 [font-family:'Poppins',Helvetica] font-normal text-[#ffffff99] text-sm tracking-[-0.17px] leading-[18px] whitespace-nowrap">
+          <div className="relative self-stretch h-4 [font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[-0.17px] leading-[18px] whitespace-nowrap">
             Welcome Back  {greeting}
           </div>
         </div>
@@ -241,6 +241,7 @@ const MainContentSection = () => {
       image: "https://c.animaapp.com/xCaMzUYh/img/image-3928@2x.png",
       bgImage: "https://c.animaapp.com/xCaMzUYh/img/oval-1@2x.png",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval.svg",
+      borderColor: "#FF69B4",
       isNew: false,
     },
     {
@@ -249,6 +250,7 @@ const MainContentSection = () => {
       image: "https://c.animaapp.com/xCaMzUYh/img/image-217@2x.png",
       bgGradient: "linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-2.svg",
+      borderColor: "#FF69B4",
       isNew: false,
     },
     {
@@ -257,6 +259,7 @@ const MainContentSection = () => {
       image: "https://c.animaapp.com/xCaMzUYh/img/image@2x.png",
       bgImage: "https://c.animaapp.com/xCaMzUYh/img/oval-4@2x.png",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-3.svg",
+      borderColor: "#FF69B4",
       isNew: true,
     },
     {
@@ -265,6 +268,7 @@ const MainContentSection = () => {
       image: "https://c.animaapp.com/xCaMzUYh/img/image-3926@2x.png",
       bgImage: "https://c.animaapp.com/xCaMzUYh/img/oval-6@2x.png",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-5.svg",
+      borderColor: "#FF69B4",
       isNew: false,
     },
     {
@@ -272,6 +276,7 @@ const MainContentSection = () => {
       name: "CS:Go Rall",
       image: "https://c.animaapp.com/xCaMzUYh/img/layer-30@2x.png",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-7.svg",
+      borderColor: "#FF69B4",
       isNew: false,
     },
     {
@@ -280,6 +285,7 @@ const MainContentSection = () => {
       image: "https://c.animaapp.com/xCaMzUYh/img/image-218@2x.png",
       bgGradient: "linear-gradient(180deg,rgba(43,113,59,1)_0%,rgba(250,212,39,1)_100%)",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-8.svg",
+      borderColor: "#FF69B4",
       isNew: false,
     },
   ];
@@ -350,7 +356,7 @@ const MainContentSection = () => {
       {dashboardData?.stats && <XpTierTracker stats={dashboardData.stats} />}
       <div className="flex flex-col items-start gap-2.5 pl-5 pr-0 py-0 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex w-[335px] items-center justify-between relative flex-[0_0_auto]">
-          <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-base tracking-[0] leading-[normal]">
+          <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
             Most Played
           </div>
           <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-[#8b92de] text-base tracking-[0] leading-[normal]">
@@ -361,16 +367,22 @@ const MainContentSection = () => {
           {mostPlayedGames.map((game) => (
             <div
               key={game.id}
-              className="items-start inline-flex flex-col gap-1.5 relative flex-[0_0_auto]"
+              className="items-start inline-flex flex-col gap-1.5 relative flex-[0_0_auto] cursor-pointer hover:scale-105 transition-transform duration-200"
             >
               <div
-                className={`relative w-[72px] h-[72px] bg-[url(${game.borderImage})] bg-[100%_100%]`}
+                className={`relative w-[72px] h-[72px] rounded-full`}
+                style={{
+                  border: `2px solid ${game.borderColor}`,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px ${game.borderColor}40`,
+                  background: `url(${game.borderImage})`,
+                  backgroundSize: '100% 100%'
+                }}
               >
                 <div
-                  className={`relative w-16 h-16 top-1 left-1 ${game.bgGradient ? `bg-[${game.bgGradient}]` : game.bgImage ? `bg-[url(${game.bgImage})] bg-cover bg-[50%_50%]` : "bg-[#00000033]"} ${!game.bgGradient && !game.bgImage ? "rounded-[32px]" : game.bgGradient ? "rounded-[32px]" : ""}`}
+                  className={`relative w-16 h-16 top-1 left-1 rounded-[32px] shadow-inner ${game.bgGradient ? `bg-[${game.bgGradient}]` : game.bgImage ? `bg-[url(${game.bgImage})] bg-cover bg-[50%_50%]` : "bg-[#00000033]"}`}
                 >
                   <img
-                    className={`absolute ${game.id === 1 ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]" : game.id === 2 ? "w-11 h-[49px] top-[7px] left-2.5 aspect-[0.89] object-cover" : game.id === 3 ? "w-[67px] h-[58px] top-1.5 left-0" : game.id === 4 ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover" : game.id === 5 ? "w-[68px] h-[42px] top-[11px] left-0" : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"}`}
+                    className={`absolute ${game.id === 1 ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]" : game.id === 2 ? "w-10 h-[44px] top-[10px] left-3 aspect-[0.89] object-cover" : game.id === 3 ? "w-[67px] h-[58px] top-1.5 left-0" : game.id === 4 ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover" : game.id === 5 ? "w-[68px] h-[42px] top-[11px] left-0" : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"}`}
                     alt="Image"
                     src={game.image}
                   />
@@ -392,7 +404,7 @@ const MainContentSection = () => {
       </div>
       <div className="inline-flex flex-col items-start gap-2.5 relative flex-[0_0_auto]">
         <div className="flex w-[335px] items-center justify-between relative flex-[0_0_auto]">
-          <p className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-xl tracking-[0] leading-[normal]">
+          <p className="relative w-fit mt-[-1.00px] text-white [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-xl tracking-[0] leading-[normal]">
             💸 💸 Fast Fun, Real Rewards!💸 💸
           </p>
           <div className="relative w-fit ml-[-53px] [font-family:'Poppins',Helvetica] font-medium text-transparent text-base tracking-[0] leading-[normal]">
