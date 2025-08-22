@@ -85,7 +85,7 @@ export default function LoginPage() {
 
 
   const handleSignUp = () => {
-    window.location.href = "/signup";
+    window.location.href = "/";
   };
 
   const handlePhoneLogin = () => {
