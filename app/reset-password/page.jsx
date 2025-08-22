@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { resetPassword } from '@/lib/api'; // <-- IMPORT THE API FUNCTION
 
-const ResetPassword = () => {
+const ResetPasswordComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState('');
@@ -17,32 +18,41 @@ const ResetPassword = () => {
     if (tokenFromUrl) {
       setToken(tokenFromUrl);
     } else {
-      setMessage('Invalid reset link. Please request a new password reset.');
+      setMessage('Invalid or missing reset token. Please request a new link.');
       setIsError(true);
     }
   }, [searchParams]);
 
+  // Enhanced validation function
   const validatePasswords = () => {
+    if (!newPassword || !confirmPassword) {
+      return 'Both password fields are required.';
+    }
     if (newPassword !== confirmPassword) {
       return 'Passwords do not match.';
     }
     if (newPassword.length < 8) {
       return 'Password must be at least 8 characters long.';
     }
-    return '';
+    if (!/[A-Z]/.test(newPassword)) {
+      return 'Password must contain at least one uppercase letter.';
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      return 'Password must contain at least one lowercase letter.';
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return 'Password must contain at least one number.';
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+      return 'Password must contain at least one special character.';
+    }
+    return ''; // All good
   };
 
   const isFormValid = newPassword && confirmPassword && validatePasswords() === '' && token;
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    
-    if (!token) {
-      setMessage('Invalid reset token.');
-      setIsError(true);
-      return;
-    }
-
     const validationError = validatePasswords();
     if (validationError) {
       setMessage(validationError);
@@ -55,34 +65,17 @@ const ResetPassword = () => {
     setIsError(false);
 
     try {
-      // Replace this URL with your actual backend URL
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-      const response = await fetch(`${baseUrl}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: token,
-          newPassword: newPassword,
-        }),
-      });
+      // Use the centralized API function
+      const data = await resetPassword(token, newPassword);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage('Password reset successful! Redirecting to login...');
-        setIsError(false);
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
-      } else {
-        setMessage(data.message || 'Failed to reset password. Please try again.');
-        setIsError(true);
-      }
+      setMessage(data.message || 'Password reset successful! Redirecting to login...');
+      setIsError(false);
+      setTimeout(() => {
+        router.push('/homepage');
+      }, 1000); // Increased timeout to let user read the message
     } catch (error) {
       console.error('Reset password error:', error);
-      setMessage('Network error. Please try again.');
+      setMessage(error.message || 'Failed to reset password. The link may be invalid or expired.');
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -96,106 +89,82 @@ const ResetPassword = () => {
   return (
     <div className="bg-[#272052] flex h-screen flex-row justify-center w-full relative overflow-hidden">
       <div className="bg-[#272052] overflow-hidden w-full max-w-[375px] relative">
-        {/* Background blur effects */}
+        {/* Background effects */}
         <div className="absolute w-[358px] h-[358px] top-0 left-[9px] bg-[#af7de6] rounded-[179px] blur-[250px]" />
-
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-[#20202033] backdrop-blur-[5px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(5px)_brightness(100%)]" />
+        <div className="absolute inset-0 bg-[#20202033] backdrop-blur-[5px]" />
 
         {/* Main content card */}
-        <div className="absolute w-[280px] h-[520px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-[15px] overflow-hidden [background:radial-gradient(50%_50%_at_50%_50%,rgba(134,47,148,1)_0%,rgba(6,9,78,1)_100%)] z-10">
-          <div className="absolute w-[168px] h-[81px] top-[25px] left-[51px]">
-            <div
-              className="absolute w-28 top-px left-[33px] [font-family:'Poppins',Helvetica] font-medium text-white text-[64px] text-center tracking-[0] leading-[normal]"
-              role="img"
-              aria-label="Key icon"
-            >
-              🔑
-            </div>
+        <div className="absolute w-[280px] h-auto min-h-[520px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-[15px] overflow-hidden [background:radial-gradient(50%_50%_at_50%_50%,rgba(134,47,148,1)_0%,rgba(6,9,78,1)_100%)] z-10 p-4">
+          <div className="relative w-full h-[81px] mt-2 flex justify-center items-center">
+            <div className="text-white text-[64px]" role="img" aria-label="Key icon">🔑</div>
           </div>
-
-          <h1 className="absolute top-[117px] left-[31px] [font-family:'Poppins',Helvetica] font-extrabold text-[#efefef] text-2xl tracking-[0] leading-[normal]">
+          <h1 className="text-center mt-4 [font-family:'Poppins',Helvetica] font-extrabold text-[#efefef] text-2xl">
             Reset Password
           </h1>
 
-          <div className="absolute w-[240px] h-[220px] top-[164px] left-4">
-            <p className="absolute w-[220px] top-0 left-[10px] [font-family:'Poppins',Helvetica] font-medium text-white text-[13px] text-center tracking-[0] leading-[normal]">
-              Enter your new password below to complete the password reset process.
+          <form onSubmit={handleResetPassword} className="mt-4 px-2">
+            <p className="[font-family:'Poppins',Helvetica] font-medium text-white text-[13px] text-center mb-4">
+              Enter your new password below to complete the reset process.
             </p>
 
             {/* New Password Field */}
-            <label className="absolute w-[134px] top-[50px] left-[10px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-              New Password
-            </label>
-
-            <div className="absolute w-[220px] h-[45px] top-[70px] left-[10px]">
-              <div className="relative w-full h-full bg-[rgba(255,255,255,0.1)] rounded-lg border border-[rgba(255,255,255,0.2)] backdrop-blur-sm">
+            <div className="mb-4">
+              <label className="block [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] mb-2">
+                New Password
+              </label>
+              <div className="relative w-full h-[45px] bg-[rgba(255,255,255,0.1)] rounded-lg border border-[rgba(255,255,255,0.2)] backdrop-blur-sm">
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full h-full px-4 bg-transparent border-none outline-none text-white [font-family:'Poppins',Helvetica] font-medium text-[14.3px] tracking-[0] leading-[normal] placeholder:text-[#d3d3d3]"
+                  className="w-full h-full px-4 bg-transparent border-none outline-none text-white [font-family:'Poppins',Helvetica] font-medium text-[14.3px] placeholder:text-[#d3d3d3]"
                   placeholder="Enter new password"
-                  aria-label="New password"
                   required
-                  minLength={8}
                 />
               </div>
             </div>
 
             {/* Confirm Password Field */}
-            <label className="absolute w-[134px] top-[125px] left-[10px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-              Confirm Password
-            </label>
-
-            <div className="absolute w-[220px] h-[45px] top-[145px] left-[10px]">
-              <div className="relative w-full h-full bg-[rgba(255,255,255,0.1)] rounded-lg border border-[rgba(255,255,255,0.2)] backdrop-blur-sm">
+            <div className="mb-4">
+              <label className="block [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] mb-2">
+                Confirm Password
+              </label>
+              <div className="relative w-full h-[45px] bg-[rgba(255,255,255,0.1)] rounded-lg border border-[rgba(255,255,255,0.2)] backdrop-blur-sm">
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full h-full px-4 bg-transparent border-none outline-none text-white [font-family:'Poppins',Helvetica] font-medium text-[14.3px] tracking-[0] leading-[normal] placeholder:text-[#d3d3d3]"
+                  className="w-full h-full px-4 bg-transparent border-none outline-none text-white [font-family:'Poppins',Helvetica] font-medium text-[14.3px] placeholder:text-[#d3d3d3]"
                   placeholder="Confirm new password"
-                  aria-label="Confirm password"
                   required
-                  minLength={8}
                 />
               </div>
             </div>
 
             {/* Error/Success Message */}
             {message && (
-              <div className={`absolute w-[220px] top-[200px] left-[10px] text-xs [font-family:'Poppins',Helvetica] font-medium text-center ${
-                isError ? 'text-red-400' : 'text-green-400'
-              }`}>
+              <div className={`w-full mt-2 text-xs [font-family:'Poppins',Helvetica] font-medium text-center ${isError ? 'text-red-400' : 'text-green-400'}`}>
                 {message}
               </div>
             )}
-          </div>
 
-          <button
-            onClick={handleResetPassword}
-            disabled={!isFormValid || isLoading}
-            className={`absolute w-[210px] h-[39px] top-[400px] left-[30px] rounded-lg overflow-hidden transition-all duration-200 ${
-              isFormValid && !isLoading
-                ? 'bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 cursor-pointer' 
-                : 'bg-gray-500 cursor-not-allowed opacity-50'
-            }`}
-            aria-label="Reset password"
-            type="button"
-          >
-            <div className="flex items-center justify-center w-full h-full [font-family:'Poppins',Helvetica] font-semibold text-white text-sm text-center tracking-[0] leading-[normal]">
-              {isLoading ? 'Resetting...' : 'Reset Password'}
-            </div>
-          </button>
+            <button
+              type="submit"
+              disabled={!isFormValid || isLoading}
+              className={`w-full h-[39px] mt-6 rounded-lg transition-all duration-200 ${isFormValid && !isLoading ? 'bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90' : 'bg-gray-500 cursor-not-allowed opacity-50'}`}
+            >
+              <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm">
+                {isLoading ? 'Resetting...' : 'Reset Password'}
+              </div>
+            </button>
+          </form>
 
           <button
             onClick={handleBackToLogin}
-            className="absolute top-[460px] left-[90px] text-center"
-            aria-label="Back to login"
+            className="w-full mt-4 text-center"
             type="button"
           >
-            <div className="[font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-sm tracking-[0] leading-5 cursor-pointer">
+            <div className="[font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-sm cursor-pointer">
               Back to Login
             </div>
           </button>
@@ -204,5 +173,14 @@ const ResetPassword = () => {
     </div>
   );
 };
+
+
+// Wrap with Suspense for useSearchParams
+const ResetPassword = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ResetPasswordComponent />
+  </Suspense>
+);
+
 
 export default ResetPassword;
