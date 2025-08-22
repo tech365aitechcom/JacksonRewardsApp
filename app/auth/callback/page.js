@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 import Image from "next/image"; // Import Image for decorative elements
@@ -46,7 +46,7 @@ const ErrorIcon = () => (
   </svg>
 );
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { handleSocialAuthCallback } = useAuth();
@@ -161,5 +161,17 @@ export default function AuthCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen w-full bg-[#272052] flex justify-center items-center">
+        <div className="border-gray-500 h-16 w-16 animate-spin rounded-full border-4 border-t-[#af7de6]" />
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
