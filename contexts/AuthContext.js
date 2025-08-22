@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
       return handleAuthSuccess(data);
     } catch (error) {
       console.error("❌ signIn failed:", error);
-      return { ok: false, error: error.message };
+      return { ok: false, error: error.body || { error: error.message } };
     } finally {
       setIsLoading(false);
       console.log("⏹️ signIn finished, isLoading =", false);
@@ -94,7 +94,7 @@ export function AuthProvider({ children }) {
       return handleAuthSuccess(data);
     } catch (error) {
       console.error("❌ signUpAndSignIn failed:", error);
-      return { ok: false, error: error.message };
+      return { ok: false, error: error.body || { error: error.message } };
     } finally {
       setIsLoading(false);
       console.log("⏹️ signUpAndSignIn finished, isLoading =", false);
@@ -137,9 +137,5 @@ export function AuthProvider({ children }) {
 
   console.log("📡 [AuthProvider] Context Value:", value);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!isLoading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

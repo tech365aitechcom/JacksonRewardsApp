@@ -18,7 +18,7 @@ const SignUp = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
@@ -26,7 +26,8 @@ const SignUp = () => {
 
 
   const handleInputChange = (field, value) => {
-    setError("");
+    // Clear errors when user starts typing
+    setError({});
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -35,27 +36,39 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError({});
 
-    // --- Form Validations ---
-    if (!formData.name || !formData.email || !formData.mobile || !formData.password) {
-      setError("Please fill all the required fields.");
-      return;
+    // --- BUG FIX: Implement robust, field-specific client-side validation ---
+    const clientErrors = {};
+    if (!formData.name.trim()) {
+      clientErrors.name = "Name is required.";
     }
-    if (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile)) {
-      setError("Please enter a valid 10-digit Indian mobile number.");
-      return;
-    } else if (countryCode !== "+91" && formData.mobile.length < 7) {
-      setError("Please enter a valid mobile number.");
-      return;
+    if (!formData.email.trim()) {
+      clientErrors.email = "Email is required.";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      clientErrors.email = "Please enter a valid email address.";
     }
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
-      return;
+    if (!formData.mobile.trim()) {
+      clientErrors.mobile = "Mobile number is required.";
+    } else if (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile)) {
+      clientErrors.mobile = "Please enter a valid 10-digit Indian mobile number.";
     }
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+    if (!formData.password) {
+      clientErrors.password = "Password is required.";
+    } else if (formData.password.length < 8) {
+      clientErrors.password = "Password must be at least 8 characters long.";
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)) {
+      clientErrors.password = "Password must include uppercase, lowercase, and a number.";
+    }
+    if (!formData.confirmPassword) {
+      clientErrors.confirmPassword = "Please confirm your password.";
+    } else if (formData.password !== formData.confirmPassword) {
+      clientErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (Object.keys(clientErrors).length > 0) {
+      setError(clientErrors);
+      return; // Stop submission if there are client-side errors
     }
 
     setIsLoading(true);
@@ -64,21 +77,14 @@ const SignUp = () => {
     try {
       const [firstName, ...lastNameParts] = formData.name.trim().split(' ');
       const lastName = lastNameParts.join(' ') || '-';
-
-      // 1. Get all the collected onboarding data from the Zustand store
       const onboardingData = useOnboardingStore.getState();
-
-      // 2. Construct a complete user object with both form data AND onboarding data
       const fullSignupData = {
-        // Data from this signup form
         firstName,
         lastName,
         email: formData.email,
         mobile: fullMobile,
         password: formData.password,
-        otp: "123456", // Dummy OTP as backend marks user verified
-
-        // Data from the onboarding store
+        otp: "123456",
         gender: onboardingData.gender,
         ageRange: onboardingData.ageRange,
         gamePreferences: onboardingData.gamePreferences,
@@ -87,19 +93,28 @@ const SignUp = () => {
         dailyEarningGoal: onboardingData.dailyEarningGoal,
       };
 
-      // 3. Call the signUpAndSignIn function with the complete data payload
       const result = await signUpAndSignIn(fullSignupData);
 
       if (result.ok) {
-        // On success, AuthContext handles saving the token/user and resetting the onboarding store.
-        // We just need to navigate to the next page.
         router.push('/permissions');
       } else {
-        // If signup fails, display the error from the context
-        setError(result.error || "Signup failed. An unknown error occurred.");
+        // BUG FIX: Handle structured backend errors correctly
+        const backendError = result?.error;
+        if (backendError && backendError.errors) {
+          const newErrors = {};
+          backendError.errors.forEach(err => {
+            if (err.param) newErrors[err.param] = err.msg;
+          });
+          setError(newErrors);
+        } else {
+          const errorMessage = backendError?.error || backendError?.message || "An unknown error occurred. Please try again.";
+          setError({ form: errorMessage });
+        }
       }
-    } catch (err) {
-      setError(err.message || "An error occurred. Please check your details and try again.");
+    }
+    catch (err) {
+      // BUG FIX: Set a 'form' error for generic failures
+      setError({ form: err.message || "An error occurred. Please check your details and try again." });
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +198,7 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
-
+              {error.name && <p className="text-red-400 text-xs -mt-3">{error.name}</p>}
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Email <span className="text-red-500">*</span>
@@ -208,6 +223,7 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
+              {error.email && <p className="text-red-400 text-xs -mt-3">{error.email}</p>}
 
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
@@ -244,6 +260,7 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
+              {error.mobile && <p className="text-red-400 text-xs -mt-3">{error.mobile}</p>}
 
               {showOtp && (<div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
@@ -292,17 +309,19 @@ const SignUp = () => {
                   >
                     {showPassword ? (
                       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
-                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1"/>
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1" />
                       </svg>
                     ) : (
                       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
                       </svg>
                     )}
                   </button>
                 </div>
               </div>
+              {error.password && <p className="text-red-400 text-xs">{error.password}</p>}
+
 
               <div className="flex flex-col items-start gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
@@ -333,25 +352,25 @@ const SignUp = () => {
                   >
                     {showConfirmPassword ? (
                       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
-                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1"/>
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1" />
                       </svg>
                     ) : (
                       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
                       </svg>
                     )}
                   </button>
                 </div>
               </div>
+              {error.confirmPassword && <p className="text-red-400 text-xs">{error.confirmPassword}</p>}
 
               {/* Error Message Display */}
-              {error && (
+              {error.form && (
                 <div className="w-full text-center">
-                  <p className="text-red-400 text-sm">{error}</p>
+                  <p className="text-red-400 text-sm">{error.form}</p>
                 </div>
               )}
-
               {/* CAPTCHA */}
               <div className="w-full flex justify-center mt-4">
                 <Image
