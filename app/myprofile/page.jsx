@@ -176,7 +176,7 @@ export default function MyProfile() {
 
         <main className="flex flex-col w-[375px] items-center gap-6 absolute top-[110px] -left-px">
           {/* ---------------- Profile Section ---------------- */}
-          <section className="flex flex-col w-[335px] items-center gap-3">
+          <section className="flex flex-col w-[335px] items-center gap-2">
             {/* Avatar + Edit holder */}
             <div className="relative">
               {/* Avatar */}
@@ -219,40 +219,13 @@ export default function MyProfile() {
               {((profile?.firstName || "Player") + " " + (profile?.lastName || "")).trim()}
             </h2>
 
-            <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 shadow-[0px_9.91px_14.86px_#eab02066]">
-                <div className="relative w-8 h-8">
-                  <Image
-                    width={29}
-                    height={29}
-                    className="absolute top-0 left-0"
-                    alt="Star"
-                    src="https://c.animaapp.com/V1uc3arn/img/star-7.svg"
-                  />
-                  <Image
-                    width={22}
-                    height={22}
-                    className="absolute top-1 left-1"
-                    alt="Rectangle"
-                    src="https://c.animaapp.com/V1uc3arn/img/rectangle-1485.svg"
-                  />
-                  <Image
-                    width={11}
-                    height={8}
-                    className="absolute top-3 left-[11px]"
-                    alt="Check icon"
-                    src="https://c.animaapp.com/V1uc3arn/img/icon-navigation-check-24px.svg"
-                  />
-                  <Image
-                    width={22}
-                    height={22}
-                    className="absolute top-[5px] left-[5px]"
-                    alt="Ellipse"
-                    src="https://c.animaapp.com/V1uc3arn/img/ellipse-10.svg"
-                  />
-                </div>
-              </div>
-              <span className="text-[#fefefe] text-sm">
+            <div className="flex  items-center justify-center gap-">
+              <img
+                src="/badge.png"
+                alt="Badge"
+                className="w-12 h-12 pt-2 flex-shrink-0 object-contain"
+              />
+              <span className="text-[#fefefe] pb-2 text-base font-medium">
                 {vipStatus?.level || "BRONZE"} Badge
               </span>
             </div>
