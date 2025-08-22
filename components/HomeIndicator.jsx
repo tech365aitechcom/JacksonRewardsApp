@@ -29,7 +29,7 @@ export const HomeIndicator = ({ activeTab }) => {
     },
     {
       id: "games",
-      icon: "https://c.animaapp.com/Tbz6Qwwg/img/games.svg",
+      icon: "/game.png",
       label: "My Games",
       route: "/games",
     },
@@ -44,13 +44,13 @@ export const HomeIndicator = ({ activeTab }) => {
       id: "wallet",
       icon: "https://c.animaapp.com/Tbz6Qwwg/img/wallet@2x.png",
       label: "My Wallet",
-      route: "/wallet",
+      // route: "/wallet",
     },
     {
       id: "cash",
       icon: "https://c.animaapp.com/Tbz6Qwwg/img/money.svg",
       label: "Cash Coach",
-      route: "/cash-coach",
+      // route: "/cash-coach",
     },
   ];
 
@@ -62,15 +62,15 @@ export const HomeIndicator = ({ activeTab }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 w-full max-w-[375px] mx-auto h-[157px] z-[9999] bg-black"
+      className="fixed bottom-0 left-0 right-0 w-full h-[157px] z-[9999] bg-black"
       data-model-id="730:32095"
       role="navigation"
       aria-label="Main navigation"
       style={{
         position: 'fixed',
         bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        left: 0,
+        right: 0,
         zIndex: 9999,
         backgroundColor: 'black'
       }}
@@ -85,10 +85,10 @@ export const HomeIndicator = ({ activeTab }) => {
           aria-hidden="true"
         />
 
-        <div className="absolute w-[375px] h-20 top-9 left-0">
+        <div className="absolute w-full max-w-[375px] h-20 top-9 left-1/2 transform -translate-x-1/2">
           <div className="relative h-[113px] -top-5">
             <img
-              className="absolute w-[375px] h-[103px] top-2.5 left-0"
+              className="absolute w-full h-[103px] top-2.5 left-0"
               alt=""
               src="https://c.animaapp.com/Tbz6Qwwg/img/botton-nav@2x.png"
               role="presentation"
@@ -129,10 +129,11 @@ export const HomeIndicator = ({ activeTab }) => {
               tabIndex={0}
             >
               <img
-                className="relative w-[35px] h-[16.28px]"
+                className="relative w-[35px] h-[16.28px] bg-transparent"
                 alt=""
-                src="https://c.animaapp.com/Tbz6Qwwg/img/games.svg"
+                src="/game.png"
                 role="presentation"
+                style={{ filter: 'brightness(1) contrast(1)', background: 'transparent' }}
               />
 
               <span className={`relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${currentActiveTab === "games" ? "text-white" : "text-[#ffffffb2]"}`}>
@@ -164,7 +165,7 @@ export const HomeIndicator = ({ activeTab }) => {
 
             <button
               className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-[229px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg p-1"
-              onClick={() => handleTabClick("wallet", "/wallet")}
+              onClick={() => handleTabClick("wallet", null)}
               aria-label="Navigate to My Wallet"
               tabIndex={0}
             >
@@ -192,7 +193,7 @@ export const HomeIndicator = ({ activeTab }) => {
 
             <button
               className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-[300px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg p-1"
-              onClick={() => handleTabClick("cash", "/cash-coach")}
+              onClick={() => handleTabClick("cash", null)}
               aria-label="Navigate to Cash Coach"
               tabIndex={0}
             >

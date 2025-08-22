@@ -6,11 +6,154 @@ import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
 import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
 import { HomeIndicator } from "../../components/HomeIndicator"; // 
 import { WelcomeOffer } from "../../components/WelcomeOffer";
+
+const Frame = () => {
+  const actionButtons = [
+    {
+      id: 1,
+      icon: "https://c.animaapp.com/JKj0xq2Q/img/group-2@2x.png",
+      alt: "Group",
+      isActive: false,
+    },
+    {
+      id: 2,
+      icon: "https://c.animaapp.com/JKj0xq2Q/img/vector.svg",
+      alt: "Vector",
+      isActive: true,
+      badge: "5/5 left",
+    },
+    {
+      id: 3,
+      icon: "https://c.animaapp.com/JKj0xq2Q/img/group-3@2x.png",
+      alt: "Group",
+      isActive: false,
+    },
+  ];
+
+  return (
+    <div className="relative w-[335px] h-[470px] mx-auto" data-model-id="2630:15320">
+      <nav
+        className="absolute w-[254px] h-[71px] top-[406px] left-10"
+        role="navigation"
+        aria-label="Action buttons"
+      >
+        {actionButtons.map((button, index) => (
+          <div
+            key={button.id}
+            className={`h-[62px] absolute w-[62px] top-0 ${index === 0 ? "left-0" : index === 1 ? "left-24" : "left-48"}`}
+          >
+            {button.isActive ? (
+              <div className="relative h-[71px]">
+                <button
+                  className="absolute w-[62px] h-[62px] top-0 left-0 rounded-[31px] border-2 border-solid border-[#f7b84b] bg-transparent cursor-pointer hover:bg-[#f7b84b]/10 transition-colors"
+                  aria-label="Active action button"
+                >
+                  <img
+                    className="absolute w-6 h-6 top-[19px] left-[19px]"
+                    alt={button.alt}
+                    src={button.icon}
+                  />
+                </button>
+                <div className="absolute w-[51px] h-[22px] top-[49px] left-[5px] bg-[#f1b24a] rounded overflow-hidden">
+                  <span className="absolute top-0.5 left-1 [font-family:'Poppins',Helvetica] font-normal text-white text-xs tracking-[0] leading-4 whitespace-nowrap">
+                    {button.badge}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="h-[62px] w-[62px] rounded-[31px] bg-transparent cursor-pointer hover:bg-white/10 transition-colors"
+                aria-label="Action button"
+              >
+                <img
+                  className="h-[62px] w-[62px]"
+                  alt={button.alt}
+                  src={button.icon}
+                />
+              </button>
+            )}
+          </div>
+        ))}
+      </nav>
+
+      <main className="absolute w-[335px] h-[335px] top-[-9px] left-0 rounded-[12px_12px_0px_0px]">
+        <img
+          className="absolute w-52 h-[244px] top-[60px] left-[73px]"
+          alt="Frame"
+          src="https://c.animaapp.com/JKj0xq2Q/img/frame-2.svg"
+        />
+
+        <img
+          className="absolute w-52 h-[244px] top-[60px] left-[73px]"
+          alt="Frame"
+          src="https://c.animaapp.com/JKj0xq2Q/img/frame-3.svg"
+        />
+
+        <div className="absolute w-[335px] h-[335px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden border-t [border-top-style:solid] border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#3a3674] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
+          <div className="relative w-[302px] h-[319px] top-4 left-[18px]">
+            <img
+              className="absolute w-[300px] h-[290px] top-[29px] left-0 aspect-[1]"
+              alt="Game screenshot"
+              src="https://c.animaapp.com/JKj0xq2Q/img/image-3930@2x.png"
+            />
+
+            <img
+              className="absolute w-[210px] h-10 top-[18px] left-11 aspect-[5.2]"
+              alt="Game logo"
+              src="https://c.animaapp.com/JKj0xq2Q/img/image-3931@2x.png"
+            />
+
+            <div className="absolute w-[74px] h-[25px] top-0 left-[228px]">
+              <div className="relative w-[72px] h-[25px] bg-[#ffffff4f] rounded-[5.32px] backdrop-blur-[2.66px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(2.66px)_brightness(100%)]">
+                <img
+                  className="absolute w-[13px] h-2.5 top-2 left-[7px]"
+                  alt="Views icon"
+                  src="https://c.animaapp.com/JKj0xq2Q/img/vector-1.svg"
+                />
+
+                <span className="absolute top-[3px] left-[25px] [font-family:'Poppins',Helvetica] font-bold text-white text-[13px] tracking-[0] leading-[normal]">
+                  10.4 K
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer className="absolute w-[335px] h-14 top-[326px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.5)_0%,rgba(113,106,231,0.5)_100%)]">
+        <div className="relative w-[210px] h-[41px] top-[7px] left-3">
+          <p className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-normal text-white text-[13px] tracking-[0] leading-[normal]">
+            <span className="font-light">
+              Complete Only 10 Tasks <br />
+            </span>
+
+            <span className="font-semibold">
+              Earn upto 100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;
+              50&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;points
+            </span>
+          </p>
+
+          <img
+            className="absolute w-[17px] h-[18px] top-[23px] left-[90px] aspect-[0.97]"
+            alt="Currency icon"
+            src="https://c.animaapp.com/JKj0xq2Q/img/image-3937@2x.png"
+          />
+
+          <img
+            className="absolute w-[21px] h-[19px] top-[22px] left-[145px]"
+            alt="Points icon"
+            src="https://c.animaapp.com/JKj0xq2Q/img/pic.svg"
+          />
+        </div>
+      </footer>
+    </div>
+  );
+};
 const Homepage = () => {
   return (
-    <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
+    <div className="relative w-full min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
       <div className="absolute w-full h-[49px] top-0 left-0 z-10 px-5">
-        <div className="absolute top-[37px] left-0 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
+        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
         </div>
       </div>
@@ -40,7 +183,7 @@ const RewardProgress = ({ stats }) => {
   };
 
   return (
-    <div className="relative w-[335px] h-[135px]" data-model-id="1151:33569">
+    <div className="relative w-full max-w-[335px] h-[135px]" data-model-id="1151:33569">
       <div className="relative w-[337px] h-[135px]">
         <div className="absolute w-[337px] h-[135px] top-0 left-0">
           <div className="relative w-[335px] h-[135px] bg-black">
@@ -110,7 +253,11 @@ const RewardProgress = ({ stats }) => {
           </div>
         </div>
 
-        <div className="absolute w-3 h-[11px] top-[85px] left-[99px] bg-[#ffd700] rounded-sm"></div>
+        <img
+          className="absolute w-3 h-[11px] top-[85px] left-[99px]"
+          alt="Star icon"
+          src="https://c.animaapp.com/FQEXnMXW/img/vector.svg"
+        />
       </div>
     </div>
   );
@@ -136,7 +283,7 @@ const XpTierTracker = ({ stats }) => {
   };
 
   return (
-    <div className="relative w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
+    <div className="relative w-full max-w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
       <div className="absolute w-[300px] h-[11px] top-[90px] left-[18px]">
         <div className="relative w-[304px] h-6 -top-1.5 -left-1">
           <div className="absolute w-[304px] h-[19px] top-0.5 left-0 bg-[#373737] rounded-[32px] border-4 border-solid border-[#ffffff33]" />
@@ -159,8 +306,12 @@ const XpTierTracker = ({ stats }) => {
         You&#39;re off to a great start!
       </h2>
 
-      <div className="absolute w-10 h-8 top-[15px] left-4 bg-white rounded-full flex items-center justify-center">
-        <span className="text-black font-bold text-sm">XP</span>
+      <div className="absolute w-10 h-8 top-[15px] left-4  rounded-full flex items-center justify-center">
+        <img
+          src="/Pic.png"
+          alt="XP"
+          className="w-6 h-6"
+        />
       </div>
 
       <div className="absolute w-[153px] h-[21px] top-[113px] left-[18px]">
@@ -172,8 +323,12 @@ const XpTierTracker = ({ stats }) => {
           {progressData.currentXp.toLocaleString()}
         </div>
 
-        <div className="absolute w-5 h-[18px] top-[3px] left-[41px] bg-[#FFD700] rounded-sm flex items-center justify-center">
-          <span className="text-black font-bold text-xs">XP</span>
+        <div className="absolute w-5 h-[18px] top-[3px] left-[41px]  rounded-sm flex items-center justify-center">
+          <img
+            src="/Pic.png"
+            alt="XP"
+            className="w-5 h-5"
+          />
         </div>
       </div>
 
@@ -235,7 +390,6 @@ const HeaderSection = () => {
   }, [token, user]);
 
   const handleProfileClick = () => {
-    console.log('Profile clicked, navigating to /myprofile');
     router.push('/myprofile');
   };
   const handleWalletClick = () => router.push('/wallet'); // Example route, adjust as needed
@@ -247,26 +401,30 @@ const HeaderSection = () => {
   const greeting = `Hi ${firstName}! 👋`;
 
   return (
-    <header className="absolute top-[66px] left-0 w-full px-5 bg-transparent">
+    <header className="absolute top-[66px] left-0 w-full px-5 bg-transparent z-20">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
-          <div
-            className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity duration-200"
-            onClick={handleProfileClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleProfileClick();
-              }
+          <button
+            className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 z-50 rounded-full overflow-hidden"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleProfileClick();
             }}
+            type="button"
+            aria-label="Go to My Profile"
           >
             <img
-              className="w-full h-full"
-              alt="Group"
-              src="https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
+              className="w-full h-full pointer-events-none rounded-full object-cover"
+              alt="Profile"
+              src={profile?.profile?.avatar || "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"}
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.log('Avatar failed to load, falling back to default');
+                e.target.src = "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png";
+              }}
             />
-          </div>
+          </button>
           <div className="flex flex-col items-start gap-1">
             <div className="[font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[-0.17px] leading-[18px]">
               Welcome Back {greeting}
@@ -327,10 +485,10 @@ const MainContentSection = () => {
     },
     {
       id: 2,
-      name: "Sugar Rush",
-      image: "https://c.animaapp.com/xCaMzUYh/img/image-217@2x.png",
-      bgGradient: "linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)",
-      borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-2.svg",
+      name: "CS:Go Rall",
+      image: "https://c.animaapp.com/xCaMzUYh/img/layer-30@2x.png",
+      bgGradient: "linear-gradient(180deg,rgba(50,50,50,1)_0%,rgba(30,30,30,1)_100%)",
+      borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-7.svg",
       borderColor: "#FF69B4",
       isNew: false,
     },
@@ -354,9 +512,10 @@ const MainContentSection = () => {
     },
     {
       id: 5,
-      name: "CS:Go Rall",
-      image: "https://c.animaapp.com/xCaMzUYh/img/layer-30@2x.png",
-      borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-7.svg",
+      name: "Sugar Rush",
+      image: "https://c.animaapp.com/xCaMzUYh/img/image-217@2x.png",
+      bgGradient: "linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)",
+      borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-2.svg",
       borderColor: "#FF69B4",
       isNew: false,
     },
@@ -432,7 +591,7 @@ const MainContentSection = () => {
   }
 
   return (
-    <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-6 pt-36 px-5 relative">
+    <div className="flex flex-col w-full items-center gap-6 pt-36 px-5 relative">
       {dashboardData?.stats && <RewardProgress stats={dashboardData.stats} />}
       {dashboardData?.stats && <XpTierTracker stats={dashboardData.stats} />}
       <div className="flex flex-col items-start gap-4 relative w-full">
@@ -493,141 +652,7 @@ const MainContentSection = () => {
         {/* Welcome Offer Component */}
         <WelcomeOffer />
         
-        <div className="relative w-full h-[557px] rounded-[14px] overflow-hidden shadow-[0px_14px_20px_#746ee85c] bg-[linear-gradient(180deg,rgba(94,152,219,1)_0%,rgba(113,106,231,1)_100%)]">
-          <div className="absolute w-[372px] h-[155px] top-[-23px] -left-9">
-            <div className="absolute w-[372px] h-[155px] top-0 left-0">
-              <div className="absolute w-[161px] h-[145px] top-0 left-0 rounded-[80.5px/72.5px] bg-[linear-gradient(180deg,rgba(27,204,231,1)_0%,rgba(154,207,251,0.01)_100%)]" />
-              <div className="absolute w-[337px] h-8 top-[22px] left-[34px] border border-solid border-[#ffffff80] bg-[linear-gradient(331deg,rgba(100,51,170,1)_0%,rgba(0,150,237,1)_100%)]">
-                <div className="absolute top-[7px] left-3.5 [font-family:'Poppins',Helvetica] font-bold text-white text-sm tracking-[0] leading-4 whitespace-nowrap">
-                  Welcome Offer
-                </div>
-                <div className="absolute w-[98px] h-[23px] top-[5px] left-[233px] bg-[#2f3ba0] rounded-lg">
-                  <div className="relative w-[89px] h-[21px] top-px left-[3px]">
-                    <div className="absolute top-1.5 left-[25px] [text-shadow:0px_0.66px_0px_#000000] [-webkit-text-stroke:0.4px_#000000] [font-family:'Lilita_One',Helvetica] font-normal text-white text-sm tracking-[-0.07px] leading-[8.3px] whitespace-nowrap">
-                      23h:20min
-                    </div>
-                    <img
-                      className="absolute w-[29px] h-[21px] top-0 left-0 aspect-[1.33] object-cover"
-                      alt="Image"
-                      src="https://c.animaapp.com/xCaMzUYh/img/image-3993@2x.png"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col w-[174px] items-start absolute top-[66px] left-[54px]">
-                <div className="relative self-stretch mt-[-1.00px] font-medium text-white text-xl leading-7 [font-family:'Poppins',Helvetica] tracking-[0]">
-                  Choose 3 games
-                </div>
-                <div className="relative self-stretch w-full h-[27px]">
-                  <div className="absolute w-[77px] -top-px left-12 font-normal text-white text-base leading-7 whitespace-nowrap [font-family:'Poppins',Helvetica] tracking-[0]">
-                    & play for
-                  </div>
-                  <img
-                    className="absolute w-[42px] h-px top-3.5 left-0"
-                    alt="Line"
-                    src="https://c.animaapp.com/xCaMzUYh/img/line-7.svg"
-                  />
-                  <img
-                    className="absolute w-[42px] h-px top-3.5 left-[132px]"
-                    alt="Line"
-                    src="https://c.animaapp.com/xCaMzUYh/img/line-7.svg"
-                  />
-                </div>
-                <div className="relative self-stretch h-[34px] font-bold text-[#ffe664] text-xl leading-9 whitespace-nowrap [font-family:'Poppins',Helvetica] tracking-[0]">
-                  just 5 mins each
-                </div>
-              </div>
-            </div>
-            <div className="absolute w-[106px] h-10 top-[88px] left-[246px] rounded-[4.62px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(253,214,91,1)_100%)]">
-              <div className="relative h-10 bg-[url(https://c.animaapp.com/xCaMzUYh/img/clip-path-group@2x.png)] bg-[100%_100%]">
-                <div className="absolute top-[9px] left-[13px] font-medium text-white text-lg leading-5 whitespace-nowrap [font-family:'Poppins',Helvetica] tracking-[0]">
-                  Earn $20
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute w-[335px] h-[412px] top-[151px] left-0">
-            <div className="absolute w-[254px] h-[62px] top-[317px] left-10">
-              <img
-                className="absolute w-[62px] h-[62px] top-0 left-48"
-                alt="Group"
-                src="https://c.animaapp.com/xCaMzUYh/img/group-3@2x.png"
-              />
-              <img
-                className="absolute w-[62px] h-[62px] top-0 left-0"
-                alt="Group"
-                src="https://c.animaapp.com/xCaMzUYh/img/group-2@2x.png"
-              />
-              <img
-                className="absolute w-[62px] h-[62px] top-0 left-24"
-                alt="Group"
-                src="https://c.animaapp.com/xCaMzUYh/img/group-4@2x.png"
-              />
-            </div>
-            <div className="absolute w-[304px] h-[304px] top-[-7px] left-[15px] rounded-[10.89px]">
-              <img
-                className="absolute w-52 h-[244px] top-[58px] left-[58px]"
-                alt="Frame"
-                src="https://c.animaapp.com/xCaMzUYh/img/frame-2.svg"
-              />
-              <div className="absolute w-[168px] h-[204px] top-[50px] left-[68px] rounded-[14px] overflow-hidden shadow-[0px_14px_20px_#1089c357] bg-[linear-gradient(180deg,rgba(28,211,235,1)_0%,rgba(7,82,165,1)_100%)]">
-                <div className="relative w-[118px] h-[203px] top-px left-[26px]">
-                  <img
-                    className="absolute w-[118px] h-[107px] top-24 left-0 aspect-[1] object-cover"
-                    alt="Image"
-                    src="https://c.animaapp.com/xCaMzUYh/img/image-4025@2x.png"
-                  />
-                  <img
-                    className="absolute w-[101px] h-[101px] top-0 left-2 aspect-[1] object-cover"
-                    alt="Image"
-                    src="https://c.animaapp.com/xCaMzUYh/img/image-220@2x.png"
-                  />
-                </div>
-              </div>
-              <img
-                className="absolute w-52 h-[244px] top-[58px] left-[58px]"
-                alt="Frame"
-                src="https://c.animaapp.com/xCaMzUYh/img/frame-3.svg"
-              />
-              <div className="absolute w-[304px] h-[304px] top-0 left-0 rounded-[10.89px] overflow-hidden shadow-[0px_9.98px_36.19px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
-                <div className="relative w-[274px] h-[289px] top-[15px] left-4">
-                  <img
-                    className="absolute w-[272px] h-[263px] top-[26px] left-0 aspect-[1]"
-                    alt="Image"
-                    src="https://c.animaapp.com/xCaMzUYh/img/image-3930@2x.png"
-                  />
-                  <img
-                    className="absolute w-[191px] h-[37px] top-4 left-10 aspect-[5.2]"
-                    alt="Image"
-                    src="https://c.animaapp.com/xCaMzUYh/img/image-3931@2x.png"
-                  />
-                  <div className="absolute w-[99px] h-[54px] top-[7px] left-0.5 rounded-[10.89px] overflow-hidden border-[3.63px] border-solid border-[#ff4e3f] opacity-0">
-                    <div className="absolute top-[5px] left-[15px] [font-family:'Poppins',Helvetica] font-semibold text-[#ff4e3f] text-[25.4px] tracking-[0] leading-[normal]">
-                      NOPE
-                    </div>
-                  </div>
-                  <div className="absolute w-[93px] h-[54px] top-[7px] left-[177px] rounded-[10.89px] overflow-hidden border-[3.63px] border-solid border-[#8b92de] opacity-0">
-                    <div className="absolute top-[5px] left-[15px] [font-family:'Poppins',Helvetica] font-semibold text-[#8b92de] text-[25.4px] tracking-[0] leading-[normal]">
-                      PLAY
-                    </div>
-                  </div>
-                  <div className="absolute w-[67px] h-[23px] top-0 left-[207px]">
-                    <div className="relative w-[65px] h-[23px] bg-[#ffffff4f] rounded-[4.83px] backdrop-blur-[2.41px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(2.41px)_brightness(100%)]">
-                      <img
-                        className="absolute w-3 h-[9px] top-[7px] left-[7px]"
-                        alt="Vector"
-                        src="https://c.animaapp.com/xCaMzUYh/img/vector-1.svg"
-                      />
-                      <div className="absolute top-[3px] left-[23px] [font-family:'Poppins',Helvetica] font-bold text-white text-[11.8px] tracking-[0] leading-[normal]">
-                        10.4 K
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Frame />
       </div>
       <div className="flex flex-col w-full items-start gap-4 relative">
         <div className="flex w-full items-center justify-between">
