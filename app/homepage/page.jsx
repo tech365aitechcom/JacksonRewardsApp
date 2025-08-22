@@ -485,7 +485,7 @@ const MainContentSection = () => {
       </div>
       <div className="flex flex-col items-start gap-4 relative w-full">
         <div className="flex w-full items-center justify-between">
-          <p className="text-white [font-family:'Poppins',Helvetica] font-semibold text-xl tracking-[0] leading-[normal]">
+          <p className="text-white [font-family:'Poppins',Helvetica] font-semibold text-xl tracking-[0] leading-[normal] text-nowrap ">
             💸 💸 Fast Fun, Real Rewards!💸 💸
           </p>
         </div>

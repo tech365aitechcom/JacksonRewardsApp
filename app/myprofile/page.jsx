@@ -168,11 +168,9 @@ export default function MyProfile() {
               />
             </button>
 
-            <h1 className="flex-1 text-center font-semibold text-white text-xl leading-5">
+            <h1 className="font-semibold text-white text-xl leading-5">
               My Profile
             </h1>
-
-            <div className="w-6 h-6" />
           </div>
         </header>
 
@@ -277,19 +275,18 @@ export default function MyProfile() {
               </div>
 
               <div className="flex items-center gap-2 text-gray-300 text-sm leading-5">
+                <div className="w-4 h-4 opacity-0"></div>
                 <span className="opacity-60">|</span>
+                <Image
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-cover"
+                  alt="Flag"
+                  src="https://c.animaapp.com/V1uc3arn/img/image-3956@2x.png"
+                />
                 <span className="tracking-wide">GamePro</span>
               </div>
             </div>
-
-            {/* Country flag (kept from original) */}
-            <Image
-              width={32}
-              height={32}
-              className="absolute w-8 h-8 top-[225px] left-[122px] object-cover"
-              alt="Flag"
-              src="https://c.animaapp.com/V1uc3arn/img/image-3956@2x.png"
-            />
           </section>
 
           {/* ---------------- Earnings ---------------- */}
