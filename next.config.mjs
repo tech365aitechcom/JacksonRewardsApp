@@ -5,7 +5,7 @@ const nextConfig = {
   trailingSlash: true,
   images: {
     unoptimized: true,
-    domains: ['c.animaapp.com'],
+    domains: ['c.animaapp.com', 'rewardsapi.hireagent.co'],
   },
 }
 

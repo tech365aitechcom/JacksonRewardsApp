@@ -6,7 +6,21 @@ export const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
   const [step, setStep] = useState("email"); // "email" or "verification"
+  const [emailError, setEmailError] = useState("");
   const router = useRouter();
+
+  const validateEmail = (email) => {
+    if (!email.trim()) {
+      return "Email is required";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Enter a valid email";
+    }
+    return "";
+  };
+
+  const isEmailValid = email.trim() && validateEmail(email) === "";
 
   const handleVerificationCodeChange = (index, value) => {
     if (value.length <= 1) {
@@ -24,9 +38,20 @@ export const ForgotPassword = () => {
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
-    if (email.trim()) {
+    const error = validateEmail(email);
+    setEmailError(error);
+    
+    if (!error) {
       console.log("Sending reset email to:", email);
       setStep("verification");
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (emailError) {
+      setEmailError(validateEmail(value));
     }
   };
 
@@ -80,19 +105,17 @@ export const ForgotPassword = () => {
             >
               {verificationCode.map((digit, index) => (
                 <div key={index} className="relative w-[69.49px] h-16">
-                  <div className="relative w-[67px] h-16 bg-[url(https://c.animaapp.com/mFOMgUve/img/card@2x.png)] bg-[100%_100%]">
-                    <input
-                      id={`code-${index}`}
-                      type="text"
-                      value={digit}
-                      onChange={(e) =>
-                        handleVerificationCodeChange(index, e.target.value)
-                      }
-                      className="absolute top-[15px] left-[27px] [font-family:'Poppins',Helvetica] font-medium text-white text-[23.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none text-center w-[13px]"
-                      maxLength="1"
-                      aria-label={`Verification code digit ${index + 1}`}
-                    />
-                  </div>
+                  <input
+                    id={`code-${index}`}
+                    type="text"
+                    value={digit}
+                    onChange={(e) =>
+                      handleVerificationCodeChange(index, e.target.value)
+                    }
+                    className="w-full h-full [font-family:'Poppins',Helvetica] font-medium text-white text-[23.3px] tracking-[0] leading-[normal] text-center bg-[rgba(255,255,255,0.1)] border-2 border-[rgba(255,255,255,0.3)] rounded-lg backdrop-blur-sm focus:border-[#9eadf7] focus:outline-none focus:ring-2 focus:ring-[#9eadf7]/50 hover:border-[rgba(255,255,255,0.5)] transition-all duration-200"
+                    maxLength="1"
+                    aria-label={`Verification code digit ${index + 1}`}
+                  />
                 </div>
               ))}
             </form>
@@ -167,23 +190,33 @@ export const ForgotPassword = () => {
             </label>
 
             <div className="absolute w-[220px] h-[45px] top-[95px] left-[10px]">
-              <div className="relative w-full h-full bg-[rgba(255,255,255,0.1)] rounded-lg border border-[rgba(255,255,255,0.2)] backdrop-blur-sm">
+              <div className={`relative w-full h-full bg-[rgba(255,255,255,0.1)] rounded-lg border backdrop-blur-sm ${emailError ? 'border-red-400' : 'border-[rgba(255,255,255,0.2)]'}`}>
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   className="w-full h-full px-4 bg-transparent border-none outline-none text-white [font-family:'Poppins',Helvetica] font-medium text-[14.3px] tracking-[0] leading-[normal] placeholder:text-[#d3d3d3]"
                   placeholder="Enter your email"
                   aria-label="Email address"
                   required
                 />
               </div>
+              {emailError && (
+                <div className="absolute top-[50px] left-0 text-red-400 text-xs [font-family:'Poppins',Helvetica] font-medium">
+                  {emailError}
+                </div>
+              )}
             </div>
           </div>
 
           <button
             onClick={handleEmailSubmit}
-            className="absolute w-[210px] h-[39px] top-[320px] left-[30px] rounded-lg overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]"
+            disabled={!isEmailValid}
+            className={`absolute w-[210px] h-[39px] top-[320px] left-[30px] rounded-lg overflow-hidden transition-all duration-200 ${
+              isEmailValid 
+                ? 'bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 cursor-pointer' 
+                : 'bg-gray-500 cursor-not-allowed opacity-50'
+            }`}
             aria-label="Send reset link"
             type="button"
           >

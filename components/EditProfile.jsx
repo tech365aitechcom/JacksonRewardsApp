@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image"; // Import Image for the preview
+// Using regular img tag for avatar to avoid CORS issues
 import { useAuth } from "@/contexts/AuthContext";
 import { getProfile, updateProfile, uploadAvatar } from "@/lib/api";
 
@@ -11,10 +11,14 @@ export const EditProfile = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
+    mobile: "",
   });
+  const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [originalAvatar, setOriginalAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null); // For immediate
   const fileInputRef = useRef(null);
@@ -26,12 +30,19 @@ export const EditProfile = () => {
       const fetchProfileData = async () => {
         try {
           const profileData = await getProfile(token);
+          console.log("Profile data received:", profileData);
+          console.log("Avatar URL:", profileData.profile?.avatar);
+          setProfileData(profileData);
           setFormData({
-            firstName: profileData.firstName,
-            lastName: profileData.lastName,
+            firstName: profileData.firstName || "",
+            lastName: profileData.lastName || "",
+            email: profileData.email || "",
+            mobile: profileData.mobile || "",
           });
-          setAvatarPreview(profileData.profile.avatar);
-          setOriginalAvatar(profileData.profile.avatar); // Store the original
+          if (profileData.profile?.avatar) {
+            setAvatarPreview(profileData.profile.avatar);
+            setOriginalAvatar(profileData.profile.avatar);
+          }
         } catch (err) {
           setError("Could not load your profile data.");
           console.error("Failed to load profile for editing:", err);
@@ -43,8 +54,77 @@ export const EditProfile = () => {
     }
   }, [token, user]);
 
+  const validateField = (field, value) => {
+    const errors = {};
+    
+    if (field === 'firstName' || field === 'lastName') {
+      const fieldName = field === 'firstName' ? 'First name' : 'Last name';
+      
+      if (!value || value.trim() === '') {
+        if (field === 'firstName') {
+          errors[field] = 'First name is required';
+        }
+      } else if (value.length > 30) {
+        errors[field] = `${fieldName} must be 30 characters or less`;
+      } else if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+        errors[field] = `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
+      }
+    }
+    
+    if (field === 'email') {
+      if (!value || value.trim() === '') {
+        errors[field] = 'Email is required';
+      } else if (value.length > 50) {
+        errors[field] = 'Email must be 50 characters or less';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errors[field] = 'Enter a valid email address';
+      }
+    }
+    
+    if (field === 'mobile') {
+      if (!value || value.trim() === '') {
+        errors[field] = 'Mobile number is required';
+      } else if (value.length > 15) {
+        errors[field] = 'Mobile number must be 15 characters or less';
+      } else if (!/^\+?[0-9\s\-\(\)]+$/.test(value)) {
+        errors[field] = 'Mobile number can only contain numbers, spaces, hyphens, parentheses, and plus sign';
+      }
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Truncate input if it exceeds maximum length
+    let truncatedValue = value;
+    if ((field === 'firstName' || field === 'lastName') && value.length > 30) {
+      truncatedValue = value.substring(0, 30);
+    } else if (field === 'email' && value.length > 50) {
+      truncatedValue = value.substring(0, 50);
+    } else if (field === 'mobile' && value.length > 15) {
+      truncatedValue = value.substring(0, 15);
+    }
+    
+    setFormData((prev) => ({ ...prev, [field]: truncatedValue }));
+    
+    // Validate field and set errors
+    const fieldError = validateField(field, truncatedValue);
+    setFieldErrors((prev) => ({ 
+      ...prev, 
+      [field]: fieldError[field] || null 
+    }));
+  };
+
+  // Check if form is valid
+  const isFormValid = () => {
+    const errors = {
+      ...validateField('firstName', formData.firstName),
+      ...validateField('lastName', formData.lastName),
+      ...validateField('email', formData.email),
+      ...validateField('mobile', formData.mobile),
+    };
+    
+    return Object.keys(errors).length === 0 && formData.firstName.trim() !== '';
   };
 
   // 2. Handle saving changes to the backend
@@ -65,7 +145,10 @@ export const EditProfile = () => {
     const dataToUpdate = {
       firstName: formData.firstName,
       lastName: formData.lastName || "-",
+      mobile: formData.mobile,
       status: "active",
+      bio: profileData?.profile?.bio || "Financial enthusiast",
+      theme: profileData?.profile?.theme || "light",
     };
 
     try {
@@ -157,12 +240,13 @@ export const EditProfile = () => {
 
         <div className="absolute w-[132px] h-[124px] top-[140px] left-1/2 transform -translate-x-1/2">
           <div className="relative w-full h-full">
-            <Image
-              src={"https://c.animaapp.com/mFM2C37Z/img/component-1.svg"}
+            <img
+              src={avatarPreview || "https://c.animaapp.com/mFM2C37Z/img/component-1.svg"}
               alt="Profile avatar preview"
               width={132}
               height={120}
               className="object-cover rounded-full"
+              crossOrigin="anonymous"
             />
             <div className="absolute w-[45px] h-[45px] bottom-0 right-0">
               <div className="relative w-[43px] h-[45px]">
@@ -207,8 +291,14 @@ export const EditProfile = () => {
                 onChange={(e) => handleInputChange("firstName", e.target.value)}
                 className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
                 placeholder="Enter your first name"
+                maxLength="30"
                 required
               />
+              {fieldErrors.firstName && (
+                <div className="mt-1 text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+                  {fieldErrors.firstName}
+                </div>
+              )}
             </div>
           </div>
 
@@ -228,7 +318,13 @@ export const EditProfile = () => {
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
                 className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
                 placeholder="Enter your last name"
+                maxLength="30"
               />
+              {fieldErrors.lastName && (
+                <div className="mt-1 text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+                  {fieldErrors.lastName}
+                </div>
+              )}
             </div>
           </div>
 
@@ -244,11 +340,18 @@ export const EditProfile = () => {
               <input
                 id="emailAddress"
                 type="email"
-                readOnly
-                value={user?.email || ''}
-
-                className="absolute inset-0 bg-transparent px-4 py-3 text-gray-400 [font-family:'Poppins',Helvetica] text-sm cursor-not-allowed"
+                value={formData.email || ""}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                placeholder="Enter your email"
+                maxLength="50"
+                required
               />
+              {fieldErrors.email && (
+                <div className="mt-1 text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+                  {fieldErrors.email}
+                </div>
+              )}
             </div>
           </div>
 
@@ -264,10 +367,18 @@ export const EditProfile = () => {
               <input
                 id="phoneNumber"
                 type="tel"
-                readOnly
-                value={user?.mobile || ''}
-                className="absolute inset-0 bg-transparent px-4 py-3 text-gray-400 [font-family:'Poppins',Helvetica] text-sm cursor-not-allowed"
+                value={formData.mobile || ""}
+                onChange={(e) => handleInputChange("mobile", e.target.value)}
+                className="absolute inset-0 bg-transparent px-4 py-3 text-white [font-family:'Poppins',Helvetica] text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                placeholder="Enter your phone number"
+                maxLength="15"
+                required
               />
+              {fieldErrors.mobile && (
+                <div className="mt-1 text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+                  {fieldErrors.mobile}
+                </div>
+              )}
             </div>
           </div>
 
@@ -276,8 +387,12 @@ export const EditProfile = () => {
           <div className="w-full pt-4 space-y-3">
             <button
               type="submit"
-              disabled={isSaving}
-              className="w-full h-[42px] rounded-lg bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSaving || !isFormValid()}
+              className={`w-full h-[42px] rounded-lg transition-opacity flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                isFormValid() && !isSaving 
+                  ? 'bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 cursor-pointer' 
+                  : 'bg-gray-500 cursor-not-allowed'
+              }`}
             >
               <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm tracking-[0] leading-[normal]">
                 {isSaving ? "Saving..." : "Save Changes"}

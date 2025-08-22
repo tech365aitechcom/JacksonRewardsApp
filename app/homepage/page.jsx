@@ -8,9 +8,8 @@ import { HomeIndicator } from "../../components/HomeIndicator"; //
 const Homepage = () => {
   return (
     <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
-      <div className="absolute w-[375px] h-[49px] top-0 left-0 z-10">
-        {/* <div className="absolute w-[375px] h-11 top-0 left-0 bg-[url(https://c.animaapp.com/xCaMzUYh/img/iphone-x--11-pro---black.svg)] bg-[100%_100%]" /> */}
-        <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
+      <div className="absolute w-full h-[49px] top-0 left-0 z-10 px-5">
+        <div className="absolute top-[37px] left-0 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
         </div>
       </div>
@@ -167,39 +166,40 @@ const HeaderSection = () => {
   const greeting = `Hi ${firstName}! 👋`;
 
   return (
-    <header className="inline-flex items-center gap-12 absolute top-[66px] left-5 bg-transparent">
-      <div className="inline-flex items-center gap-3 relative  flex-[0_0_auto]">
-        <div
-          className="relative w-12 h-12 cursor-pointer hover:opacity-80 z-50 transition-opacity duration-200"
-          onClick={handleProfileClick}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              handleProfileClick();
-            }
-          }}
-        >
-          <img
-            className="w-full h-full"
-            alt="Group"
-            src="https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
-          />
-        </div>
-        <div className="flex flex-col w-[140px] items-start gap-1 relative">
-          <div className="relative self-stretch h-4 [font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[-0.17px] leading-[18px] whitespace-nowrap">
-            Welcome Back  {greeting}
+    <header className="absolute top-[66px] left-0 w-full px-5 bg-transparent">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-3">
+          <div
+            className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+            onClick={handleProfileClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleProfileClick();
+              }
+            }}
+          >
+            <img
+              className="w-full h-full"
+              alt="Group"
+              src="https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
+            />
+          </div>
+          <div className="flex flex-col items-start gap-1">
+            <div className="[font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[-0.17px] leading-[18px]">
+              Welcome Back {greeting}
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex w-[87px] h-9 items-center gap-[169px] relative">
-        <div className="relative w-[87px] h-[39px] mt-[-1.50px] mb-[-1.50px]">
-          <div className="relative h-9 top-px rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
-            <div className="top-1 left-2.5 text-white text-lg tracking-[0] absolute [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
+        
+        <div className="flex items-center">
+          <div className="w-[87px] h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between px-2.5">
+            <div className="text-white text-lg [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
               {balance || 0}
             </div>
             <img
-              className="w-[23px] h-6 top-[5px] left-[54px] absolute aspect-[0.97]"
+              className="w-[23px] h-6"
               alt="Image"
               src="https://c.animaapp.com/xCaMzUYh/img/image-3937-3@2x.png"
             />
@@ -351,19 +351,19 @@ const MainContentSection = () => {
   }
 
   return (
-    <div className="flex flex-col w-[375px] items-center gap-8 pt-36 relative">
+    <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-6 pt-36 px-5 relative">
       {dashboardData?.stats && <RewardProgress stats={dashboardData.stats} />}
       {dashboardData?.stats && <XpTierTracker stats={dashboardData.stats} />}
-      <div className="flex flex-col items-start gap-2.5 pl-5 pr-0 py-0 relative self-stretch w-full flex-[0_0_auto]">
-        <div className="flex w-[335px] items-center justify-between relative flex-[0_0_auto]">
-          <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
+      <div className="flex flex-col items-start gap-4 relative w-full">
+        <div className="flex w-full items-center justify-between">
+          <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
             Most Played
           </div>
-          <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-[#8b92de] text-base tracking-[0] leading-[normal]">
+          <div className="[font-family:'Poppins',Helvetica] font-medium text-[#8b92de] text-base tracking-[0] leading-[normal]">
             See All
           </div>
         </div>
-        <div className="flex h-[110px] items-start gap-3 relative self-stretch w-full overflow-x-scroll">
+        <div className="flex h-[110px] items-start gap-3 w-full overflow-x-scroll -mx-5 px-5">
           {mostPlayedGames.map((game) => (
             <div
               key={game.id}
@@ -402,16 +402,13 @@ const MainContentSection = () => {
           ))}
         </div>
       </div>
-      <div className="inline-flex flex-col items-start gap-2.5 relative flex-[0_0_auto]">
-        <div className="flex w-[335px] items-center justify-between relative flex-[0_0_auto]">
-          <p className="relative w-fit mt-[-1.00px] text-white [font-family:'Poppins',Helvetica] font-semibold text-white-f4f3fc text-xl tracking-[0] leading-[normal]">
+      <div className="flex flex-col items-start gap-4 relative w-full">
+        <div className="flex w-full items-center justify-between">
+          <p className="text-white [font-family:'Poppins',Helvetica] font-semibold text-xl tracking-[0] leading-[normal]">
             💸 💸 Fast Fun, Real Rewards!💸 💸
           </p>
-          <div className="relative w-fit ml-[-53px] [font-family:'Poppins',Helvetica] font-medium text-transparent text-base tracking-[0] leading-[normal]">
-            See All
-          </div>
         </div>
-        <div className="relative w-[335px] h-[557px] rounded-[14px] overflow-hidden shadow-[0px_14px_20px_#746ee85c] bg-[linear-gradient(180deg,rgba(94,152,219,1)_0%,rgba(113,106,231,1)_100%)]">
+        <div className="relative w-full h-[557px] rounded-[14px] overflow-hidden shadow-[0px_14px_20px_#746ee85c] bg-[linear-gradient(180deg,rgba(94,152,219,1)_0%,rgba(113,106,231,1)_100%)]">
           <div className="absolute w-[372px] h-[155px] top-[-23px] -left-9">
             <div className="absolute w-[372px] h-[155px] top-0 left-0">
               <div className="absolute w-[161px] h-[145px] top-0 left-0 rounded-[80.5px/72.5px] bg-[linear-gradient(180deg,rgba(27,204,231,1)_0%,rgba(154,207,251,0.01)_100%)]" />
@@ -547,13 +544,13 @@ const MainContentSection = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-        <div className="relative w-[166px] h-6">
-          <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
+      <div className="flex flex-col w-full items-start gap-4 relative">
+        <div className="flex w-full items-center justify-between">
+          <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
             Non- Gaming Offers
           </div>
         </div>
-        <div className="relative w-[335px] h-[220px]">
+        <div className="relative w-full h-[220px]">
           <div className="w-[337px] h-[220px]">
             <div className="relative w-[339px] h-[220px]">
               <div className="absolute w-[339px] h-[161px] top-[22px] left-0">
@@ -642,9 +639,9 @@ const MainContentSection = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-[335px] h-[127px] items-start gap-2.5 relative">
+      <div className="flex flex-col w-full h-[127px] items-start gap-4 relative">
         <img
-          className="h-[127px] relative w-[334px]"
+          className="h-[127px] relative w-full"
           alt="Race"
           src="https://c.animaapp.com/xCaMzUYh/img/race.svg"
         />
@@ -669,8 +666,8 @@ const MainContentSection = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-        <div className="h-36 rounded-[20px] overflow-hidden bg-[linear-gradient(51deg,rgba(88,41,171,1)_0%,rgba(59,41,171,1)_100%)] overflow-x-scroll relative w-[334px]">
+      <div className="flex flex-col w-full items-start gap-4 relative">
+        <div className="h-36 rounded-[20px] overflow-hidden bg-[linear-gradient(51deg,rgba(88,41,171,1)_0%,rgba(59,41,171,1)_100%)] overflow-x-scroll relative w-full">
           <div className="relative w-[371px] h-[198px] -top-4 left-2">
             <div className="top-[81px] left-1 font-normal absolute [font-family:'Poppins',Helvetica] text-white text-base tracking-[0] leading-6 whitespace-nowrap">
               Take Part & Win
@@ -693,13 +690,13 @@ const MainContentSection = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-        <div className="relative w-[184px] h-6">
-          <p className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
+      <div className="flex flex-col w-full items-start gap-4 relative">
+        <div className="flex w-full items-center justify-between">
+          <p className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
             Get Paid to do Surveys
           </p>
         </div>
-        <div className="relative w-[335px] h-[190px]">
+        <div className="relative w-full h-[190px]">
           <div className="w-[335px] h-[190px]">
             <div className="relative w-[339px] h-[190px]">
               <div className="absolute w-[339px] h-40 top-[11px] left-0">
@@ -748,8 +745,8 @@ const MainContentSection = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-[335px] items-start gap-2.5 relative flex-[0_0_auto]">
-        <div className="h-[111px] rounded-[20px] overflow-hidden bg-[linear-gradient(64deg,rgba(41,138,171,1)_0%,rgba(41,171,162,1)_100%)] overflow-x-scroll relative w-[334px]">
+      <div className="flex flex-col w-full items-start gap-4 relative">
+        <div className="h-[111px] rounded-[20px] overflow-hidden bg-[linear-gradient(64deg,rgba(41,138,171,1)_0%,rgba(41,171,162,1)_100%)] overflow-x-scroll relative w-full">
           <div className="relative w-[285px] h-[207px] top-[-73px] left-5">
             <div className="top-[88px] left-0 font-medium absolute [font-family:'Poppins',Helvetica] text-white text-base tracking-[0] leading-6 whitespace-nowrap">
               30 Days Streak

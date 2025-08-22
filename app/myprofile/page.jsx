@@ -182,12 +182,13 @@ export default function MyProfile() {
             {/* Avatar + Edit holder */}
             <div className="relative">
               {/* Avatar */}
-              <Image
+              <img
                 width={132}
                 height={120}
-                className="w-[132px] h-[120px]"
+                className="w-[132px] h-[120px] object-cover rounded-full"
                 alt="Profile avatar"
-                src="https://c.animaapp.com/V1uc3arn/img/component-1.svg"
+                src={profile?.profile?.avatar || "https://c.animaapp.com/V1uc3arn/img/component-1.svg"}
+                crossOrigin="anonymous"
               />
 
               {/* JACK_51: Edit badge in its own holder (no overlap/clipping) */}
@@ -216,8 +217,8 @@ export default function MyProfile() {
             </div>
 
             {/* JACK_52: Clean vertical stack — Name, VIP badge/level */}
-            <h2 className="font-semibold text-white text-xl text-center">
-              {profile?.firstName || "Player"}
+            <h2 className="font-semibold text-white text-xl text-center truncate max-w-[300px]">
+              {((profile?.firstName || "Player") + " " + (profile?.lastName || "")).trim()}
             </h2>
 
             <div className="flex items-center gap-2">
@@ -268,11 +269,11 @@ export default function MyProfile() {
                   src="https://c.animaapp.com/V1uc3arn/img/image-3958@2x.png"
                   className="w-4 h-4"
                 />
-                <span className="truncate max-w-[250px]">
-                  {user?.email || "youremail@domain.com"}
+                <span className="truncate max-w-[180px]">
+                  {profile?.email || "youremail@domain.com"}
                 </span>
                 <span className="opacity-60">|</span>
-                <span>{user?.mobile || "+01 234 567 89"}</span>
+                <span className="truncate max-w-[120px]">{profile?.mobile || "+01 234 567 89"}</span>
               </div>
 
               <div className="flex items-center gap-2 text-gray-300 text-sm leading-5">

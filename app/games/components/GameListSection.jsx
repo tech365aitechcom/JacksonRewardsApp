@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
-export const GameListSection = () => {
+export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   const { token } = useAuth();
   const [userGames, setUserGames] = useState([]);
   const [userStats, setUserStats] = useState(null);
@@ -294,6 +294,27 @@ export const GameListSection = () => {
     },
   ];
 
+  // Search filtering function
+  const filterGamesBySearch = (games, query) => {
+    if (!query || query.trim() === "") return games;
+    const searchTerm = query.toLowerCase().trim();
+    return games.filter(game => 
+      game.name.toLowerCase().includes(searchTerm) ||
+      game.genre.toLowerCase().includes(searchTerm)
+    );
+  };
+
+  // Apply search filter to all game lists
+  const filteredDownloadedGames = filterGamesBySearch(downloadedGames, searchQuery);
+  const filteredOtherGames = filterGamesBySearch(otherGames, searchQuery);
+  const filteredRecentGames = filterGamesBySearch(recentGames, searchQuery);
+  const filteredUserGames = userGames.filter(game => {
+    if (!searchQuery || searchQuery.trim() === "") return true;
+    const searchTerm = searchQuery.toLowerCase().trim();
+    const gameName = game.gameId.replace('_', ' ').toLowerCase();
+    return gameName.includes(searchTerm);
+  });
+
   // Non-gaming offers data
   const nonGamingOffers = [
     {
@@ -458,7 +479,7 @@ export const GameListSection = () => {
   );
 
   return (
-    <div className="flex flex-col w-[335px] items-start gap-8 absolute top-[146px] left-5">
+    <div className={`flex flex-col w-[335px] items-start gap-8 absolute left-5 ${showSearch ? 'top-[200px]' : 'top-[146px]'}`}>
       <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex flex-col w-[335px] items-start gap-[49px] relative flex-[0_0_auto]">
           <div className="inline-flex items-center gap-0.5 relative flex-[0_0_auto]">
@@ -476,14 +497,17 @@ export const GameListSection = () => {
         </div>
 
         <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
-          {downloadedGames.map((game, index) =>
-            renderGameItem(game, index < downloadedGames.length - 1),
+          {filteredDownloadedGames.map((game, index) =>
+            renderGameItem(game, index < filteredDownloadedGames.length - 1),
+          )}
+          {searchQuery && filteredDownloadedGames.length === 0 && (
+            <div className="text-white text-center py-4">No downloaded games found for "{searchQuery}"</div>
           )}
         </div>
       </div>
 
       {/* User Games from API */}
-      {userGames.length > 0 && (
+      {(userGames.length > 0 || searchQuery) && (
         <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
           <div className="flex flex-col w-[335px] items-start gap-[49px] relative flex-[0_0_auto]">
             <div className="inline-flex items-center gap-0.5 relative flex-[0_0_auto]">
@@ -501,10 +525,10 @@ export const GameListSection = () => {
           </div>
 
           <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
-            {userGames.map((game, index) => (
+            {filteredUserGames.map((game, index) => (
               <div
                 key={game._id}
-                className={`flex items-center justify-between pt-0 pb-4 px-0 relative self-stretch w-full flex-[0_0_auto] ${index < userGames.length - 1 ? "border-b [border-bottom-style:solid] border-[#4d4d4d]" : ""}`}
+                className={`flex items-center justify-between pt-0 pb-4 px-0 relative self-stretch w-full flex-[0_0_auto] ${index < filteredUserGames.length - 1 ? "border-b [border-bottom-style:solid] border-[#4d4d4d]" : ""}`}
               >
                 <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
                   <div className="relative w-[55px] h-[55px] rounded-[27.5px] bg-[linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)]" />
@@ -550,6 +574,9 @@ export const GameListSection = () => {
                 )}
               </div>
             ))}
+            {searchQuery && filteredUserGames.length === 0 && userGames.length > 0 && (
+              <div className="text-white text-center py-4">No user games found for "{searchQuery}"</div>
+            )}
           </div>
         </div>
       )}
@@ -723,8 +750,11 @@ export const GameListSection = () => {
 
       <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
-          {otherGames.map((game, index) =>
-            renderGameItem(game, index < otherGames.length - 1),
+          {filteredOtherGames.map((game, index) =>
+            renderGameItem(game, index < filteredOtherGames.length - 1),
+          )}
+          {searchQuery && filteredOtherGames.length === 0 && otherGames.length > 0 && (
+            <div className="text-white text-center py-4">No other games found for "{searchQuery}"</div>
           )}
         </div>
       </div>
@@ -753,8 +783,11 @@ export const GameListSection = () => {
 
       <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
-          {recentGames.map((game, index) =>
-            renderGameItem(game, index < recentGames.length - 1),
+          {filteredRecentGames.map((game, index) =>
+            renderGameItem(game, index < filteredRecentGames.length - 1),
+          )}
+          {searchQuery && filteredRecentGames.length === 0 && recentGames.length > 0 && (
+            <div className="text-white text-center py-4">No recent games found for "{searchQuery}"</div>
           )}
         </div>
       </div>
