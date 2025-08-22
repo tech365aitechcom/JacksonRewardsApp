@@ -7,33 +7,49 @@ import { useRouter } from "next/navigation"; // Use Next.js router
 export default function LoginPage() {
   const [emailOrMobile, setEmailOrMobile] = useState(""); // Changed initial state
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null); // State for login errors
+  const [error, setError] = useState({}); // State for login errors
   const [isSubmitting, setIsSubmitting] = useState(false); // State for loading
   const { signIn } = useAuth();
   const router = useRouter(); // Initialize router
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSignIn = async () => {
-    if (!emailOrMobile || !password) {
-      setError("Please enter both email/mobile and password.");
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+
+    const clientErrors = {};
+    if (!emailOrMobile.trim()) clientErrors.emailOrMobile = "Email or Mobile is required.";
+    if (!password) clientErrors.password = "Password is required.";
+    if (Object.keys(clientErrors).length > 0) {
+      setError(clientErrors);
       return;
     }
 
-    setError(null);
+    setError({});
     setIsSubmitting(true);
 
     try {
       const result = await signIn(emailOrMobile, password);
+
       if (result?.ok) {
-        // On successful login, redirect to a protected route like a dashboard
         router.push("/homepage");
-      } else {
-        // Use the error message from the API response
-        setError(result?.error || "Invalid credentials. Please try again.");
+      }
+      else {
+        const backendError = result?.error;
+        if (backendError && backendError.errors) {
+          const newErrors = {};
+          backendError.errors.forEach(err => {
+            if (err.param) newErrors[err.param] = err.msg;
+          });
+          setError(newErrors);
+        }
+        else {
+          const errorMessage = backendError?.error || backendError?.message || "An unknown error occurred. Please try again.";
+          setError({ form: errorMessage });
+        }
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("An unexpected error occurred. Please try again later.");
+      console.error("Login component error:", err);
+      setError({ form: "A client-side error occurred. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -114,11 +130,7 @@ export default function LoginPage() {
               />
             </div>
           </div>
-          {error && (
-            <div className="absolute top-[340px] left-[246px] w-[316px] text-center text-red-400 [font-family:'Poppins',Helvetica] text-sm">
-              {error}
-            </div>
-          )}
+
           {/* <button
             className="absolute w-[316px] h-[50px] top-[685px] left-[246px] cursor-pointer"
             onClick={handleSignIn}
@@ -165,6 +177,11 @@ export default function LoginPage() {
               />
             </div>
           </div>
+          {error.emailOrMobile && (
+            <p className="absolute top-[460px] left-[250px] text-red-400 text-xs">
+              {error.emailOrMobile}
+            </p>
+          )}
 
           <label className="absolute top-[369px] left-[246px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
             Email/ Phone Number
@@ -211,24 +228,36 @@ export default function LoginPage() {
               >
                 {showPassword ? (
                   <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5Z" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
-                    <circle cx="8.5" cy="8.5" r="3" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
+                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                    <circle cx="8.5" cy="8.5" r="3" stroke="#d3d3d3" strokeWidth="1" fill="none" />
                   </svg>
                 ) : (
                   <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
-                    <path d="M16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none"/>
-                    <line x1="2" y1="2" x2="15" y2="15" stroke="#d3d3d3" strokeWidth="1"/>
+                    <path d="M1 8.5C1 8.5 4 4.5 8.5 4.5C13 4.5 16 8.5 16 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                    <path d="M16 8.5C16 8.5 13 12.5 8.5 12.5C4 12.5 1 8.5 1 8.5" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                    <line x1="2" y1="2" x2="15" y2="15" stroke="#d3d3d3" strokeWidth="1" />
                   </svg>
                 )}
               </button>
             </div>
           </div>
+          {error.password && (
+            <p className="absolute top-[554px] left-[250px] text-red-400 text-xs">
+              {error.password}
+            </p>
+          )}
+
+          {error.form && (
+            <div className="absolute top-[554px] left-[220px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+              {error.form}
+            </div>
+          )}
 
           <div className="absolute w-[216px] h-[65px] top-[289px] left-[302px]">
             <p className="absolute top-11 left-0 [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-sm tracking-[0] leading-[normal]">
               welcome back we missed you
             </p>
+
 
             <h1 className="absolute top-0 left-[11px] [font-family:'Poppins',Helvetica] font-semibold text-[#efefef] text-2xl tracking-[0] leading-[normal]">
               Welcome Back!
@@ -336,7 +365,7 @@ export default function LoginPage() {
                 >
                   <div className="w-[20px] h-[20px] flex items-center justify-center">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M20 10C20 4.477 15.523 0 10 0S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" fill="#1877F2"/>
+                      <path d="M20 10C20 4.477 15.523 0 10 0S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" fill="#1877F2" />
                     </svg>
                   </div>
                 </button>
