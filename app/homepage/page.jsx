@@ -32,11 +32,11 @@ const Frame = () => {
 
   return (
     <div
-      className="relative w-[335px] h-[470px] mx-auto"
+      className="relative w-full max-w-[375px] h-[470px] mx-auto px-4"
       data-model-id="2630:15320"
     >
       <nav
-        className="absolute w-[254px] h-[71px] top-[406px] left-10"
+        className="absolute w-[254px] h-[71px] top-[406px] left-1/2 -translate-x-1/2"
         role="navigation"
         aria-label="Action buttons"
       >
@@ -81,7 +81,7 @@ const Frame = () => {
         ))}
       </nav>
 
-      <main className="absolute w-[335px] h-[335px] top-[-9px] left-0 rounded-[12px_12px_0px_0px]">
+      <main className="absolute w-full h-[335px] top-[-9px] left-0 rounded-[12px_12px_0px_0px] overflow-hidden">
         <img
           className="absolute w-52 h-[244px] top-[60px] left-[73px]"
           alt="Frame"
@@ -94,21 +94,21 @@ const Frame = () => {
           src="https://c.animaapp.com/JKj0xq2Q/img/frame-3.svg"
         />
 
-        <div className="absolute w-[335px] h-[335px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden border-t [border-top-style:solid] border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#3a3674] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
-          <div className="relative w-[302px] h-[319px] top-4 left-[18px]">
+        <div className="absolute w-full h-[335px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden border-t border-r border-l border-[#3a3674] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
+          <div className="relative w-[calc(100%-36px)] max-w-[302px] h-[319px] top-4 left-1/2 -translate-x-1/2">
             <img
-              className="absolute w-[300px] h-[290px] top-[29px] left-0 aspect-[1]"
+              className="absolute w-full max-w-[300px] h-[290px] top-[29px] left-1/2 -translate-x-1/2 object-cover"
               alt="Game screenshot"
               src="https://c.animaapp.com/JKj0xq2Q/img/image-3930@2x.png"
             />
 
             <img
-              className="absolute w-[210px] h-10 top-[18px] left-11 aspect-[5.2]"
+              className="absolute w-[210px] h-10 top-[18px] left-1/2 -translate-x-1/2 ml-[20px] object-contain"
               alt="Game logo"
               src="https://c.animaapp.com/JKj0xq2Q/img/image-3931@2x.png"
             />
 
-            <div className="absolute w-[74px] h-[25px] top-0 left-[228px]">
+            <div className="absolute w-[74px] h-[25px] top-0 right-0">
               <div className="relative w-[72px] h-[25px] bg-[#ffffff4f] rounded-[5.32px] backdrop-blur-[2.66px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(2.66px)_brightness(100%)]">
                 <img
                   className="absolute w-[13px] h-2.5 top-2 left-[7px]"
@@ -125,8 +125,8 @@ const Frame = () => {
         </div>
       </main>
 
-      <footer className="absolute w-[335px] h-14 top-[326px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.5)_0%,rgba(113,106,231,0.5)_100%)]">
-        <div className="relative w-[210px] h-[41px] top-[7px] left-3">
+      <footer className="absolute w-full h-14 top-[326px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.5)_0%,rgba(113,106,231,0.5)_100%)]">
+        <div className="relative w-[calc(100%-24px)] max-w-[210px] h-[41px] top-[7px] left-3">
           <p className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-normal text-white text-[13px] tracking-[0] leading-[normal]">
             <span className="font-light">
               Complete Only 10 Tasks <br />
@@ -194,17 +194,17 @@ const RewardProgress = ({ stats }) => {
 
   return (
     <div
-      className="relative w-full max-w-[335px] h-[135px]"
+      className="relative w-full max-w-[375px] mx-auto h-[135px]"
       data-model-id="1151:33569"
     >
-      <div className="relative w-[337px] h-[135px]">
-        <div className="absolute w-[337px] h-[135px] top-0 left-0">
-          <div className="relative w-[335px] h-[135px] bg-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+      <div className="relative w-full h-[135px]">
+        <div className="absolute w-full h-[135px] top-0 left-0">
+          <div className="relative w-full h-[135px] bg-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
             <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[0_0_30px_8px_rgba(255,215,0,0.06)]" />
-            <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
-              <div className="absolute w-[302px] h-[37px] top-0 left-0">
-                <div className="w-[304px] h-[37px]">
-                  <div className="relative w-[302px] h-[37px]">
+            <div className="absolute w-[calc(100%-34px)] max-w-[302px] h-[37px] top-[73px] left-[17px]">
+              <div className="absolute w-full h-[37px] top-0 left-0">
+                <div className="w-full h-[37px]">
+                  <div className="relative w-full h-[37px]">
                     {/* Progress bar background */}
                     <div className="absolute w-full h-full rounded-full overflow-hidden ring-1 ring-[#8b7332] bg-gradient-to-r from-[#4a3c1a] to-[#6b5424] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.25)]"></div>
 
@@ -239,15 +239,15 @@ const RewardProgress = ({ stats }) => {
               </p>
             </div>
 
-            <header className="absolute w-[299px] h-[42px] top-[19px] left-5">
-              <div className="relative w-[301px] h-[42px]">
-                <div className="absolute w-[301px] h-[21px] top-0 left-0">
-                  <h1 className="absolute w-[299px] top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[-0.37px] leading-[27.2px] whitespace-nowrap">
+            <header className="absolute w-[calc(100%-40px)] max-w-[299px] h-[42px] top-[19px] left-5">
+              <div className="relative w-full h-[42px]">
+                <div className="absolute w-full h-[21px] top-0 left-0">
+                  <h1 className="absolute w-full top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-lg sm:text-xl tracking-[-0.37px] leading-[27.2px] truncate">
                     Hurry! Earn {pointsData.pointsNeeded} more &amp; Claim
                   </h1>
                 </div>
 
-                <p className="absolute w-[235px] top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] whitespace-nowrap">
+                <p className="absolute w-full top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] truncate">
                   {pointsData.pointsNeeded} Points until your next reward
                 </p>
               </div>
@@ -255,7 +255,7 @@ const RewardProgress = ({ stats }) => {
           </div>
         </div>
 
-        <div className="absolute w-8 h-[30px] top-[77px] left-72 opacity-50">
+        <div className="absolute w-8 h-[30px] top-[77px] right-4 opacity-50">
           <div className="relative w-[30px] h-[30px]">
             <div className="absolute w-[30px] h-[30px] top-0 left-0">
               <div className="h-[30px] bg-[url(https://c.animaapp.com/BzW3YOS5/img/ellipse-35-1.svg)] bg-[100%_100%]">
@@ -301,10 +301,10 @@ const XpTierTracker = ({ stats }) => {
   };
 
   return (
-    <div className="relative w-full max-w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
-      <div className="absolute w-[300px] h-[11px] top-[90px] left-[18px]">
-        <div className="relative w-[304px] h-6 -top-1.5 -left-1">
-          <div className="absolute w-[304px] h-[19px] top-0.5 left-0 bg-[#373737] rounded-[32px] border-4 border-solid border-[#ffffff33]" />
+    <div className="relative w-full max-w-[375px] mx-auto h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
+      <div className="absolute w-[calc(100%-36px)] max-w-[300px] h-[11px] top-[90px] left-[18px]">
+        <div className="relative w-full h-6 -top-1.5 -left-1">
+          <div className="absolute w-full h-[19px] top-0.5 left-0 bg-[#373737] rounded-[32px] border-4 border-solid border-[#ffffff33]" />
 
           <div
             className="absolute h-[11px] top-1.5 left-1 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-[32px]"
@@ -320,11 +320,11 @@ const XpTierTracker = ({ stats }) => {
             }}
           />
 
-          <div className="left-[280px] absolute w-6 h-6 top-0 bg-[#373737] rounded-full border-2 border-[#666666]" />
+          <div className="right-6 absolute w-6 h-6 top-0 bg-[#373737] rounded-full border-2 border-[#666666]" />
         </div>
       </div>
 
-      <h2 className="w-[210px] h-6 top-4 left-[62px] [font-family:'Poppins-SemiBold',Helvetica] font-semibold text-white text-base leading-6 absolute tracking-[0]">
+      <h2 className="w-[calc(100%-80px)] max-w-[210px] h-6 top-4 left-[62px] [font-family:'Poppins-SemiBold',Helvetica] font-semibold text-white text-base leading-6 absolute tracking-[0] truncate">
         You&#39;re off to a great start!
       </h2>
 
@@ -346,7 +346,7 @@ const XpTierTracker = ({ stats }) => {
         </div>
       </div>
 
-      <div className="absolute w-[303px] h-[15px] top-[63px] left-4">
+      <div className="absolute w-[calc(100%-32px)] max-w-[303px] h-[15px] top-[63px] left-4">
         {progressData.levels.map((level, index) => (
           <div
             key={index}
@@ -357,7 +357,7 @@ const XpTierTracker = ({ stats }) => {
         ))}
       </div>
 
-      <div className="absolute w-5 h-5 top-36 left-[157px]">
+      <div className="absolute w-5 h-5 top-36 left-1/2 -translate-x-1/2">
         <div className="w-4 h-4  items-center justify-center">
           <svg
             width="12"
@@ -628,16 +628,16 @@ const MainContentSection = () => {
   // SKELETON LOADER FOR THE MAIN CONTENT
   if (isLoading) {
     return (
-      <div className="flex flex-col w-[375px] items-center gap-8 pt-36 px-5">
-        <div className="w-[335px] h-[135px] bg-gray-800 rounded-lg animate-pulse"></div>
-        <div className="w-[335px] h-[169px] bg-gray-800 rounded-lg animate-pulse"></div>
+      <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-8 pt-36 px-4">
+        <div className="w-full h-[135px] bg-gray-800 rounded-lg animate-pulse"></div>
+        <div className="w-full h-[169px] bg-gray-800 rounded-lg animate-pulse"></div>
         {/* Add more skeleton loaders for other sections as needed */}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full items-center gap-6 pt-36 px-5 relative">
+    <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-6 pt-36 px-4 relative">
       {dashboardData?.stats && <RewardProgress stats={dashboardData.stats} />}
       {dashboardData?.stats && <XpTierTracker stats={dashboardData.stats} />}
       <div className="flex flex-col items-start gap-4 relative w-full">
@@ -649,7 +649,7 @@ const MainContentSection = () => {
             See All
           </div>
         </div>
-        <div className="flex h-[110px] items-start gap-3 w-full overflow-x-scroll -mx-5 px-5">
+        <div className="flex h-[110px] items-start gap-3 w-full overflow-x-auto scrollbar-hide -mx-4 px-4">
           {mostPlayedGames.map((game) => (
             <div
               key={game.id}
@@ -724,30 +724,30 @@ const MainContentSection = () => {
             Non- Gaming Offers
           </div>
         </div>
-        <div className="relative w-full h-[220px]">
-          <div className="w-[337px] h-[220px]">
-            <div className="relative w-[339px] h-[220px]">
-              <div className="absolute w-[339px] h-[161px] top-[22px] left-0">
+        <div className="relative w-full h-[220px] overflow-hidden">
+          <div className="w-full h-[220px] flex justify-center">
+            <div className="relative w-full max-w-[375px] h-[220px]">
+              <div className="absolute w-full h-[161px] top-[22px] left-0">
                 {nonGamingOffers.slice(0, 2).map((offer, index) => (
                   <div
                     key={offer.id}
-                    className={`absolute w-[165px] ${
+                    className={`absolute w-[44%] ${
                       index === 0
                         ? "h-40 top-px left-0"
-                        : "h-[161px] top-0 left-[170px]"
+                        : "h-[161px] top-0 right-0"
                     }`}
                   >
                     <img
                       className={`${
                         index === 0
-                          ? "w-[132px] h-40 top-0 left-0"
-                          : "w-[132px] h-40 top-px left-[33px]"
+                          ? "w-[80%] h-40 top-0 left-0"
+                          : "w-[80%] h-40 top-px right-0"
                       } absolute object-cover`}
                       alt="Rectangle"
                       src={offer.bgImage}
                     />
                     <img
-                      className={`w-[165px] h-[57px] ${
+                      className={`w-full h-[57px] ${
                         index === 0
                           ? "top-[103px] left-0"
                           : "top-[104px] left-0"
@@ -773,8 +773,8 @@ const MainContentSection = () => {
                     <img
                       className={`absolute ${
                         index === 0
-                          ? "w-[103px] h-[102px] top-px left-[3px] aspect-[1.01]"
-                          : "w-[105px] h-[104px] top-0 left-[60px] aspect-[1.01]"
+                          ? "w-[62%] h-[102px] top-px left-[3px] aspect-[1.01]"
+                          : "w-[62%] h-[104px] top-0 right-[5%] aspect-[1.01]"
                       }`}
                       alt="Image"
                       src={offer.image}
@@ -799,31 +799,31 @@ const MainContentSection = () => {
                 ))}
               </div>
               <img
-                className="h-[220px] absolute w-[165px] top-0 left-[79px] object-cover"
+                className="h-[220px] absolute w-[44%] top-0 left-1/2 -translate-x-1/2 object-cover z-10"
                 alt="Rectangle"
                 src="https://c.animaapp.com/xCaMzUYh/img/rectangle-73-1@2x.png"
               />
               <img
-                className="absolute w-[165px] h-[57px] top-[163px] left-[79px] object-cover"
+                className="absolute w-[44%] h-[57px] top-[163px] left-1/2 -translate-x-1/2 object-cover z-10"
                 alt="Rectangle"
                 src="https://c.animaapp.com/xCaMzUYh/img/rectangle-74-1@2x.png"
               />
-              <div className="absolute top-[172px] left-[97px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5">
+              <div className="absolute top-[172px] left-1/2 -translate-x-1/2 [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5 z-20">
                 Chime- Mobile
                 <br />
                 Banking
               </div>
-              <div className="absolute w-[61px] h-6 top-[130px] left-[130px]">
+              <div className="absolute w-[61px] h-6 top-[130px] left-1/2 -translate-x-1/2 z-20">
                 <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
                   BitLabs
                 </div>
               </div>
               <img
-                className="absolute w-[125px] h-[153px] top-px left-[99px] aspect-[0.81]"
+                className="absolute w-[33%] h-[153px] top-px left-1/2 -translate-x-1/2 aspect-[0.81] object-contain z-20"
                 alt="Image"
                 src="https://c.animaapp.com/xCaMzUYh/img/image-3980@2x.png"
               />
-              <div className="w-[122px] h-[29px] top-[127px] left-[89px] rounded-[10px] absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
+              <div className="w-[32%] h-[29px] top-[127px] left-1/2 -translate-x-1/2 rounded-[10px] absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] z-20">
                 <div className="absolute top-1 left-2 [font-family:'Poppins',Helvetica] font-medium text-white text-[13px] tracking-[0] leading-[normal]">
                   Earn upto 100
                 </div>
@@ -894,17 +894,17 @@ const MainContentSection = () => {
             Get Paid to do Surveys
           </p>
         </div>
-        <div className="relative w-full h-[190px]">
-          <div className="w-[335px] h-[190px]">
-            <div className="relative w-[339px] h-[190px]">
-              <div className="absolute w-[339px] h-40 top-[11px] left-0">
+        <div className="relative w-full h-[190px] overflow-hidden">
+          <div className="w-full h-[190px] flex justify-center">
+            <div className="relative w-full max-w-[375px] h-[190px]">
+              <div className="absolute w-full h-40 top-[11px] left-0">
                 {surveyProviders
                   .filter((_, index) => index !== 1)
                   .map((provider, index) => (
                     <div
                       key={provider.id}
-                      className={`absolute w-[132px] h-40 top-0 ${
-                        index === 0 ? "left-0" : "left-[203px]"
+                      className={`absolute w-[35%] h-40 top-0 ${
+                        index === 0 ? "left-0" : "right-0"
                       } bg-[url(${provider.bgImage})] bg-cover bg-[50%_50%]`}
                     >
                       <div
@@ -937,17 +937,17 @@ const MainContentSection = () => {
                   ))}
               </div>
               <img
-                className="h-[190px] absolute w-[165px] top-0 left-[79px] object-cover"
+                className="h-[190px] absolute w-[44%] top-0 left-1/2 -translate-x-1/2 object-cover z-10"
                 alt="Rectangle"
                 src="https://c.animaapp.com/xCaMzUYh/img/rectangle-73-3@2x.png"
               />
-              <div className="absolute w-[61px] h-6 top-[123px] left-[130px]">
+              <div className="absolute w-[61px] h-6 top-[123px] left-1/2 -translate-x-1/2 z-20">
                 <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
                   BitLabs
                 </div>
               </div>
               <img
-                className="absolute w-20 h-[78px] top-[39px] left-[119px] aspect-[1.03]"
+                className="absolute w-20 h-[78px] top-[39px] left-1/2 -translate-x-1/2 aspect-[1.03] object-contain z-20"
                 alt="Image"
                 src="https://c.animaapp.com/xCaMzUYh/img/image-3974@2x.png"
               />
