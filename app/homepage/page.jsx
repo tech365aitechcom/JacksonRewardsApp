@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
 import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
-import { HomeIndicator } from "../../components/HomeIndicator"; // 
+import { HomeIndicator } from "../../components/HomeIndicator"; //
 import { WelcomeOffer } from "../../components/WelcomeOffer";
 
 const Frame = () => {
@@ -31,7 +31,10 @@ const Frame = () => {
   ];
 
   return (
-    <div className="relative w-[335px] h-[470px] mx-auto" data-model-id="2630:15320">
+    <div
+      className="relative w-[335px] h-[470px] mx-auto"
+      data-model-id="2630:15320"
+    >
       <nav
         className="absolute w-[254px] h-[71px] top-[406px] left-10"
         role="navigation"
@@ -40,7 +43,9 @@ const Frame = () => {
         {actionButtons.map((button, index) => (
           <div
             key={button.id}
-            className={`h-[62px] absolute w-[62px] top-0 ${index === 0 ? "left-0" : index === 1 ? "left-24" : "left-48"}`}
+            className={`h-[62px] absolute w-[62px] top-0 ${
+              index === 0 ? "left-0" : index === 1 ? "left-24" : "left-48"
+            }`}
           >
             {button.isActive ? (
               <div className="relative h-[71px]">
@@ -151,7 +156,10 @@ const Frame = () => {
 };
 const Homepage = () => {
   return (
-    <div className="relative w-full min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
+    <div
+      className="relative w-full min-h-screen bg-black pb-[170px]"
+      data-model-id="972:9945"
+    >
       <div className="absolute w-full h-[49px] top-0 left-0 z-10 px-5">
         <div className="absolute top-[37px] left-5 [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] tracking-[0] leading-3 whitespace-nowrap">
           App Version: V0.0.1
@@ -165,14 +173,16 @@ const Homepage = () => {
   );
 };
 
-
 const RewardProgress = ({ stats }) => {
   const rewardGoal = 6000;
 
   const currentProgress = stats?.currentXP ?? 0;
   const pointsNeeded = Math.max(0, rewardGoal - currentProgress);
 
-  const progressPercentage = Math.min((currentProgress / rewardGoal) * 100, 100);
+  const progressPercentage = Math.min(
+    (currentProgress / rewardGoal) * 100,
+    100
+  );
 
   const pointsData = {
     currentPoints: currentProgress,
@@ -183,25 +193,33 @@ const RewardProgress = ({ stats }) => {
   };
 
   return (
-    <div className="relative w-full max-w-[335px] h-[135px]" data-model-id="1151:33569">
+    <div
+      className="relative w-full max-w-[335px] h-[135px]"
+      data-model-id="1151:33569"
+    >
       <div className="relative w-[337px] h-[135px]">
         <div className="absolute w-[337px] h-[135px] top-0 left-0">
-          <div className="relative w-[335px] h-[135px] bg-black">
+          <div className="relative w-[335px] h-[135px] bg-black rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+            <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[0_0_30px_8px_rgba(255,215,0,0.06)]" />
             <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
               <div className="absolute w-[302px] h-[37px] top-0 left-0">
                 <div className="w-[304px] h-[37px]">
                   <div className="relative w-[302px] h-[37px]">
                     {/* Progress bar background */}
-                    <div className="absolute w-full h-full bg-gradient-to-r from-[#4a3c1a] to-[#6b5424] rounded-full border border-[#8b7332]"></div>
-                    
+                    <div className="absolute w-full h-full rounded-full overflow-hidden ring-1 ring-[#8b7332] bg-gradient-to-r from-[#4a3c1a] to-[#6b5424] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.25)]"></div>
+
                     {/* Progress bar fill */}
-                    <div 
-                      className="absolute h-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#f4d03f] rounded-full"
-                      style={{ width: `${(pointsData.currentPoints / pointsData.targetPoints) * 100}%` }}
+                    <div
+                      className="absolute h-full rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#f4d03f] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                      style={{
+                        width: `${
+                          (pointsData.currentPoints / pointsData.targetPoints) *
+                          100
+                        }%`,
+                      }}
                     ></div>
-                    
                     {/* Current level indicator */}
-                    <div className="absolute w-[29px] h-[30px] top-1 left-[3px] bg-[#ffd700] rounded-full border-2 border-[#b8860b] flex items-center justify-center">
+                    <div className="absolute w-[29px] h-[30px] top-1 left-[3px] bg-[#ffd700] rounded-full border-2 border-[#b8860b] flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.35),0_0_0_3px_rgba(255,215,0,0.25)]">
                       <div className="[font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[14.9px] tracking-[0.02px] leading-[normal]">
                         {pointsData.currentLevel}
                       </div>
@@ -210,7 +228,7 @@ const RewardProgress = ({ stats }) => {
                 </div>
               </div>
 
-              <p className="absolute w-[86px] top-2.5 left-[101px] opacity-80 [font-family:'Poppins',Helvetica] font-semibold text-transparent text-[14.9px] tracking-[0.02px] leading-[normal]">
+              <p className="absolute top-2.5 left-1/2 -translate-x-1/2  opacity-80 [font-family:'Poppins',Helvetica] font-semibold text-transparent text-[14.9px] tracking-[0.02px] leading-[normal]">
                 <span className="text-[#685512] tracking-[0]">
                   {pointsData.currentPoints}
                 </span>
@@ -290,12 +308,16 @@ const XpTierTracker = ({ stats }) => {
 
           <div
             className="absolute h-[11px] top-1.5 left-1 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-[32px]"
-            style={{ width: `${Math.min((progressPercentage / 100) * 137, 137)}px` }}
+            style={{
+              width: `${Math.min((progressPercentage / 100) * 137, 137)}px`,
+            }}
           />
 
           <div
             className="absolute w-6 h-6 top-0 bg-white rounded-full border-2 border-[#FFD700]"
-            style={{ left: `${Math.min((progressPercentage / 100) * 130, 130)}px` }}
+            style={{
+              left: `${Math.min((progressPercentage / 100) * 130, 130)}px`,
+            }}
           />
 
           <div className="left-[280px] absolute w-6 h-6 top-0 bg-[#373737] rounded-full border-2 border-[#666666]" />
@@ -307,11 +329,7 @@ const XpTierTracker = ({ stats }) => {
       </h2>
 
       <div className="absolute w-10 h-8 top-[15px] left-4  rounded-full flex items-center justify-center">
-        <img
-          src="/Pic.png"
-          alt="XP"
-          className="w-6 h-6"
-        />
+        <img src="/Pic.png" alt="XP" className="w-6 h-6" />
       </div>
 
       <div className="absolute w-[153px] h-[21px] top-[113px] left-[18px]">
@@ -324,11 +342,7 @@ const XpTierTracker = ({ stats }) => {
         </div>
 
         <div className="absolute w-5 h-[18px] top-[3px] left-[41px]  rounded-sm flex items-center justify-center">
-          <img
-            src="/Pic.png"
-            alt="XP"
-            className="w-5 h-5"
-          />
+          <img src="/Pic.png" alt="XP" className="w-5 h-5" />
         </div>
       </div>
 
@@ -344,9 +358,36 @@ const XpTierTracker = ({ stats }) => {
       </div>
 
       <div className="absolute w-5 h-5 top-36 left-[157px]">
-        <div className="w-4 h-4 flex items-center justify-center">
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1.5L6 6.5L11 1.5" stroke="#888888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <div className="w-4 h-4  items-center justify-center">
+          <svg
+            width="12"
+            height="8"
+            viewBox="0 0 12 8"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M1 1.5L6 6.5L11 1.5"
+              stroke="#888888"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <svg
+            width="12"
+            height="8"
+            viewBox="0 0 12 8"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M1 1.5L6 6.5L11 1.5"
+              stroke="#888888"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
       </div>
@@ -369,7 +410,7 @@ const HeaderSection = () => {
           // Fetch profile and balance in parallel
           const [profileData, walletData] = await Promise.all([
             getProfile(token),
-            getProfileStats(token)
+            getProfileStats(token),
           ]);
           setProfile(profileData);
           setBalance(walletData.balance);
@@ -390,14 +431,12 @@ const HeaderSection = () => {
   }, [token, user]);
 
   const handleProfileClick = () => {
-    router.push('/myprofile');
+    router.push("/myprofile");
   };
-  const handleWalletClick = () => router.push('/wallet'); // Example route, adjust as needed
-
-
+  const handleWalletClick = () => router.push("/wallet"); // Example route, adjust as needed
 
   // Use fetched first name or fallback from user context or a generic greeting
-  const firstName = profile?.firstName || user?.firstName || 'there';
+  const firstName = profile?.firstName || user?.firstName || "there";
   const greeting = `Hi ${firstName}! 👋`;
 
   return (
@@ -417,11 +456,15 @@ const HeaderSection = () => {
             <img
               className="w-full h-full pointer-events-none rounded-full object-cover"
               alt="Profile"
-              src={profile?.profile?.avatar || "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"}
+              src={
+                profile?.profile?.avatar ||
+                "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png"
+              }
               crossOrigin="anonymous"
               onError={(e) => {
-                console.log('Avatar failed to load, falling back to default');
-                e.target.src = "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png";
+                console.log("Avatar failed to load, falling back to default");
+                e.target.src =
+                  "https://c.animaapp.com/xCaMzUYh/img/group-4-1@2x.png";
               }}
             />
           </button>
@@ -431,7 +474,7 @@ const HeaderSection = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center">
           <div className="w-[87px] h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between px-2.5">
             <div className="text-white text-lg [font-family:'Poppins',Helvetica] font-semibold leading-[normal]">
@@ -449,9 +492,7 @@ const HeaderSection = () => {
   );
 };
 
-
 const MainContentSection = () => {
-
   const { token } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -463,7 +504,10 @@ const MainContentSection = () => {
           const data = await getHomeDashboard(token);
           setDashboardData(data);
         } catch (error) {
-          console.error("Failed to fetch dashboard data for main content:", error);
+          console.error(
+            "Failed to fetch dashboard data for main content:",
+            error
+          );
         } finally {
           setIsLoading(false);
         }
@@ -471,7 +515,6 @@ const MainContentSection = () => {
       fetchData();
     }
   }, [token]);
-
 
   const mostPlayedGames = [
     {
@@ -487,7 +530,8 @@ const MainContentSection = () => {
       id: 2,
       name: "CS:Go Rall",
       image: "https://c.animaapp.com/xCaMzUYh/img/layer-30@2x.png",
-      bgGradient: "linear-gradient(180deg,rgba(50,50,50,1)_0%,rgba(30,30,30,1)_100%)",
+      bgGradient:
+        "linear-gradient(180deg,rgba(50,50,50,1)_0%,rgba(30,30,30,1)_100%)",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-7.svg",
       borderColor: "#FF69B4",
       isNew: false,
@@ -514,7 +558,8 @@ const MainContentSection = () => {
       id: 5,
       name: "Sugar Rush",
       image: "https://c.animaapp.com/xCaMzUYh/img/image-217@2x.png",
-      bgGradient: "linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)",
+      bgGradient:
+        "linear-gradient(180deg,rgba(141,173,248,1)_0%,rgba(240,136,249,1)_100%)",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-2.svg",
       borderColor: "#FF69B4",
       isNew: false,
@@ -523,7 +568,8 @@ const MainContentSection = () => {
       id: 6,
       name: "Le Bandit",
       image: "https://c.animaapp.com/xCaMzUYh/img/image-218@2x.png",
-      bgGradient: "linear-gradient(180deg,rgba(43,113,59,1)_0%,rgba(250,212,39,1)_100%)",
+      bgGradient:
+        "linear-gradient(180deg,rgba(43,113,59,1)_0%,rgba(250,212,39,1)_100%)",
       borderImage: "https://c.animaapp.com/xCaMzUYh/img/oval-8.svg",
       borderColor: "#FF69B4",
       isNew: false,
@@ -615,14 +661,32 @@ const MainContentSection = () => {
                   border: `2px solid ${game.borderColor}`,
                   boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px ${game.borderColor}40`,
                   background: `url(${game.borderImage})`,
-                  backgroundSize: '100% 100%'
+                  backgroundSize: "100% 100%",
                 }}
               >
                 <div
-                  className={`relative w-16 h-16 top-1 left-1 rounded-[32px] shadow-inner ${game.bgGradient ? `bg-[${game.bgGradient}]` : game.bgImage ? `bg-[url(${game.bgImage})] bg-cover bg-[50%_50%]` : "bg-[#00000033]"}`}
+                  className={`relative w-16 h-16 top-1 left-1 rounded-[32px] shadow-inner ${
+                    game.bgGradient
+                      ? `bg-[${game.bgGradient}]`
+                      : game.bgImage
+                      ? `bg-[url(${game.bgImage})] bg-cover bg-[50%_50%]`
+                      : "bg-[#00000033]"
+                  }`}
                 >
                   <img
-                    className={`absolute ${game.id === 1 ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]" : game.id === 2 ? "w-10 h-[44px] top-[10px] left-3 aspect-[0.89] object-cover" : game.id === 3 ? "w-[67px] h-[58px] top-1.5 left-0" : game.id === 4 ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover" : game.id === 5 ? "w-[68px] h-[42px] top-[11px] left-0" : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"}`}
+                    className={`absolute ${
+                      game.id === 1
+                        ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]"
+                        : game.id === 2
+                        ? "w-10 h-[44px] top-[10px] left-3 aspect-[0.89] object-cover"
+                        : game.id === 3
+                        ? "w-[67px] h-[58px] top-1.5 left-0"
+                        : game.id === 4
+                        ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover"
+                        : game.id === 5
+                        ? "w-[68px] h-[42px] top-[11px] left-0"
+                        : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"
+                    }`}
                     alt="Image"
                     src={game.image}
                   />
@@ -648,10 +712,10 @@ const MainContentSection = () => {
             💸 💸 Fast Fun, Real Rewards!💸 💸
           </p>
         </div>
-        
+
         {/* Welcome Offer Component */}
         <WelcomeOffer />
-        
+
         <Frame />
       </div>
       <div className="flex flex-col w-full items-start gap-4 relative">
@@ -667,20 +731,36 @@ const MainContentSection = () => {
                 {nonGamingOffers.slice(0, 2).map((offer, index) => (
                   <div
                     key={offer.id}
-                    className={`absolute w-[165px] ${index === 0 ? "h-40 top-px left-0" : "h-[161px] top-0 left-[170px]"}`}
+                    className={`absolute w-[165px] ${
+                      index === 0
+                        ? "h-40 top-px left-0"
+                        : "h-[161px] top-0 left-[170px]"
+                    }`}
                   >
                     <img
-                      className={`${index === 0 ? "w-[132px] h-40 top-0 left-0" : "w-[132px] h-40 top-px left-[33px]"} absolute object-cover`}
+                      className={`${
+                        index === 0
+                          ? "w-[132px] h-40 top-0 left-0"
+                          : "w-[132px] h-40 top-px left-[33px]"
+                      } absolute object-cover`}
                       alt="Rectangle"
                       src={offer.bgImage}
                     />
                     <img
-                      className={`w-[165px] h-[57px] ${index === 0 ? "top-[103px] left-0" : "top-[104px] left-0"} absolute object-cover`}
+                      className={`w-[165px] h-[57px] ${
+                        index === 0
+                          ? "top-[103px] left-0"
+                          : "top-[104px] left-0"
+                      } absolute object-cover`}
                       alt="Rectangle"
                       src={offer.bottomBg}
                     />
                     <div
-                      className={`absolute ${index === 0 ? "top-[111px] left-[11px]" : "top-28 left-[11px]"} [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
+                      className={`absolute ${
+                        index === 0
+                          ? "top-[111px] left-[11px]"
+                          : "top-28 left-[11px]"
+                      } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
                     >
                       {offer.name.split(" ").map((word, i) => (
                         <span key={i}>
@@ -691,12 +771,20 @@ const MainContentSection = () => {
                       ))}
                     </div>
                     <img
-                      className={`absolute ${index === 0 ? "w-[103px] h-[102px] top-px left-[3px] aspect-[1.01]" : "w-[105px] h-[104px] top-0 left-[60px] aspect-[1.01]"}`}
+                      className={`absolute ${
+                        index === 0
+                          ? "w-[103px] h-[102px] top-px left-[3px] aspect-[1.01]"
+                          : "w-[105px] h-[104px] top-0 left-[60px] aspect-[1.01]"
+                      }`}
                       alt="Image"
                       src={offer.image}
                     />
                     <div
-                      className={`w-24 h-[23px] ${index === 0 ? "top-[72px] left-2.5" : "top-[73px] left-11"} rounded absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
+                      className={`w-24 h-[23px] ${
+                        index === 0
+                          ? "top-[72px] left-2.5"
+                          : "top-[73px] left-11"
+                      } rounded absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
                     >
                       <div className="absolute top-[3px] left-1.5 [font-family:'Poppins',Helvetica] font-medium text-white text-[10.2px] tracking-[0] leading-[normal]">
                         {offer.earnAmount}
@@ -815,21 +903,33 @@ const MainContentSection = () => {
                   .map((provider, index) => (
                     <div
                       key={provider.id}
-                      className={`absolute w-[132px] h-40 top-0 ${index === 0 ? "left-0" : "left-[203px]"} bg-[url(${provider.bgImage})] bg-cover bg-[50%_50%]`}
+                      className={`absolute w-[132px] h-40 top-0 ${
+                        index === 0 ? "left-0" : "left-[203px]"
+                      } bg-[url(${provider.bgImage})] bg-cover bg-[50%_50%]`}
                     >
                       <div
-                        className={`absolute ${index === 0 ? "top-[97px] left-[21px]" : "top-[90px] left-[37px]"} [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
+                        className={`absolute ${
+                          index === 0
+                            ? "top-[97px] left-[21px]"
+                            : "top-[90px] left-[37px]"
+                        } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
                       >
                         {provider.name.split(" ").map((word, i) => (
                           <span key={i}>
                             {word}
                             {i === 0 && <br />}
-                            {i > 0 && i < provider.name.split(" ").length - 1 && " "}
+                            {i > 0 &&
+                              i < provider.name.split(" ").length - 1 &&
+                              " "}
                           </span>
                         ))}
                       </div>
                       <img
-                        className={`absolute ${index === 0 ? "w-[65px] h-[65px] top-6 left-[18px] aspect-[1]" : "w-[70px] h-[51px] top-[31px] left-[41px] aspect-[1.37]"}`}
+                        className={`absolute ${
+                          index === 0
+                            ? "w-[65px] h-[65px] top-6 left-[18px] aspect-[1]"
+                            : "w-[70px] h-[51px] top-[31px] left-[41px] aspect-[1.37]"
+                        }`}
                         alt="Image"
                         src={provider.image}
                       />
@@ -880,6 +980,5 @@ const MainContentSection = () => {
     </div>
   );
 };
-
 
 export default Homepage;
