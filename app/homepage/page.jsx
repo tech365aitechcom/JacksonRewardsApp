@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
 import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
 import { HomeIndicator } from "../../components/HomeIndicator"; // 
+import { WelcomeOffer } from "../../components/WelcomeOffer";
 const Homepage = () => {
   return (
     <div className="relative w-full max-w-[375px] mx-auto min-h-screen bg-black pb-[170px]" data-model-id="972:9945">
@@ -30,39 +31,86 @@ const RewardProgress = ({ stats }) => {
 
   const progressPercentage = Math.min((currentProgress / rewardGoal) * 100, 100);
 
+  const pointsData = {
+    currentPoints: currentProgress,
+    targetPoints: rewardGoal,
+    pointsNeeded: pointsNeeded,
+    currentLevel: stats?.tier ?? 2,
+    nextLevel: (stats?.tier ?? 2) + 1,
+  };
+
   return (
-    <div className="relative w-[335px] h-[135px] shadow-[2.48px_2.48px_18.58px_#3b3b3b80,-1.24px_-1.24px_16.1px_#825700]">
-      <div className="relative w-[335px] h-[135px] bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289468@2x.png)] bg-cover bg-center">
-        {/* Texts */}
-        <div className="absolute w-[299px] h-[42px] top-[19px] left-5">
-          <p className="absolute w-full top-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[-0.37px] leading-[27.2px] whitespace-nowrap">
-            Hurry! Earn {pointsNeeded} more & Claim
-          </p>
-          <p className="absolute w-full top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] whitespace-nowrap">
-            {pointsNeeded} Points until your next reward
-          </p>
-        </div>
+    <div className="relative w-[335px] h-[135px]" data-model-id="1151:33569">
+      <div className="relative w-[337px] h-[135px]">
+        <div className="absolute w-[337px] h-[135px] top-0 left-0">
+          <div className="relative w-[335px] h-[135px] bg-black">
+            <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
+              <div className="absolute w-[302px] h-[37px] top-0 left-0">
+                <div className="w-[304px] h-[37px]">
+                  <div className="relative w-[302px] h-[37px]">
+                    {/* Progress bar background */}
+                    <div className="absolute w-full h-full bg-gradient-to-r from-[#4a3c1a] to-[#6b5424] rounded-full border border-[#8b7332]"></div>
+                    
+                    {/* Progress bar fill */}
+                    <div 
+                      className="absolute h-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#f4d03f] rounded-full"
+                      style={{ width: `${(pointsData.currentPoints / pointsData.targetPoints) * 100}%` }}
+                    ></div>
+                    
+                    {/* Current level indicator */}
+                    <div className="absolute w-[29px] h-[30px] top-1 left-[3px] bg-[#ffd700] rounded-full border-2 border-[#b8860b] flex items-center justify-center">
+                      <div className="[font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[14.9px] tracking-[0.02px] leading-[normal]">
+                        {pointsData.currentLevel}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        {/* Progress Bar */}
-        <div className="absolute w-[302px] h-[37px] top-[73px] left-[17px]">
-          <div className="relative w-full h-full bg-[url(https://c.animaapp.com/xCaMzUYh/img/group-289352@2x.png)] bg-cover bg-center">
-            {/* Dynamic Progress Fill */}
-            <div className="absolute h-full bg-yellow-500 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+              <p className="absolute w-[86px] top-2.5 left-[101px] opacity-80 [font-family:'Poppins',Helvetica] font-semibold text-transparent text-[14.9px] tracking-[0.02px] leading-[normal]">
+                <span className="text-[#685512] tracking-[0]">
+                  {pointsData.currentPoints}
+                </span>
 
-            {/* Static background and icons */}
-            <img className="absolute w-[29px] h-[30px] top-1 left-[3px]" alt="Ellipse" src="https://c.animaapp.com/xCaMzUYh/img/ellipse-35.svg" />
-            <div className="absolute w-2 top-2 left-3 text-white text-[14.9px] tracking-[0.02px] font-semibold leading-[normal]">{stats?.tier ?? 1}</div>
+                <span className="text-[#8d741b80] tracking-[0]">
+                  /{pointsData.targetPoints}
+                </span>
+              </p>
+            </div>
 
-            {/* Progress Text */}
-            <p className="absolute w-auto top-2.5 left-[101px] opacity-80 font-semibold text-transparent text-[14.9px]">
-              <span className="text-white">{currentProgress}</span>
-              <span className="text-[#8d741b80]">/{rewardGoal}</span>
-            </p>
+            <header className="absolute w-[299px] h-[42px] top-[19px] left-5">
+              <div className="relative w-[301px] h-[42px]">
+                <div className="absolute w-[301px] h-[21px] top-0 left-0">
+                  <h1 className="absolute w-[299px] top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[-0.37px] leading-[27.2px] whitespace-nowrap">
+                    Hurry! Earn {pointsData.pointsNeeded} more &amp; Claim
+                  </h1>
+                </div>
 
-            {/* Next Level Icon */}
-            <div className="absolute w-8 h-[30px] top-[3px] right-[-10px] opacity-50">...</div>
+                <p className="absolute w-[235px] top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] whitespace-nowrap">
+                  {pointsData.pointsNeeded} Points until your next reward
+                </p>
+              </div>
+            </header>
           </div>
         </div>
+
+        <div className="absolute w-8 h-[30px] top-[77px] left-72 opacity-50">
+          <div className="relative w-[30px] h-[30px]">
+            <div className="absolute w-[30px] h-[30px] top-0 left-0">
+              <div className="h-[30px] bg-[url(https://c.animaapp.com/BzW3YOS5/img/ellipse-35-1.svg)] bg-[100%_100%]">
+                <div className="relative w-[15px] h-3.5 top-2 left-2 overflow-hidden">
+                  <div className="absolute w-[15px] h-3.5 top-0 left-0 bg-[#815c23] rounded-sm"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-[9px] top-1 left-2.5 absolute [font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[14.9px] tracking-[0.02px] leading-[normal]">
+              {pointsData.nextLevel}
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute w-3 h-[11px] top-[85px] left-[99px] bg-[#ffd700] rounded-sm"></div>
       </div>
     </div>
   );
@@ -71,49 +119,82 @@ const RewardProgress = ({ stats }) => {
 const XpTierTracker = ({ stats }) => {
   // Define XP goals for each tier. These would ideally come from a config or API.
   const tierGoals = { junior: 0, mid: 5000, senior: 10000 };
-  const currentXp = stats?.currentXP ?? 0;
+  const currentXp = stats?.currentXP ?? 2592;
   const totalXpGoal = tierGoals.senior;
 
+  // Calculate progress - appears to be around 25% based on the image
   const progressPercentage = Math.min((currentXp / totalXpGoal) * 100, 100);
 
+  const progressData = {
+    currentXp: currentXp,
+    totalXp: totalXpGoal,
+    levels: [
+      { name: "Junior", position: "left-0" },
+      { name: "Mid-level", position: "left-[114px]" },
+      { name: "Senior", position: "left-[259px]" },
+    ],
+  };
+
   return (
-    <div className="relative w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700 p-4 flex flex-col justify-between">
-      <div>
-        <div className="flex items-center gap-3">
-          <img className="w-10 h-8" alt="Trophy Icon" src="https://c.animaapp.com/xCaMzUYh/img/pic.svg" />
-          <p className="font-semibold text-white text-base">You're off to a great start!</p>
-        </div>
+    <div className="relative w-[335px] h-[169px] bg-black rounded-[10px] border border-solid border-neutral-700">
+      <div className="absolute w-[300px] h-[11px] top-[90px] left-[18px]">
+        <div className="relative w-[304px] h-6 -top-1.5 -left-1">
+          <div className="absolute w-[304px] h-[19px] top-0.5 left-0 bg-[#373737] rounded-[32px] border-4 border-solid border-[#ffffff33]" />
 
-        <div className="flex justify-between w-full mt-4 text-white text-xs px-1">
-          <span>Junior</span>
-          <span>Mid-level</span>
-          <span>Senior</span>
-        </div>
-      </div>
-
-      <div>
-        {/* Custom Progress Bar with Slider */}
-        <div className="relative w-full h-1.5 flex items-center">
-          {/* Track Background */}
-          <div className="w-full h-full bg-neutral-800 rounded-full"></div>
-          {/* Achieved Progress Track */}
-          <div className="absolute top-0 left-0 h-full bg-neutral-400 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
-          {/* Slider Thumb */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-400 rounded-full border-2 border-black shadow-lg"
-            style={{ left: `calc(${progressPercentage}% - 8px)` }} // Offset by half the thumb's width
-          ></div>
-        </div>
+            className="absolute h-[11px] top-1.5 left-1 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-[32px]"
+            style={{ width: `${Math.min((progressPercentage / 100) * 137, 137)}px` }}
+          />
 
-        {/* Current Progress Text */}
-        <div className="flex items-center mt-3">
-          <img className="w-5 h-[18px]" alt="XP Icon" src="https://c.animaapp.com/xCaMzUYh/img/pic-1.svg" />
-          <div className="ml-2 font-medium text-[#d2d2d2] text-sm">{currentXp.toLocaleString()}</div>
-          <div className="ml-1 font-medium text-[#dddddd] text-sm">out of {totalXpGoal.toLocaleString()}</div>
+          <div
+            className="absolute w-6 h-6 top-0 bg-white rounded-full border-2 border-[#FFD700]"
+            style={{ left: `${Math.min((progressPercentage / 100) * 130, 130)}px` }}
+          />
+
+          <div className="left-[280px] absolute w-6 h-6 top-0 bg-[#373737] rounded-full border-2 border-[#666666]" />
         </div>
       </div>
 
-      <img className="absolute w-5 h-5 bottom-3 left-1/2 -translate-x-1/2" alt="Arrow" src="https://c.animaapp.com/xCaMzUYh/img/arrow.svg" />
+      <h2 className="w-[210px] h-6 top-4 left-[62px] [font-family:'Poppins-SemiBold',Helvetica] font-semibold text-white text-base leading-6 absolute tracking-[0]">
+        You&#39;re off to a great start!
+      </h2>
+
+      <div className="absolute w-10 h-8 top-[15px] left-4 bg-white rounded-full flex items-center justify-center">
+        <span className="text-black font-bold text-sm">XP</span>
+      </div>
+
+      <div className="absolute w-[153px] h-[21px] top-[113px] left-[18px]">
+        <div className="h-[21px] -top-px left-[65px] [font-family:'Poppins-Medium',Helvetica] font-medium text-[#dddddd] text-sm text-right leading-[normal] absolute tracking-[0]">
+          out of {progressData.totalXp.toLocaleString()}
+        </div>
+
+        <div className="h-[21px] -top-px left-0 [font-family:'Poppins-Medium',Helvetica] font-medium text-[#d2d2d2] text-sm leading-[normal] absolute tracking-[0]">
+          {progressData.currentXp.toLocaleString()}
+        </div>
+
+        <div className="absolute w-5 h-[18px] top-[3px] left-[41px] bg-[#FFD700] rounded-sm flex items-center justify-center">
+          <span className="text-black font-bold text-xs">XP</span>
+        </div>
+      </div>
+
+      <div className="absolute w-[303px] h-[15px] top-[63px] left-4">
+        {progressData.levels.map((level, index) => (
+          <div
+            key={index}
+            className={`h-3.5 -top-px ${level.position} [font-family:'Poppins-Regular',Helvetica] font-normal text-white text-sm leading-[14px] whitespace-nowrap absolute tracking-[0]`}
+          >
+            {level.name}
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute w-5 h-5 top-36 left-[157px]">
+        <div className="w-4 h-4 flex items-center justify-center">
+          <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 1.5L6 6.5L11 1.5" stroke="#888888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
     </div>
   );
 };
@@ -408,6 +489,10 @@ const MainContentSection = () => {
             💸 💸 Fast Fun, Real Rewards!💸 💸
           </p>
         </div>
+        
+        {/* Welcome Offer Component */}
+        <WelcomeOffer />
+        
         <div className="relative w-full h-[557px] rounded-[14px] overflow-hidden shadow-[0px_14px_20px_#746ee85c] bg-[linear-gradient(180deg,rgba(94,152,219,1)_0%,rgba(113,106,231,1)_100%)]">
           <div className="absolute w-[372px] h-[155px] top-[-23px] -left-9">
             <div className="absolute w-[372px] h-[155px] top-0 left-0">
