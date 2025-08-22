@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login, signup } from "@/lib/api";
+import { login, signup, getProfile } from "@/lib/api";
 import useOnboardingStore from "@/stores/useOnboardingStore";
 
 const AuthContext = createContext({});
@@ -118,6 +118,25 @@ export function AuthProvider({ children }) {
     console.log("➡️ Redirected to /login");
   };
 
+  const handleSocialAuthCallback = async (token) => {
+    setIsLoading(true);
+    try {
+      setToken(token);
+      localStorage.setItem("authToken", token);
+      const userProfile = await getProfile(token);
+      console.log("📩 Fetched user profile:", userProfile);
+      handleAuthSuccess({ token, user: userProfile });
+      return { ok: true };
+    } catch (error) {
+      console.error("❌ handleSocialAuthCallback failed:", error);
+      // If it fails, clear the bad token
+      signOut();
+      return { ok: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // In AuthContext.js
   const updateUserInContext = (newUserData) => {
     setUser(newUserData);
@@ -133,6 +152,7 @@ export function AuthProvider({ children }) {
     signUpAndSignIn,
     signOut,
     updateUserInContext,
+    handleSocialAuthCallback,
   };
 
   console.log("📡 [AuthProvider] Context Value:", value);
