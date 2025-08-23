@@ -345,7 +345,7 @@ const SignUp = () => {
                       onChange={(e) => handleInputChange("mobile", e.target.value.replace(/\D/g, ''))}
                       maxLength={10}
                       className="absolute top-[17px] left-[105px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[190px] disabled:opacity-50"
-                      placeholder="Enter mobile number"
+                      // placeholder="Enter mobile number"
                       required
                       disabled={isOtpSent || isMobileVerified}
                     />
