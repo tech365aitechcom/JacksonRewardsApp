@@ -1,9 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 
 export const WelcomeOffer = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+  
   return (
     <div
-      className="relative w-[334px] h-[245px] rounded-[20px] overflow-hidden bg-[linear-gradient(103deg,rgba(121,32,207,1)_0%,rgba(205,73,153,1)_80%)]"
+      className={`relative w-[334px] rounded-[20px] overflow-hidden bg-[linear-gradient(103deg,rgba(121,32,207,1)_0%,rgba(205,73,153,1)_80%)] transition-all duration-300 ${
+        isExpanded ? 'h-[330px]' : 'h-[245px]'
+      }`}
       data-model-id="4001:7472"
     >
       <div className="absolute w-[334px] h-[245px] top-0 left-0">
@@ -47,13 +55,18 @@ export const WelcomeOffer = () => {
 
         <div className="h-[73px] top-[172px] bg-[#982fbb] rounded-[0px_0px_20px_20px] absolute w-[334px] left-0" />
 
-        <div className="inline-flex items-center gap-1 absolute top-[214px] left-[100px]">
+        <div 
+          className="inline-flex items-center gap-1 absolute top-[214px] left-[100px] cursor-pointer"
+          onClick={toggleExpanded}
+        >
           <div className="relative w-fit mt-[-1.00px] font-medium [font-family:'Poppins',Helvetica] text-white text-base tracking-[0] leading-6 whitespace-nowrap">
             Check Details
           </div>
 
           <img
-            className="relative w-5 h-5"
+            className={`relative w-5 h-5 transition-transform duration-300 ${
+              isExpanded ? 'rotate-90' : ''
+            }`}
             alt="Arrow"
             src="https://c.animaapp.com/iuW6cMRd/img/arrow.svg"
           />
@@ -71,6 +84,15 @@ export const WelcomeOffer = () => {
           22h:30 mins
         </div>
       </div>
+
+      {/* Expanded content */}
+      {isExpanded && (
+        <div className="absolute w-full top-[245px] left-0 bg-[#982fbb] -mt-2 rounded-[0px_0px_20px_20px] px-6 pt-4 pb-6 animate-fade-in">
+          <div className="font-normal [font-family:'Poppins',Helvetica] text-white text-sm leading-6 break-words">
+            Please start downloading your first game from below suggestions to claim your Welcome Bonus.
+          </div>
+        </div>
+      )}
     </div>
   );
 };
