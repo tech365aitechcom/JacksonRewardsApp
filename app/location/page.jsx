@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext"; // Import auth context
 import { updateLocationSettings, updateLocation } from "@/lib/api"; // Import API functions
+import { Geolocation } from '@capacitor/geolocation';
 
 export default function LocationPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,8 +12,8 @@ export default function LocationPage() {
   const [isSkipping, setIsSkipping] = useState(false);
   const { user, token } = useAuth(); // Get user and token for API calls
   const [showSkipWarning, setShowSkipWarning] = useState(false);
-  const handleContinue = () => {
-    // Guard against missing auth data
+  // --- 2. THIS IS THE REPLACED FUNCTION THAT USES THE NATIVE PLUGIN ---
+  const handleContinue = async () => {
     if (!user || !token) {
       setError("Authentication session not found. Please log in again.");
       return;
@@ -21,49 +22,48 @@ export default function LocationPage() {
     setIsLoading(true);
     setError(null);
 
-    // Use the browser's Geolocation API
-    navigator.geolocation.getCurrentPosition(
-      // SUCCESS: User grants permission
-      async (position) => {
+    try {
+      // First, request permission. This triggers the native Android dialog.
+      const permissionStatus = await Geolocation.requestPermissions();
+
+      if (permissionStatus.location === 'granted') {
+        // If permission is granted, get the current GPS position.
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000, // 10 seconds
+        });
         const { latitude, longitude } = position.coords;
-        try {
-          // Update backend settings and location in parallel for efficiency
-          await Promise.all([
-            updateLocationSettings(user.mobile, "granted", "while_using"),
-            updateLocation({ latitude, longitude }, token)
-          ]);
 
-          // 3. Navigate to the dashboard
-          router.push("/homepage");
-        } catch (apiError) {
-          console.error("Failed to update location on backend:", apiError);
-          setError(apiError.message || "Could not save your location. Please try again.");
-          setIsLoading(false);
-        }
-      },
-      // ERROR CALLBACK (User clicked "Block" or an error occurred)
-      async (err) => {
-        console.warn(`Location permission error (${err.code}): ${err.message}`);
+        // Update your backend with the location data and settings
+        await Promise.all([
+          updateLocationSettings(user.mobile, "granted", "while_using"),
+          updateLocation({ latitude, longitude }, token)
+        ]);
 
-        try {
-          // Update permission status to 'denied' on the backend
-          await updateLocationSettings(user.mobile, "denied", "never");
-          console.log("Location settings updated to 'denied'");
-        } catch (apiError) {
-          console.error("Failed to update location settings to 'denied':", apiError);
-        } finally {
-          // Provide feedback to the user and stop loading
-          setError("Location access is required for the app to work correctly.");
-          setIsLoading(false);
-        }
-      },
-      // Geolocation API options
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        // Navigate to the next page on success
+        router.push("/homepage");
+
+      } else {
+        // This block runs if the user taps "Don't allow"
+        console.warn('Location permission was denied by the user.');
+        await updateLocationSettings(user.mobile, "denied", "never");
+        setError("Location access is required for key features. You can enable it later in app settings.");
       }
-    );
+    } catch (err) {
+      console.error("Geolocation plugin error:", err);
+      // This block handles errors like the user's GPS being turned off
+      let errorMessage = "Could not get your location. Please ensure location services are enabled on your device and try again.";
+
+      try {
+        await updateLocationSettings(user.mobile, "denied", "never");
+      } catch (apiError) {
+        console.error("Failed to update settings after location error:", apiError);
+      }
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSkip = async () => {
