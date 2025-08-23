@@ -62,7 +62,7 @@ export const HomeIndicator = ({ activeTab }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 w-full h-[157px] z-[9999] bg-black"
+      className="fixed bottom-0 left-0 right-0 w-full h-[157px] z-[9999]"
       data-model-id="730:32095"
       role="navigation"
       aria-label="Main navigation"
@@ -72,11 +72,10 @@ export const HomeIndicator = ({ activeTab }) => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        backgroundColor: 'black'
       }}
     >
-      {/* Background overlay to prevent content bleed */}
-      <div className="absolute inset-0 bg-black w-full h-full"></div>
+      {/* Background overlay covering only bottom half */}
+      <div className="absolute bottom-0 left-0 right-0 bg-black w-full h-[78px]"></div>
       
       <div className="relative h-[120px] -top-px z-10">
         <div

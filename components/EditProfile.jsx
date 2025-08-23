@@ -245,7 +245,7 @@ export const EditProfile = () => {
               alt="Profile avatar preview"
               width={132}
               height={120}
-              className="object-cover rounded-full"
+              className="w-[132px] h-[120px] object-cover rounded-full"
               crossOrigin="anonymous"
             />
             <div className="absolute w-[45px] h-[45px] bottom-0 right-0">
