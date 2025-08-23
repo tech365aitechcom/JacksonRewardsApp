@@ -1,9 +1,10 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Added usePathname
+import { useRouter, usePathname } from "next/navigation";
 import { login, signup, getProfile } from "@/lib/api";
 import useOnboardingStore from "@/stores/useOnboardingStore";
-import LoadingScreen from "@/components/LoadingScreen"; // Ensure you have this component
+import LoadingScreen from "@/components/LoadingScreen";
+import { App } from "@capacitor/app";
 
 const AuthContext = createContext({});
 
@@ -24,7 +25,7 @@ const PUBLIC_ONLY_ROUTES = [
   "/signup",
   "/forgot-password",
   "/reset-password",
-  "/select-age", // Add all onboarding steps here
+  "/select-age",
   "/onboarding/select-gender",
   "/onboarding/game-preferences",
   "/onboarding/game-styles",
@@ -34,39 +35,50 @@ const PUBLIC_ONLY_ROUTES = [
 
 export function AuthProvider({ children }) {
   const router = useRouter();
-  const pathname = usePathname(); // ✅ ADDED HOOK
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log(
-      "🔄 [AuthProvider] useEffect running - checking localStorage..."
-    );
+    const listener = App.addListener("appUrlOpen", (event) => {
+      const url = new URL(event.url);
+      const token = url.searchParams.get("token");
+
+      if (url.hostname === "auth" && url.pathname === "/callback" && token) {
+        console.log("Token received via deep link. Finalizing login...");
+        handleSocialAuthCallback(token).then((result) => {
+          if (result.ok) {
+            router.replace("/homepage");
+          } else {
+            router.replace("/login");
+          }
+        });
+      }
+    });
+    return () => {
+      listener.remove();
+    };
+  }, [router]);
+
+  useEffect(() => {
     try {
       const storedToken = localStorage.getItem("authToken");
       const storedUser = localStorage.getItem("user");
-      console.log("📦 Stored Token:", storedToken);
-      console.log("📦 Stored User:", storedUser);
-
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        console.log("✅ Session restored from storage");
       } else {
-        console.log("⚠️ No session found in storage");
       }
     } catch (error) {
       console.error("❌ Failed to load session from storage", error);
       localStorage.clear();
     } finally {
       setIsLoading(false);
-      console.log("⏹️ Finished checking storage. isLoading =", false);
     }
   }, []);
 
   useEffect(() => {
-    // Wait until the session has been loaded before running any checks
     if (isLoading) {
       console.log("🛡️ [Gatekeeper] Waiting for session to load...");
       return;
@@ -127,7 +139,6 @@ export function AuthProvider({ children }) {
 
   const signIn = async (emailOrMobile, password) => {
     console.log("🔐 signIn called with:", { emailOrMobile, password });
-    setIsLoading(true);
     try {
       const data = await login(emailOrMobile, password);
       console.log("📩 login API response:", data);
@@ -136,14 +147,12 @@ export function AuthProvider({ children }) {
       console.error("❌ signIn failed:", error);
       return { ok: false, error: error.body || { error: error.message } };
     } finally {
-      setIsLoading(false);
       console.log("⏹️ signIn finished, isLoading =", false);
     }
   };
 
   const signUpAndSignIn = async (signupData) => {
     console.log("🆕 signUpAndSignIn called with:", signupData);
-    setIsLoading(true);
     try {
       const data = await signup(signupData);
       console.log("📩 signup API response:", data);
@@ -154,7 +163,6 @@ export function AuthProvider({ children }) {
       console.error("❌ signUpAndSignIn failed:", error);
       return { ok: false, error: error.body || { error: error.message } };
     } finally {
-      setIsLoading(false);
       console.log("⏹️ signUpAndSignIn finished, isLoading =", false);
     }
   };
@@ -181,7 +189,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem("authToken", token);
       const userProfile = await getProfile(token);
       console.log("📩 Fetched user profile:", userProfile);
-      return handleAuthSuccess({ token, user: userProfile }); // Use handleAuthSuccess to set all flags
+      return handleAuthSuccess({ token, user: userProfile });
     } catch (error) {
       console.error("❌ handleSocialAuthCallback failed:", error);
       signOut();
@@ -215,7 +223,7 @@ export function AuthProvider({ children }) {
   console.log("📡 [AuthProvider] Context Value:", {
     ...value,
     user: value.user ? "..." : null,
-  }); // Avoid logging sensitive user data
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
