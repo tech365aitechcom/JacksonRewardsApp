@@ -80,15 +80,21 @@ export default function GameStyleSelection() {
                     }`}
                 />
                 <div
-                  className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex items-center justify-center bg-white group-hover:translate-y-0.5 ${isSelected ? 'scale-105 shadow-lg shadow-[#AF7DE6]/50' : ''
+                  className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex flex-col items-center justify-center bg-white group-hover:translate-y-0.5 ${isSelected ? 'scale-105 shadow-lg shadow-[#AF7DE6]/50' : ''
                     }`}
                 >
                   <span
                     className={`text-base font-semibold font-poppins tracking-wide transition-colors duration-200 ${isSelected ? 'text-[#272052]' : 'text-[#2D2D2D]'
                       }`}
                   >
-                    {option.label} {/* Use `option.label` from API */}
+                    {option.label}
                   </span>
+                  <p
+                    className={`text-xs font-normal font-poppins mt-1 transition-colors duration-200 ${isSelected ? 'text-[#272052]/70' : 'text-[#2D2D2D]/70'
+                      }`}
+                  >
+                    {option.description}
+                  </p>
                 </div>
               </button>
             )

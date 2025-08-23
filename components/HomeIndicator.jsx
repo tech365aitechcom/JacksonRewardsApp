@@ -29,7 +29,7 @@ export const HomeIndicator = ({ activeTab }) => {
     },
     {
       id: "games",
-      icon: "/game.png",
+      icon: "/Games.svg",
       label: "My Games",
       route: "/games",
     },
@@ -132,7 +132,7 @@ export const HomeIndicator = ({ activeTab }) => {
                 alt=""
                 src="/game.png"
                 role="presentation"
-                style={{ filter: 'brightness(1) contrast(1)', background: 'transparent' }}
+                // style={{ filter: 'bri', background: 'transparent' }}
               />
 
               <span className={`relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-[10px] text-center tracking-[-0.17px] leading-[normal] ${currentActiveTab === "games" ? "text-white" : "text-[#ffffffb2]"}`}>

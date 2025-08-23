@@ -268,7 +268,7 @@ const SignUp = () => {
                   Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="User icon"
@@ -293,7 +293,7 @@ const SignUp = () => {
                   Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="Email icon"
@@ -320,7 +320,7 @@ const SignUp = () => {
                   Mobile Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="Phone icon"
@@ -415,7 +415,7 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
                   <div className="absolute w-[17px] h-[17px] top-5 left-5">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
                       <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
@@ -456,7 +456,7 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
-                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%]">
+                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
                   <div className="absolute w-[17px] h-[17px] top-5 left-5">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
                       <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
