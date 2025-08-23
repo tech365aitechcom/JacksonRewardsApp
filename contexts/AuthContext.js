@@ -1,8 +1,9 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // Added usePathname
 import { login, signup, getProfile } from "@/lib/api";
 import useOnboardingStore from "@/stores/useOnboardingStore";
+import LoadingScreen from "@/components/LoadingScreen"; // Ensure you have this component
 
 const AuthContext = createContext({});
 
@@ -10,8 +11,30 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+const PROTECTED_ROUTES = [
+  "/homepage",
+  "/myprofile",
+  "/edit-profile",
+  "/games",
+  "/permissions",
+  "/location",
+];
+const PUBLIC_ONLY_ROUTES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/select-age", // Add all onboarding steps here
+  "/onboarding/select-gender",
+  "/onboarding/game-preferences",
+  "/onboarding/game-styles",
+  "/onboarding/player-type",
+  "/welcome",
+];
+
 export function AuthProvider({ children }) {
   const router = useRouter();
+  const pathname = usePathname(); // ✅ ADDED HOOK
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,21 +52,55 @@ export function AuthProvider({ children }) {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        console.log("✅ Session restored from storage:", {
-          token: storedToken,
-          user: JSON.parse(storedUser),
-        });
+        console.log("✅ Session restored from storage");
       } else {
         console.log("⚠️ No session found in storage");
       }
     } catch (error) {
       console.error("❌ Failed to load session from storage", error);
-      localStorage.clear(); // Clear corrupted storage
+      localStorage.clear();
     } finally {
       setIsLoading(false);
       console.log("⏹️ Finished checking storage. isLoading =", false);
     }
   }, []);
+
+  useEffect(() => {
+    // Wait until the session has been loaded before running any checks
+    if (isLoading) {
+      console.log("🛡️ [Gatekeeper] Waiting for session to load...");
+      return;
+    }
+
+    const isAuthenticated = !!user;
+    console.log(
+      `🛡️ [Gatekeeper] Running check: isAuthenticated=${isAuthenticated}, pathname=${pathname}`
+    );
+
+    const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
+      pathname.startsWith(route)
+    );
+    const isPublicOnlyRoute = PUBLIC_ONLY_ROUTES.some((route) =>
+      pathname.startsWith(route)
+    );
+    const isWelcomeRoute = pathname === "/";
+
+    // Rule: Logged-in users should not see public or welcome pages.
+    if (isAuthenticated && (isPublicOnlyRoute || isWelcomeRoute)) {
+      console.log(
+        "🛡️ [Gatekeeper] Redirecting authenticated user from public page to /homepage"
+      );
+      router.replace("/homepage");
+    }
+
+    // Rule: Logged-out users should not see protected pages.
+    if (!isAuthenticated && isProtectedRoute) {
+      console.log(
+        "🛡️ [Gatekeeper] Redirecting unauthenticated user from protected page to /login"
+      );
+      router.replace("/login");
+    }
+  }, [isLoading, user, pathname, router]); // Dependency array is key
 
   const handleAuthSuccess = (data) => {
     console.log("🔑 handleAuthSuccess called with:", data);
@@ -59,7 +116,8 @@ export function AuthProvider({ children }) {
     try {
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("authToken", token);
-      console.log("✅ User + Token saved to localStorage");
+      localStorage.setItem("onboardingComplete", "true");
+      console.log("✅ User + Token + OnboardingFlag saved to localStorage");
     } catch (err) {
       console.error("❌ Failed to save to localStorage", err);
     }
@@ -105,7 +163,6 @@ export function AuthProvider({ children }) {
     console.log("🚪 signOut called. Clearing session...");
     setUser(null);
     setToken(null);
-
     try {
       localStorage.removeItem("user");
       localStorage.removeItem("authToken");
@@ -113,7 +170,6 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("❌ Failed to clear localStorage", err);
     }
-
     router.push("/login");
     console.log("➡️ Redirected to /login");
   };
@@ -125,11 +181,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem("authToken", token);
       const userProfile = await getProfile(token);
       console.log("📩 Fetched user profile:", userProfile);
-      handleAuthSuccess({ token, user: userProfile });
-      return { ok: true };
+      return handleAuthSuccess({ token, user: userProfile }); // Use handleAuthSuccess to set all flags
     } catch (error) {
       console.error("❌ handleSocialAuthCallback failed:", error);
-      // If it fails, clear the bad token
       signOut();
       return { ok: false, error: error.message };
     } finally {
@@ -137,11 +191,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // In AuthContext.js
   const updateUserInContext = (newUserData) => {
     setUser(newUserData);
     localStorage.setItem("user", JSON.stringify(newUserData));
   };
+
+  if (isLoading) {
+    return <LoadingScreen message="Loading App..." />;
+  }
 
   const value = {
     user,
@@ -155,7 +212,10 @@ export function AuthProvider({ children }) {
     handleSocialAuthCallback,
   };
 
-  console.log("📡 [AuthProvider] Context Value:", value);
+  console.log("📡 [AuthProvider] Context Value:", {
+    ...value,
+    user: value.user ? "..." : null,
+  }); // Avoid logging sensitive user data
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

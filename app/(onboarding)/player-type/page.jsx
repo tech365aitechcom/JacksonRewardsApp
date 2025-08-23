@@ -38,6 +38,7 @@ export default function PlayerTypeSelection() {
 
   const handleSelectGameHabit = async (habitId) => {
     await setGameHabit(habitId)
+    localStorage.setItem('onboardingComplete', 'true');
     setTimeout(() => {
       router.push('/signup')
     }, 200)
