@@ -801,7 +801,7 @@ export default function MyProfile() {
             </div>
 
             {/* group 3 */}
-            <div className="w-full bg-[#141414] rounded-lg border border-[#494949] shadow p-4">
+            <div className="w-full mb-8 bg-[#141414] rounded-lg border border-[#494949] shadow p-4">
               {/* Tickets / Complaints */}
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-4">
@@ -825,7 +825,7 @@ export default function MyProfile() {
                     height={24}
                     alt="Arrow"
                     src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
-                    className="w-6 h-6 rotate-180"
+                    className="w-6 h-6"
                   />
                 </button>
               </div>
@@ -848,7 +848,7 @@ export default function MyProfile() {
                     height={24}
                     alt="Arrow"
                     src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
-                    className="w-6 h-6 rotate-180"
+                    className="w-6 h-6"
                   />
                 </button>
               </div>
@@ -871,7 +871,7 @@ export default function MyProfile() {
                     height={24}
                     alt="Arrow"
                     src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
-                    className="w-6 h-6 rotate-180"
+                    className="w-6 h-6"
                   />
                 </button>
               </div>

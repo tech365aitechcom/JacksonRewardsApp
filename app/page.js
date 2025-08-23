@@ -38,9 +38,9 @@ export default function Home() {
         className='absolute z-20 touch-manipulation active:scale-95 transition-transform duration-100 hover:opacity-80 disabled:opacity-50'
         style={{
           right: '18px',
-          bottom: '262px',
-          width: '60px', // Increased touch target
-          height: '60px', // Increased touch target
+          bottom: '230px',
+          width: '70px', // Increased touch target
+          height: '75px', // Increased touch target
           background: 'transparent',
           borderRadius: '50%',
           WebkitTapHighlightColor: 'transparent', // Remove tap highlight

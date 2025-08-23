@@ -248,7 +248,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       bonus: "+5",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
       picIcon: "https://c.animaapp.com/3mn7waJw/img/pic-12.svg",
-      scoreWidth: "w-[49px]",
+      scoreWidth: "w-[70px]",
     },
     {
       id: 10,
@@ -262,7 +262,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       bonus: "+1.5",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
       picIcon: "https://c.animaapp.com/3mn7waJw/img/pic-13.svg",
-      scoreWidth: "w-[54px]",
+      scoreWidth: "w-[70px]",
     },
     {
       id: 11,
@@ -276,7 +276,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       bonus: "+5",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
       picIcon: "https://c.animaapp.com/3mn7waJw/img/pic-14.svg",
-      scoreWidth: "w-[54px]",
+      scoreWidth: "w-[70px]",
     },
     {
       id: 12,
@@ -290,7 +290,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       bonus: "+5",
       coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png",
       picIcon: "https://c.animaapp.com/3mn7waJw/img/pic-15.svg",
-      scoreWidth: "w-[55px]",
+      scoreWidth: "w-[70px]",
     },
   ];
 
@@ -315,35 +315,31 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     return gameName.includes(searchTerm);
   });
 
-  // Non-gaming offers data
   const nonGamingOffers = [
     {
       id: 1,
       name: "Albert- Mobile Banking",
-      image: "https://c.animaapp.com/3mn7waJw/img/image-3981@2x.png",
-      backgroundImage:
-        "https://c.animaapp.com/3mn7waJw/img/rectangle-74@2x.png",
-      bottomImage: "https://c.animaapp.com/3mn7waJw/img/rectangle-76@2x.png",
-      coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-14@2x.png",
+      image: "https://c.animaapp.com/xCaMzUYh/img/image-3981@2x.png",
+      bgImage: "https://c.animaapp.com/xCaMzUYh/img/rectangle-74@2x.png",
+      bottomBg: "https://c.animaapp.com/xCaMzUYh/img/rectangle-76@2x.png",
+      earnAmount: "Earn upto 100",
     },
     {
       id: 2,
       name: "Chime- Mobile Banking",
-      image: "https://c.animaapp.com/3mn7waJw/img/image-3980@2x.png",
-      backgroundImage:
-        "https://c.animaapp.com/3mn7waJw/img/rectangle-73-1@2x.png",
-      bottomImage: "https://c.animaapp.com/3mn7waJw/img/rectangle-74-1@2x.png",
-      coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-15@2x.png",
-      isCenter: true,
+      image: "https://c.animaapp.com/xCaMzUYh/img/image-3980@2x.png",
+      bgImage: "https://c.animaapp.com/xCaMzUYh/img/rectangle-73-1@2x.png",
+      bottomBg: "https://c.animaapp.com/xCaMzUYh/img/rectangle-74-1@2x.png",
+      earnAmount: "Earn upto 100",
+      provider: "BitLabs",
     },
     {
       id: 3,
       name: "Albert- Mobile Banking",
-      image: "https://c.animaapp.com/3mn7waJw/img/image-3982@2x.png",
-      backgroundImage:
-        "https://c.animaapp.com/3mn7waJw/img/rectangle-74@2x.png",
-      bottomImage: "https://c.animaapp.com/3mn7waJw/img/rectangle-76@2x.png",
-      coinIcon: "https://c.animaapp.com/3mn7waJw/img/image-3937-14@2x.png",
+      image: "https://c.animaapp.com/xCaMzUYh/img/image-3982@2x.png",
+      bgImage: "https://c.animaapp.com/xCaMzUYh/img/rectangle-74@2x.png",
+      bottomBg: "https://c.animaapp.com/xCaMzUYh/img/rectangle-76@2x.png",
+      earnAmount: "Earn upto 100",
     },
   ];
 
@@ -605,8 +601,9 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                 <div className="absolute w-[154px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.gamesPlayed}/5 Games Played` : "3/5 Games Played"}
                 </div>
-                <div className="absolute w-36 h-[20px] top-[38px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                <div className="absolute w-36 h-[20px] top-[38px] left-[5px] bg-[#ffffff40] rounded-[10px]">
                   <div className="w-[60%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                  <div className="absolute w-6 h-6 bg-white rounded-full top-[-3px] border-[3px] border-[#FFB74D]" style={{left: 'calc(60% - 12px)'}}></div>
                 </div>
                 <div className="w-[78px] top-0 left-[226px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 flex flex-col justify-center items-center px-2">
@@ -626,9 +623,13 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                       <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
                         +{userStats ? Math.floor(userStats.xp * 0.5) : "500"}
                       </div>
-                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                        XP
-                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="XP"
+                        src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                        width={16}
+                        height={16}
+                      />
                     </div>
                   </div>
                 </div>
@@ -638,8 +639,9 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.balance}/900 Coins Earned (Daily)` : "100/900 Coins Earned (Daily)"}
                 </div>
-                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px]">
                   <div className="w-[25%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                  <div className="absolute w-6 h-6 bg-white rounded-full top-[-3px] border-[3px] border-[#FFB74D]" style={{left: 'calc(25% - 12px)'}}></div>
                 </div>
                 <div className="w-[69px] top-[7px] left-[230px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 flex flex-col justify-center items-center px-2">
@@ -659,9 +661,13 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                       <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
                         +{userStats ? Math.floor(userStats.balance * 0.5) : "50"}
                       </div>
-                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                        Coin
-                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="XP"
+                        src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                        width={16}
+                        height={16}
+                      />
                     </div>
                   </div>
                 </div>
@@ -671,8 +677,9 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                 <div className="absolute w-[178px] top-1.5 left-[5px] [font-family:'Poppins',Helvetica] font-bold text-white text-base tracking-[0.02px] leading-[normal]">
                   {userStats ? `${userStats.surveysCompleted + userStats.racesCompleted}/3 Challenges Finished (Daily)` : "0/3 Challenges Finished (Daily)"}
                 </div>
-                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px] overflow-hidden">
+                <div className="absolute w-[177px] h-[20px] top-[68px] left-[5px] bg-[#ffffff40] rounded-[10px]">
                   <div className="w-[10%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
+                  <div className="absolute w-6 h-6 bg-white rounded-full top-[-3px] border-[3px] border-[#FFB74D]" style={{left: 'calc(10% - 12px)'}}></div>
                 </div>
                 <div className="w-14 top-2 left-[245px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 flex flex-col justify-center items-center px-1">
@@ -692,9 +699,13 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                       <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
                         +5
                       </div>
-                      <div className="font-medium text-xs [font-family:'Poppins',Helvetica] text-white tracking-[0]">
-                        XP
-                      </div>
+                      <Image
+                        className="w-[16px] h-[16px]"
+                        alt="XP"
+                        src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                        width={16}
+                        height={16}
+                      />
                     </div>
                   </div>
                 </div>
@@ -792,131 +803,120 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
         </div>
       </div>
 
-      <div className="w-[335px] gap-2.5 flex-[0_0_auto] flex flex-col items-start relative">
-        <div className="relative w-[166px] h-6">
-          <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
+      <div className="flex flex-col w-full items-start gap-4 relative">
+        <div className="flex w-full items-center justify-between">
+          <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
             Non- Gaming Offers
           </div>
         </div>
-
-        <div className="relative w-[335px] h-[220px]">
-          <div className="w-[337px] h-[220px]">
-            <div className="relative w-[339px] h-[220px]">
-              <div className="absolute w-[339px] h-[161px] top-[22px] left-0">
-                {nonGamingOffers.map((offer, index) => {
-                  if (offer.isCenter) {
-                    return (
-                      <div
-                        key={offer.id}
-                        className="absolute w-[165px] h-[220px] top-[-22px] left-[79px]"
-                      >
-                        <Image
-                          className="absolute w-[165px] h-[220px] top-0 left-0 object-cover"
-                          alt="Rectangle"
-                          src={offer.backgroundImage}
-                          width={165}
-                          height={220}
-                        />
-                        <Image
-                          className="absolute w-[165px] h-[57px] top-[163px] left-0 object-cover"
-                          alt="Rectangle"
-                          src={offer.bottomImage}
-                          width={165}
-                          height={57}
-                        />
-                        <div className="absolute top-[172px] left-[18px] [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5">
-                          {offer.name}
-                        </div>
-                        <div className="absolute w-[61px] h-6 top-[130px] left-[51px]">
-                          <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
-                            BitLabs
-                          </div>
-                        </div>
-                        <Image
-                          className="absolute w-[125px] h-[153px] top-[1px] left-[20px]"
-                          alt="Image"
-                          src={offer.image}
-                          width={125}
-                          height={153}
-                        />
-                        <div className="absolute w-[122px] h-[29px] top-[127px] left-[10px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
-                          <div className="absolute top-1 left-2 [font-family:'Poppins',Helvetica] font-medium text-white text-[13px] tracking-[0] leading-[normal]">
-                            Earn upto 100
-                          </div>
-                          <Image
-                            className="w-[15px] h-[15px] top-[7px] left-[99px] absolute"
-                            alt="Image"
-                            src={offer.coinIcon}
-                            width={15}
-                            height={15}
-                          />
-                        </div>
+        <div className="relative w-full h-[220px] overflow-hidden">
+          <div className="w-full h-[220px] flex justify-center">
+            <div className="relative w-full max-w-[375px] h-[220px]">
+              <div className="absolute w-full h-[161px] top-[22px] left-0">
+                {nonGamingOffers.slice(0, 2).map((offer, index) => (
+                  <div
+                    key={offer.id}
+                    className={`absolute w-[44%] ${
+                      index === 0
+                        ? "h-40 top-px left-0"
+                        : "h-[161px] top-0 right-0"
+                    }`}
+                  >
+                    <img
+                      className={`${
+                        index === 0
+                          ? "w-[80%] h-40 top-0 left-0"
+                          : "w-[80%] h-40 top-px right-0"
+                      } absolute object-cover`}
+                      alt="Rectangle"
+                      src={offer.bgImage}
+                    />
+                    <img
+                      className={`w-full h-[57px] ${
+                        index === 0
+                          ? "top-[103px] left-0"
+                          : "top-[104px] left-0"
+                      } absolute object-cover`}
+                      alt="Rectangle"
+                      src={offer.bottomBg}
+                    />
+                    <div
+                      className={`absolute ${
+                        index === 0
+                          ? "top-[111px] left-[11px]"
+                          : "top-28 left-[11px]"
+                      } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
+                    >
+                      {offer.name.split(" ").map((word, i) => (
+                        <span key={i}>
+                          {word}
+                          {i === 0 && <br />}
+                          {i > 0 && i < offer.name.split(" ").length - 1 && " "}
+                        </span>
+                      ))}
+                    </div>
+                    <img
+                      className={`absolute ${
+                        index === 0
+                          ? "w-[62%] h-[102px] top-px left-[3px] aspect-[1.01]"
+                          : "w-[62%] h-[104px] top-0 right-[5%] aspect-[1.01]"
+                      }`}
+                      alt="Image"
+                      src={offer.image}
+                    />
+                    <div
+                      className={`w-24 h-[23px] ${
+                        index === 0
+                          ? "top-[72px] left-2.5"
+                          : "top-[73px] left-11"
+                      } rounded absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
+                    >
+                      <div className="absolute top-[3px] left-1.5 [font-family:'Poppins',Helvetica] font-medium text-white text-[10.2px] tracking-[0] leading-[normal]">
+                        {offer.earnAmount}
                       </div>
-                    );
-                  } else {
-                    const leftPosition =
-                      index === 0 ? "left-0" : "left-[170px]";
-                    const topPosition = index === 0 ? "top-px" : "top-0";
-                    const imageLeft =
-                      index === 0 ? "left-[3px]" : "left-[60px]";
-                    const imageTop = index === 0 ? "top-px" : "top-0";
-                    const textLeft =
-                      index === 0 ? "left-[11px]" : "left-[11px]";
-                    const textTop = index === 0 ? "top-[111px]" : "top-28";
-                    const earnLeft = index === 0 ? "left-2.5" : "left-11";
-                    const earnTop = index === 0 ? "top-[72px]" : "top-[73px]";
-                    const coinLeft =
-                      index === 0 ? "left-[78px]" : "left-[78px]";
-
-                    return (
-                      <div
-                        key={offer.id}
-                        className={`absolute w-[165px] h-40 ${topPosition} ${leftPosition}`}
-                      >
-                        <Image
-                          className="absolute w-[132px] h-40 top-0 left-0 object-cover"
-                          alt="Rectangle"
-                          src={offer.backgroundImage}
-                          width={132}
-                          height={160}
-                        />
-                        <Image
-                          className="absolute w-[165px] h-[57px] top-[103px] left-0 object-cover"
-                          alt="Rectangle"
-                          src={offer.bottomImage}
-                          width={165}
-                          height={57}
-                        />
-                        <div
-                          className={`absolute ${textTop} ${textLeft} [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
-                        >
-                          {offer.name}
-                        </div>
-                        <Image
-                          className={`absolute w-[103px] h-[102px] ${imageTop} ${imageLeft}`}
-                          alt="Image"
-                          src={offer.image}
-                          width={103}
-                          height={102}
-                        />
-                        <div
-                          className={`absolute w-24 h-[23px] ${earnTop} ${earnLeft} rounded overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
-                        >
-                          <div className="absolute top-[3px] left-1.5 [font-family:'Poppins',Helvetica] font-medium text-white text-[10.2px] tracking-[0] leading-[normal]">
-                            Earn upto 100
-                          </div>
-                          <Image
-                            className={`w-[11px] h-3 top-1.5 ${coinLeft} absolute`}
-                            alt="Image"
-                            src={offer.coinIcon}
-                            width={11}
-                            height={12}
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                })}
+                      <img
+                        className="absolute w-[11px] h-3 top-1.5 left-[78px] aspect-[0.97]"
+                        alt="Image"
+                        src="https://c.animaapp.com/xCaMzUYh/img/image-3937-1@2x.png"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <img
+                className="h-[220px] absolute w-[44%] top-0 left-1/2 -translate-x-1/2 object-cover z-10"
+                alt="Rectangle"
+                src="https://c.animaapp.com/xCaMzUYh/img/rectangle-73-1@2x.png"
+              />
+              <img
+                className="absolute w-[44%] h-[57px] top-[163px] left-1/2 -translate-x-1/2 object-cover z-10"
+                alt="Rectangle"
+                src="https://c.animaapp.com/xCaMzUYh/img/rectangle-74-1@2x.png"
+              />
+              <div className="absolute top-[172px] left-1/2 -translate-x-1/2 [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5 z-20">
+                Chime- Mobile
+                <br />
+                Banking
+              </div>
+              <div className="absolute w-[61px] h-6 top-[130px] left-1/2 -translate-x-1/2 z-20">
+                <div className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
+                  BitLabs
+                </div>
+              </div>
+              <img
+                className="absolute w-[33%] h-[153px] top-px left-1/2 -translate-x-1/2 aspect-[0.81] object-contain z-20"
+                alt="Image"
+                src="https://c.animaapp.com/xCaMzUYh/img/image-3980@2x.png"
+              />
+              <div className="w-[32%] h-[29px] top-[127px] left-1/2 -translate-x-1/2 rounded-[10px] absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] z-20">
+                <div className="absolute top-1 left-2 [font-family:'Poppins',Helvetica] font-medium text-white text-[13px] tracking-[0] leading-[normal]">
+                  Earn upto 100
+                </div>
+                <img
+                  className="w-[15px] h-[15px] top-[7px] left-[99px] absolute aspect-[0.97]"
+                  alt="Image"
+                  src="https://c.animaapp.com/xCaMzUYh/img/image-3937-2@2x.png"
+                />
               </div>
             </div>
           </div>

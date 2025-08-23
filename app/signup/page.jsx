@@ -435,13 +435,15 @@ const SignUp = () => {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
-                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1" />
+                      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
                     ) : (
-                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
                       </svg>
                     )}
                   </button>
@@ -478,13 +480,15 @@ const SignUp = () => {
                     }
                   >
                     {showConfirmPassword ? (
-                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
-                        <path d="M2 2l13 13" stroke="#d3d3d3" strokeWidth="1" />
+                      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
                     ) : (
-                      <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 2.5c-4 0-7.5 4-7.5 4s3.5 4 7.5 4 7.5-4 7.5-4-3.5-4-7.5-4zM8.5 5.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
+                      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
                       </svg>
                     )}
                   </button>
