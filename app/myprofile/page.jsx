@@ -182,8 +182,8 @@ export default function MyProfile() {
               {/* Avatar */}
               <img
                 width={132}
-                height={120}
-                className="w-[132px] h-[120px] object-cover rounded-full"
+                height={132}
+                className="w-[132px] h-[132px] object-cover rounded-full"
                 alt="Profile avatar"
                 src={profile?.profile?.avatar || "https://c.animaapp.com/V1uc3arn/img/component-1.svg"}
                 crossOrigin="anonymous"
@@ -273,8 +273,8 @@ export default function MyProfile() {
                   backgroundSize: "cover",
                 }}
               >
-                <div className="absolute top-[23px] left-4">
-                  <div className="text-white text-xs">My Earnings</div>
+                <div className="absolute top-[10px] left-4">
+                  <div className="text-white  text-xl">My Earnings</div>
                   <div className="flex items-center gap-2">
                     <div className="font-semibold text-white text-2xl">
                       {stats?.balance ?? 0}

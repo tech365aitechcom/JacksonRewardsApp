@@ -759,6 +759,13 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
         </div>
       </div>
 
+      {/* Static text above Other Games section */}
+      <div className="flex flex-col items-center gap-4 relative self-stretch w-full flex-[0_0_auto] bg-[#4a1a5c] rounded-[15px] p-4 mb-4">
+        <div className="text-center [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-6">
+          Please start downloading games from below suggestions & start earning now!
+        </div>
+      </div>
+
       <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex flex-col w-[335px] items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
           {filteredOtherGames.map((game, index) =>

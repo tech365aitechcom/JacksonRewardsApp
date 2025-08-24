@@ -1,5 +1,5 @@
 "use client"; // <-- THIS IS THE ONLY LINE YOU NEED TO ADD
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
@@ -7,113 +7,87 @@ import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
 import { HomeIndicator } from "../../components/HomeIndicator"; //
 import { WelcomeOffer } from "../../components/WelcomeOffer";
 
-const Frame = () => {
+export const Frame = () => {
+  // Data for action buttons
   const actionButtons = [
     {
       id: 1,
-      icon: "https://c.animaapp.com/JKj0xq2Q/img/group-2@2x.png",
-      alt: "Group",
-      isActive: false,
+      src: "https://c.animaapp.com/DfFsihWg/img/group-2@2x.png",
+      alt: "Close",
+      position: "left-0",
     },
     {
       id: 2,
-      icon: "https://c.animaapp.com/JKj0xq2Q/img/vector.svg",
-      alt: "Vector",
-      isActive: true,
-      badge: "5/5 left",
+      src: "https://c.animaapp.com/DfFsihWg/img/group-4@2x.png",
+      alt: "Refresh",
+      position: "left-24",
     },
     {
       id: 3,
-      icon: "https://c.animaapp.com/JKj0xq2Q/img/group-3@2x.png",
-      alt: "Group",
-      isActive: false,
+      src: "https://c.animaapp.com/DfFsihWg/img/group-3@2x.png",
+      alt: "Download",
+      position: "left-48",
     },
   ];
 
   return (
-    <div
-      className="relative mt-1 w-full max-w-[375px] h-[470px] mx-auto px-4"
-      data-model-id="2630:15320"
-    >
-      <nav
-        className="absolute w-[254px] h-[71px] top-[406px] left-1/2 -translate-x-1/2"
-        role="navigation"
+    <main className="relative w-[335px] h-[549px]" data-model-id="2035:14588">
+      {/* Action buttons section */}
+      <section
+        className="absolute w-[254px] h-[62px] top-[492px] left-10"
         aria-label="Action buttons"
       >
-        {actionButtons.map((button, index) => (
-          <div
+        {actionButtons.map((button) => (
+          <button
             key={button.id}
-            className={`h-[62px] absolute w-[62px] top-0 ${
-              index === 0 ? "left-0" : index === 1 ? "left-24" : "left-48"
-            }`}
+            className={`${button.position} absolute w-[62px] h-[62px] top-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full`}
+            aria-label={button.alt}
           >
-            {button.isActive ? (
-              <div className="relative h-[71px]">
-                <button
-                  className="absolute w-[62px] h-[62px] top-0 left-0 rounded-[31px] border-2 border-solid border-[#f7b84b] bg-transparent cursor-pointer hover:bg-[#f7b84b]/10 transition-colors"
-                  aria-label="Active action button"
-                >
-                  <img
-                    className="absolute w-6 h-6 top-[19px] left-[19px]"
-                    alt={button.alt}
-                    src={button.icon}
-                  />
-                </button>
-                <div className="absolute w-[51px] h-[22px] top-[49px] left-[5px] bg-[#f1b24a] rounded overflow-hidden">
-                  <span className="absolute top-0.5 left-1 [font-family:'Poppins',Helvetica] font-normal text-white text-xs tracking-[0] leading-4 whitespace-nowrap">
-                    {button.badge}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <button
-                className="h-[62px] w-[62px] rounded-[31px] bg-transparent cursor-pointer hover:bg-white/10 transition-colors"
-                aria-label="Action button"
-              >
-                <img
-                  className="h-[62px] w-[62px]"
-                  alt={button.alt}
-                  src={button.icon}
-                />
-              </button>
-            )}
-          </div>
+            <img className="w-full h-full" alt={button.alt} src={button.src} />
+          </button>
         ))}
-      </nav>
+      </section>
 
-      <main className="absolute w-full h-[335px] top-[-9px] left-0 rounded-[12px_12px_0px_0px] overflow-hidden">
+      {/* Main game card */}
+      <article className="absolute w-[335px] h-[429px] top-0 left-0 rounded-[12px_12px_0px_0px]">
+        {/* Background frames */}
         <img
-          className="absolute w-52 h-[244px] top-[60px] left-[73px]"
-          alt="Frame"
-          src="https://c.animaapp.com/JKj0xq2Q/img/frame-2.svg"
+          className="absolute w-52 h-[244px] top-[51px] left-[73px]"
+          alt=""
+          src="https://c.animaapp.com/DfFsihWg/img/frame-2.svg"
+          role="presentation"
         />
 
         <img
-          className="absolute w-52 h-[244px] top-[60px] left-[73px]"
-          alt="Frame"
-          src="https://c.animaapp.com/JKj0xq2Q/img/frame-3.svg"
+          className="absolute w-52 h-[244px] top-[51px] left-[73px]"
+          alt=""
+          src="https://c.animaapp.com/DfFsihWg/img/frame-3.svg"
+          role="presentation"
         />
 
-        <div className="absolute w-full h-[335px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden border-t border-r border-l border-[#3a3674] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
-          <div className="relative w-[calc(100%-36px)] max-w-[302px] h-[319px] top-4 left-1/2 -translate-x-1/2">
+        {/* Main card container */}
+        <div className="absolute w-[335px] h-[429px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden shadow-[0px_27.92px_39.88px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
+          {/* Game content section */}
+          <section className="absolute w-[302px] h-[303px] top-[102px] left-[18px]">
             <img
-              className="absolute w-full max-w-[300px] h-[290px] top-[29px] left-1/2 -translate-x-1/2 object-cover"
-              alt="Game screenshot"
-              src="https://c.animaapp.com/JKj0xq2Q/img/image-3930@2x.png"
+              className="absolute w-[300px] h-[300px] top-[3px] left-0 aspect-[1]"
+              alt="Orbitfall game artwork showing colorful spaceships and cosmic elements"
+              src="https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"
             />
 
             <img
-              className="absolute w-[210px] h-10 top-[18px] left-1/2 -translate-x-1/2 ml-[20px] object-contain"
-              alt="Game logo"
-              src="https://c.animaapp.com/JKj0xq2Q/img/image-3931@2x.png"
+              className="absolute w-[210px] h-10 top-[15px] left-11 aspect-[5.2]"
+              alt="Orbitfall game logo"
+              src="https://c.animaapp.com/DfFsihWg/img/image-3931@2x.png"
             />
 
-            <div className="absolute w-[74px] h-[25px] top-0 right-0">
+            {/* View count badge */}
+            <div className="absolute w-[74px] h-[25px] top-0 left-[228px]">
               <div className="relative w-[72px] h-[25px] bg-[#ffffff4f] rounded-[5.32px] backdrop-blur-[2.66px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(2.66px)_brightness(100%)]">
                 <img
                   className="absolute w-[13px] h-2.5 top-2 left-[7px]"
                   alt="Views icon"
-                  src="https://c.animaapp.com/JKj0xq2Q/img/vector-1.svg"
+                  src="https://c.animaapp.com/DfFsihWg/img/vector.svg"
                 />
 
                 <span className="absolute top-[3px] left-[25px] [font-family:'Poppins',Helvetica] font-bold text-white text-[13px] tracking-[0] leading-[normal]">
@@ -121,37 +95,48 @@ const Frame = () => {
                 </span>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
+          </section>
 
-      <footer className="absolute w-full h-14 top-[326px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.5)_0%,rgba(113,106,231,0.5)_100%)]">
-        <div className="relative w-[calc(100%-24px)] max-w-[210px] h-[41px] top-[7px] left-3">
+          {/* Header message */}
+          <header className="absolute w-[334px] h-[88px] -top-0.5 left-0">
+            <div className="relative w-[335px] h-[87px] top-px bg-[#442a3b] rounded-[10px_10px_0px_0px]">
+              <p className="absolute w-[304px] top-3.5 left-[15px] [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-5">
+                Please start downloading games from below suggestions &amp;
+                start earning now!
+              </p>
+            </div>
+          </header>
+        </div>
+      </article>
+
+      {/* Bottom earnings section */}
+      <footer className="absolute w-[335px] h-[51px] top-[429px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.5)_0%,rgba(113,106,231,0.5)_100%)]">
+        <div className="relative w-[300px] h-10 top-[5px] left-3">
           <p className="absolute top-0 left-0 [font-family:'Poppins',Helvetica] font-normal text-white text-[13px] tracking-[0] leading-[normal]">
-            <span className="font-light">
-              Complete Only 10 Tasks <br />
-            </span>
+            <span className="font-light">Complete Only 10 Tasks to </span>
 
             <span className="font-semibold">
-              Earn upto 100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;
-              50&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;points
+              Earn upto 100
+              .&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;
+              <br />
+              10
             </span>
           </p>
 
           <img
-            className="absolute w-[17px] h-[18px] top-[23px] left-[90px] aspect-[0.97]"
-            alt="Currency icon"
-            src="https://c.animaapp.com/JKj0xq2Q/img/image-3937@2x.png"
+            className="absolute w-[18px] h-5 top-px left-[265px] aspect-[0.97]"
+            alt="Currency symbol"
+            src="https://c.animaapp.com/DfFsihWg/img/image-3937@2x.png"
           />
 
           <img
-            className="absolute w-[21px] h-[19px] top-[22px] left-[145px]"
-            alt="Points icon"
-            src="https://c.animaapp.com/JKj0xq2Q/img/pic.svg"
+            className="absolute w-[22px] h-5 top-[21px] left-[15px]"
+            alt="Reward icon"
+            src="https://c.animaapp.com/DfFsihWg/img/pic.svg"
           />
         </div>
       </footer>
-    </div>
+    </main>
   );
 };
 const Homepage = () => {
@@ -255,19 +240,9 @@ const RewardProgress = ({ stats }) => {
           </div>
         </div>
 
-        <div className="absolute w-6 h-6 top-[79px] right-[25px] opacity-50">
-          <div className="relative w-6 h-6">
-            <div className="absolute w-6 h-6 top-0 left-0">
-              <div className="h-6 w-6 bg-[url(https://c.animaapp.com/BzW3YOS5/img/ellipse-35-1.svg)] bg-[100%_100%] rounded-full">
-                <div className="relative w-3 h-3 top-1.5 left-1.5 overflow-hidden">
-                  <div className="absolute w-3 h-3 top-0 left-0 bg-[#815c23] rounded-sm"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full top-0.5 left-0 absolute [font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[12px] tracking-[0.02px] leading-[normal] flex justify-center">
-              {pointsData.nextLevel}
-            </div>
+        <div className="absolute w-[24px] h-[24px] top-[78.5px] right-[20px] bg-[#ffd700] rounded-full border-2 border-[#b8860b] flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.35),0_0_0_3px_rgba(255,215,0,0.25)]">
+          <div className="[font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[12px] tracking-[0.02px] leading-[normal]">
+            3
           </div>
         </div>
 
@@ -325,8 +300,6 @@ const XpTierTracker = ({ stats }) => {
               }}
             />
 
-            {/* End indicator */}
-            <div className="absolute w-6 h-6 top-0 right-6 bg-[#373737] rounded-full border-2 border-[#666666]" />
           </div>
         </div>
 
@@ -432,7 +405,7 @@ const HeaderSection = () => {
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
           <button
-            className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 z-50 rounded-full overflow-hidden"
+            className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 z-50 rounded-full overflow-hidden flex-shrink-0"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -442,7 +415,7 @@ const HeaderSection = () => {
             aria-label="Go to My Profile"
           >
             <img
-              className="w-full h-full pointer-events-none rounded-full object-cover"
+              className="w-12 h-12 pointer-events-none rounded-full object-cover"
               alt="Profile"
               src={
                 profile?.profile?.avatar ||
@@ -457,8 +430,11 @@ const HeaderSection = () => {
             />
           </button>
           <div className="flex flex-col items-start gap-1">
-            <div className="[font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[-0.17px] leading-[18px]">
-              Welcome Back {greeting}
+            <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[-0.37px] leading-[22px]">
+              Hi! {firstName}👋
+            </div>
+            <div className="[font-family:'Poppins',Helvetica] font-light text-white text-sm tracking-[-0.17px] leading-[18px] opacity-60">
+              Welcome back
             </div>
           </div>
         </div>
@@ -702,7 +678,9 @@ const MainContentSection = () => {
         </div>
 
         {/* Welcome Offer Component */}
-        <WelcomeOffer />
+        <div className="relative w-full overflow-visible">
+          <WelcomeOffer />
+        </div>
 
         <Frame />
       </div>

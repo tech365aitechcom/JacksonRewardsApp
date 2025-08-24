@@ -202,9 +202,9 @@ export const EditProfile = () => {
   }
 
   return (
-    <div className="bg-[#272052] flex h-screen flex-row justify-center w-full relative overflow-hidden">
+    <div className="bg-[#272052] flex min-h-screen flex-row justify-center w-full relative overflow-auto">
       <div
-        className="relative w-full max-w-[390px] h-full bg-[#272052] mx-auto"
+        className="relative w-full max-w-[390px] min-h-full bg-[#272052] mx-auto"
         data-model-id="2739:7886"
       >
         <header className="absolute w-full h-24 top-[10px] left-0 px-6 pt-4">
@@ -238,14 +238,14 @@ export const EditProfile = () => {
         {/* White divider below header */}
         <div className="absolute w-full h-[3px] top-[96px] left-0 bg-white"></div>
 
-        <div className="absolute w-[132px] h-[124px] top-[140px] left-1/2 transform -translate-x-1/2">
+        <div className="absolute w-[132px] h-[132px] top-[140px] left-1/2 transform -translate-x-1/2">
           <div className="relative w-full h-full">
             <img
               src={avatarPreview || "https://c.animaapp.com/mFM2C37Z/img/component-1.svg"}
               alt="Profile avatar preview"
               width={132}
-              height={120}
-              className="w-[132px] h-[120px] object-cover rounded-full"
+              height={132}
+              className="w-[132px] h-[132px] object-cover rounded-full"
               crossOrigin="anonymous"
             />
             <div className="absolute w-[45px] h-[45px] bottom-0 right-0">
@@ -274,7 +274,7 @@ export const EditProfile = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSaveChanges} className="absolute top-[280px] left-0 w-full px-8 space-y-6">
+        <form onSubmit={handleSaveChanges} className="absolute top-[300px] left-0 w-full px-8 pb-16 space-y-6">
           <div className="w-full">
             <label
               htmlFor="firstName"
@@ -402,7 +402,7 @@ export const EditProfile = () => {
             <button
               type="button"
               onClick={handleClose}
-              className="w-full h-[42px] bg-[#2c2c2c] rounded-lg hover:bg-[#3c3c3c] transition-colors cursor-pointer flex items-center justify-center"
+              className="w-full  h-[42px] bg-[#2c2c2c] rounded-lg hover:bg-[#3c3c3c] transition-colors cursor-pointer flex items-center justify-center"
             >
               <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm tracking-[0] leading-[normal]">
                 Cancel
