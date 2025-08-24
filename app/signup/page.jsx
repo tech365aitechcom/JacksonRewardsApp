@@ -62,7 +62,6 @@ const SignUp = () => {
     }
   };
 
-  // --- OTP FIX: Function to send the OTP (Solves JACK_19) ---
   const handleSendOtp = async () => {
     setError({});
     if (!formData.mobile.trim() || (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile))) {
@@ -82,7 +81,6 @@ const SignUp = () => {
     }
   };
 
-  // --- OTP FIX: Function to resend the OTP (Solves JACK_89) ---
   const handleResendOtp = async () => {
     if (countdown > 0) return;
     setIsResending(true);
@@ -99,7 +97,6 @@ const SignUp = () => {
     }
   };
 
-  // --- OTP FIX: Function to verify the OTP (Solves JACK_90) ---
   const handleVerifyOtp = async () => {
     const otpCode = formData.otp.join('');
     if (otpCode.length < 4) {
@@ -112,7 +109,7 @@ const SignUp = () => {
       setIsMobileVerified(true);
       setError({});
     } catch (err) {
-      setError({ otp: "The code you entered is incorrect. Please try again." });
+      setError({ otp: err.message || "An unknown verification error occurred." });
     } finally {
       setIsLoading(false);
     }
@@ -436,14 +433,14 @@ const SignUp = () => {
                   >
                     {showPassword ? (
                       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
-                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round"/>
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round" />
                       </svg>
                     ) : (
                       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
-                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
                       </svg>
                     )}
                   </button>
@@ -481,14 +478,14 @@ const SignUp = () => {
                   >
                     {showConfirmPassword ? (
                       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
-                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round"/>
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <line x1="3" y1="3" x2="17" y2="17" stroke="#d3d3d3" strokeWidth="1.2" strokeLinecap="round" />
                       </svg>
                     ) : (
                       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" className="w-full h-full">
-                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
-                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none"/>
+                        <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
+                        <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" fill="none" />
                       </svg>
                     )}
                   </button>
