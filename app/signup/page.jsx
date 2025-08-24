@@ -10,7 +10,8 @@ const SignUp = () => {
   const router = useRouter();
   const { signUpAndSignIn } = useAuth();
   const [formData, setFormData] = useState({
-    name: "",
+    firstname: "",
+    lastname: "",
     email: "",
     mobile: "",
     password: "",
@@ -127,8 +128,11 @@ const SignUp = () => {
 
     // --- BUG FIX: Implement robust, field-specific client-side validation ---
     const clientErrors = {};
-    if (!formData.name.trim()) {
-      clientErrors.name = "Name is required.";
+    if (!formData.firstname.trim()) {
+      clientErrors.firstname = "First name is required.";
+    }
+    if (!formData.lastname.trim()) {
+      clientErrors.lastname = "Last name is required.";
     }
     if (!formData.email.trim()) {
       clientErrors.email = "Email is required.";
@@ -162,12 +166,10 @@ const SignUp = () => {
     const fullMobile = `${countryCode}${formData.mobile}`;
 
     try {
-      const [firstName, ...lastNameParts] = formData.name.trim().split(' ');
-      const lastName = lastNameParts.join(' ') || '-';
       const onboardingData = useOnboardingStore.getState();
       const fullSignupData = {
-        firstName,
-        lastName,
+        firstName: formData.firstname.trim(),
+        lastName: formData.lastname.trim() || '-',
         email: formData.email,
         mobile: fullMobile,
         password: formData.password,
@@ -262,7 +264,7 @@ const SignUp = () => {
             >
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-                  Name <span className="text-red-500">*</span>
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative w-[314px] h-[55px]">
                   <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
@@ -275,10 +277,35 @@ const SignUp = () => {
                     />
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      value={formData.firstname}
+                      onChange={(e) => handleInputChange("firstname", e.target.value)}
                       className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                      placeholder="Enter your name"
+                      placeholder="Enter your first name"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              {error.name && <p className="text-red-400 text-xs -mt-3">{error.name}</p>}
+              <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
+                <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
+                <div className="relative w-[314px] h-[55px]">
+                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
+                    <Image
+                      className="absolute w-[17px] h-[17px] top-5 left-5"
+                      alt="User icon"
+                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                      width={17}
+                      height={17}
+                    />
+                    <input
+                      type="text"
+                      value={formData.lastname}
+                      onChange={(e) => handleInputChange("lastname", e.target.value)}
+                      className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
+                      placeholder="Enter your last name"
                       required
                     />
                   </div>
