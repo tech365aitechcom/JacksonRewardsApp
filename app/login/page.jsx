@@ -202,7 +202,7 @@ export default function LoginPage() {
               </div>
             </div>
             {error.emailOrMobile && (
-              <p className="absolute top-[460px] left-[250px] text-red-400 text-xs">
+              <p className="absolute top-[460px] left-[246px] text-red-400 text-xs">
                 {error.emailOrMobile}
               </p>
             )}
@@ -266,13 +266,13 @@ export default function LoginPage() {
               </div>
             </div>
             {error.password && (
-              <p className="absolute top-[554px] left-[250px] text-red-400 text-xs">
+              <p className="absolute top-[554px] left-[246px] text-red-400 text-xs">
                 {error.password}
               </p>
             )}
 
             {error.form && (
-              <div className="absolute top-[554px] left-[220px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+              <div className="absolute top-[554px] left-[246px] w-[316px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
                 {error.form}
               </div>
             )}
