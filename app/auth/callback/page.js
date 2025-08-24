@@ -3,9 +3,10 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
-import Image from "next/image"; // Import Image for decorative elements
+import Image from "next/image";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
-// A loading spinner styled to match your app's purple theme
 const Spinner = () => (
   <div className="border-gray-500 h-16 w-16 animate-spin rounded-full border-4 border-t-[#af7de6]" />
 );
@@ -59,6 +60,20 @@ function AuthCallbackContent() {
     const processAuth = async () => {
       const token = searchParams.get("token");
       const authError = searchParams.get("message");
+      if (Capacitor.isNativePlatform()) {
+        let deepLink = "com.jackson.app://auth/callback";
+        if (token) {
+          deepLink += `?token=${token}`;
+        } else {
+          const message = authError || "Authentication token not found.";
+          deepLink += `?message=${encodeURIComponent(message)}`;
+        }
+        window.location.href = deepLink;
+        setTimeout(() => {
+          Browser.close();
+        }, 500);
+        return;
+      }
 
       if (authError) {
         setErrorMessage(authError || "An unknown error occurred.");
@@ -70,9 +85,8 @@ function AuthCallbackContent() {
       if (token) {
         const result = await handleSocialAuthCallback(token);
         if (result.ok) {
-          // On success, show a success message before redirecting
           setStatus("success");
-          setTimeout(() => router.push("/homepage"), 5000); // Shorter delay for success
+          setTimeout(() => router.push("/homepage"), 1000); // Shorter delay for web success
         } else {
           setErrorMessage(
             result.error ||
@@ -166,11 +180,13 @@ function AuthCallbackContent() {
 
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen w-full bg-[#272052] flex justify-center items-center">
-        <div className="border-gray-500 h-16 w-16 animate-spin rounded-full border-4 border-t-[#af7de6]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full bg-[#272052] flex justify-center items-center">
+          <div className="border-gray-500 h-16 w-16 animate-spin rounded-full border-4 border-t-[#af7de6]" />
+        </div>
+      }
+    >
       <AuthCallbackContent />
     </Suspense>
   );

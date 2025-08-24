@@ -71,7 +71,7 @@ const ResetPasswordComponent = () => {
       setMessage(data.message || 'Password reset successful! Redirecting to login...');
       setIsError(false);
       setTimeout(() => {
-        router.push('/homepage');
+        router.push('/login');
       }, 1000); // Increased timeout to let user read the message
     } catch (error) {
       console.error('Reset password error:', error);

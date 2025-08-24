@@ -5,6 +5,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
+
 export default function LoginPage() {
   const [emailOrMobile, setEmailOrMobile] = useState("");
   const [password, setPassword] = useState("");
@@ -62,30 +65,38 @@ export default function LoginPage() {
 
   };
 
-  const handleSocialLogin = (provider) => {
+  const handleSocialLogin = async (provider) => {
     setIsRedirecting(true);
     const backendUrl = "https://rewardsapi.hireagent.co";
+    const authUrl = `${backendUrl}/api/auth/${provider}`;
 
-    setTimeout(() => {
-      switch (provider) {
-        case 'google':
-          window.location.href = `${backendUrl}/api/auth/google`;
-          break;
-        case 'facebook':
-          window.location.href = `${backendUrl}/api/auth/facebook`;
-          break;
-        default:
-          console.error('Unsupported provider:', provider);
-          setError({ form: `${provider} login is not supported yet.` });
-          setIsRedirecting(false); // Hide overlay on error
+    // Check if the app is running on a native mobile platform (iOS/Android)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Use the Capacitor Browser plugin to open the auth URL.
+        // This displays a secure, temporary browser window over the app.
+        await Browser.open({ url: authUrl });
+
+        // Add a listener to hide the loading overlay if the user
+        // manually closes the browser window without logging in.
+        Browser.addListener('browserFinished', () => {
+          setIsRedirecting(false);
+        });
+
+      } catch (error) {
+        console.error("Failed to open browser", error);
+        setIsRedirecting(false); // Hide overlay on error
       }
-    }, 100);
+    } else {
+      // If running in a standard web browser, perform a simple redirect.
+      window.location.href = authUrl;
+    }
   };
 
 
 
   const handleSignUp = () => {
-    window.location.href = "/";
+    router.push("/welcome");
   };
 
   const handlePhoneLogin = () => {
