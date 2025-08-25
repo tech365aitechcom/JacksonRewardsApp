@@ -6,6 +6,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import useOnboardingStore from '@/stores/useOnboardingStore';
 import { sendOtp, verifyOtp } from '@/lib/api';
 
+const validateName = (name, fieldName = 'Name') => {
+  const trimmedName = name.trim();
+
+
+  if (!trimmedName) {
+    return `${fieldName} is required.`;
+  }
+  if (trimmedName.length < 2) {
+    return `${fieldName} must be at least 2 characters.`;
+  }
+  if (trimmedName.length > 30) {
+    return `${fieldName} cannot exceed 50 characters.`;
+  }
+
+  const nameRegex = /^[\p{L}'\- ]+$/u;
+  if (!nameRegex.test(trimmedName)) {
+    return `${fieldName} contains invalid characters.`;
+  }
+
+  return "";
+};
+
+
 const SignUp = () => {
   const router = useRouter();
   const { signUpAndSignIn } = useAuth();
@@ -29,6 +52,9 @@ const SignUp = () => {
   const [countdown, setCountdown] = useState(60);
   const [isResending, setIsResending] = useState(false);
   const otpInputs = useRef([]);
+
+
+
 
   useEffect(() => {
     let timer;
@@ -127,12 +153,11 @@ const SignUp = () => {
     }
 
     const clientErrors = {};
-    if (!formData.firstname.trim()) {
-      clientErrors.firstname = "First name is required.";
-    }
-    if (!formData.lastname.trim()) {
-      clientErrors.lastname = "Last name is required.";
-    }
+    const firstNameError = validateName(formData.firstname, "First name");
+    if (firstNameError) clientErrors.firstname = firstNameError;
+
+    const lastNameError = validateName(formData.lastname, "Last name");
+    if (lastNameError) clientErrors.lastname = lastNameError;
     if (!formData.email.trim()) {
       clientErrors.email = "Email is required.";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -283,7 +308,7 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
-              {error.name && <p className="text-red-400 text-xs -mt-3">{error.name}</p>}
+              {error.firstname && <p className="text-red-400 text-xs -mt-3">{error.firstname}</p>}
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Last Name <span className="text-red-500">*</span>
@@ -308,7 +333,7 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
-              {error.name && <p className="text-red-400 text-xs -mt-3">{error.name}</p>}
+              {error.lastname && <p className="text-red-400 text-xs -mt-3">{error.lastname}</p>}
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Email <span className="text-red-500">*</span>
