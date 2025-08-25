@@ -43,20 +43,36 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const listener = App.addListener("appUrlOpen", (event) => {
-      const url = new URL(event.url);
-      const token = url.searchParams.get("token");
+      // This logic now handles ANY deep link starting with your app's scheme.
+      const urlString = event.url;
+      const urlScheme = "com.jackson.app://";
 
-      if (url.hostname === "auth" && url.pathname === "/callback" && token) {
-        console.log("Token received via deep link. Finalizing login...");
-        handleSocialAuthCallback(token).then((result) => {
-          if (result.ok) {
-            router.replace("/homepage");
-          } else {
-            router.replace("/login");
-          }
-        });
+      if (urlString.startsWith(urlScheme)) {
+        // Create a full, parsable URL to easily get path and params
+        const parsableUrl = new URL(
+          urlString.replace(urlScheme, "http://app/")
+        );
+
+        const path = parsableUrl.pathname; // This will be "/reset-password" OR "/auth/callback"
+        const token = parsableUrl.searchParams.get("token");
+
+        // --- Case 1: Handle Password Reset ---
+        if (path === "/reset-password" && token) {
+          console.log("🔑 Handling password reset link...");
+          // Navigate to the reset password page inside your app, passing the token
+          router.push(`/reset-password?token=${token}`);
+        }
+
+        // --- Case 2: Handle Social Auth Callback ---
+        else if (path === "/auth/callback" && token) {
+          console.log("🔗 Handling social auth callback...");
+          handleSocialAuthCallback(token).then((result) => {
+            router.replace(result.ok ? "/homepage" : "/login");
+          });
+        }
       }
     });
+
     return () => {
       listener.remove();
     };
