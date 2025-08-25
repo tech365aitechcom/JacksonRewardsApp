@@ -429,8 +429,8 @@ const HeaderSection = () => {
               }}
             />
           </button>
-          <div className="flex flex-col items-start gap-1">
-            <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[-0.37px] leading-[22px]">
+          <div className="flex flex-col items-start gap-1 flex-1 min-w-0">
+            <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[-0.37px] leading-[22px] truncate w-full max-w-[160px]">
               Hi! {firstName}👋
             </div>
             <div className="[font-family:'Poppins',Helvetica] font-light text-white text-sm tracking-[-0.17px] leading-[18px] opacity-60">
