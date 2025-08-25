@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext"; // Ensure path is correct
 import { getProfile, getProfileStats, getHomeDashboard } from "@/lib/api";
 import { HomeIndicator } from "../../components/HomeIndicator"; //
 import { WelcomeOffer } from "../../components/WelcomeOffer";
+import { XPPointsModal } from "../../components/XPPointsModal";
 
 export const Frame = () => {
   // Data for action buttons
@@ -257,6 +258,8 @@ const RewardProgress = ({ stats }) => {
 };
 
 const XpTierTracker = ({ stats }) => {
+  const [isXPModalOpen, setIsXPModalOpen] = useState(false);
+  
   // Define XP goals for each tier. These would ideally come from a config or API.
   const tierGoals = { junior: 0, mid: 5000, senior: 10000 };
   const currentXp = stats?.currentXP ?? 2592;
@@ -307,11 +310,17 @@ const XpTierTracker = ({ stats }) => {
           {progressData.title}
         </h2>
 
-        <img
-          className="absolute w-10 h-8 top-[15px] left-4"
-          alt="XP icon"
-          src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
-        />
+        <button
+          className="absolute w-10 h-8 top-[15px] left-4 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => setIsXPModalOpen(true)}
+          aria-label="Open XP Points information"
+        >
+          <img
+            className="w-full h-full"
+            alt="XP icon"
+            src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
+          />
+        </button>
 
         <div className="absolute w-[153px] h-[21px] top-[113px] left-[18px] flex items-center">
           <div className="font-medium text-[#d2d2d2] leading-[normal] [font-family:'Poppins',Helvetica] text-sm tracking-[0]">
@@ -346,12 +355,13 @@ const XpTierTracker = ({ stats }) => {
           ))}
         </nav>
 
-        <img
-          className="absolute w-5 h-5 top-36 left-[157px]"
-          alt="Expand details"
-          src="https://c.animaapp.com/mHRmJGe1/img/arrow.svg"
-        />
+       
       </section>
+      
+      <XPPointsModal 
+        isOpen={isXPModalOpen} 
+        onClose={() => setIsXPModalOpen(false)} 
+      />
     </div>
   );
 };
