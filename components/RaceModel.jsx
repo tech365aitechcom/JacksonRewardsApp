@@ -1,6 +1,7 @@
 import React from "react";
 
-export const Banner = () => {
+export const RaceModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
     const decorativeStars = [
         { id: 1, top: "44px", left: "248px" },
         { id: 2, top: "125px", left: "12px" },
@@ -22,17 +23,23 @@ export const Banner = () => {
 
     return (
         <div
-            className="relative w-[335px] h-[486px] rounded-[20px] overflow-hidden border border-solid border-[#ffffff80] bg-[linear-gradient(0deg,rgba(0,0,0,1)_0%,rgba(0,0,0,1)_100%)]"
-            data-model-id="2035:13685"
-            role="dialog"
-            aria-labelledby="banner-title"
-            aria-describedby="banner-description"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={onClose}
         >
+            <div
+                className="relative w-[335px] h-[486px] rounded-[20px] overflow-hidden border border-solid border-[#ffffff80] bg-[linear-gradient(0deg,rgba(0,0,0,1)_0%,rgba(0,0,0,1)_100%)]"
+                data-model-id="2035:13685"
+                role="dialog"
+                aria-labelledby="banner-title"
+                aria-describedby="banner-description"
+                onClick={(e) => e.stopPropagation()}
+            >
             {/* Close Button */}
             <button
-                className="absolute w-[31px] h-[31px] top-6 left-[280px] cursor-pointer"
+                className="absolute w-[31px] h-[31px] top-6 left-[280px] cursor-pointer hover:opacity-80 transition-opacity"
                 aria-label="Close banner"
                 type="button"
+                onClick={onClose}
             >
                 <img
                     alt=""
@@ -136,7 +143,7 @@ export const Banner = () => {
                     />
                 </div>
 
-                <div className="flex items-center justify-center gap-1 relative w-full mb-[-50.00px]">
+                <div className="flex top-5 items-center justify-center gap-1 relative w-full mb-[-50.00px]">
                     <div className="[font-family:'Poppins',Helvetica] font-medium text-[#d2d2d2] text-sm tracking-[0] leading-[normal]">
                         {progressData.currentPoints.toLocaleString()}
                     </div>
@@ -152,6 +159,7 @@ export const Banner = () => {
                     </div>
                 </div>
             </section>
+            </div>
         </div>
     );
 };
