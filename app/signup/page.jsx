@@ -89,6 +89,16 @@ const SignUp = () => {
     }
   };
 
+  const handleOtpKeyDown = (e, index) => {
+    // Handle backspace to move to previous field
+    if (e.key === 'Backspace' && !formData.otp[index] && index > 0) {
+      const newOtp = [...formData.otp];
+      newOtp[index - 1] = '';
+      setFormData({ ...formData, otp: newOtp });
+      otpInputs.current[index - 1]?.focus();
+    }
+  };
+
   const handleSendOtp = async () => {
     setError({});
     if (!formData.mobile.trim() || (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile))) {
@@ -288,24 +298,22 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   First Name <span className="text-red-500">*</span>
                 </label>
-                <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
-                    <Image
-                      className="absolute w-[17px] h-[17px] top-5 left-5"
-                      alt="User icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
-                      width={17}
-                      height={17}
-                    />
-                    <input
-                      type="text"
-                      value={formData.firstname}
-                      onChange={(e) => handleInputChange("firstname", e.target.value)}
-                      className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                      placeholder="Enter your first name"
-                      required
-                    />
-                  </div>
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+                  <Image
+                    className="absolute w-[17px] h-[17px] top-5 left-5"
+                    alt="User icon"
+                    src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                    width={17}
+                    height={17}
+                  />
+                  <input
+                    type="text"
+                    value={formData.firstname}
+                    onChange={(e) => handleInputChange("firstname", e.target.value)}
+                    className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
+                    placeholder="Enter your first name"
+                    required
+                  />
                 </div>
               </div>
               {error.firstname && <p className="text-red-400 text-xs -mt-3">{error.firstname}</p>}
@@ -313,24 +321,22 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Last Name <span className="text-red-500">*</span>
                 </label>
-                <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
-                    <Image
-                      className="absolute w-[17px] h-[17px] top-5 left-5"
-                      alt="User icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
-                      width={17}
-                      height={17}
-                    />
-                    <input
-                      type="text"
-                      value={formData.lastname}
-                      onChange={(e) => handleInputChange("lastname", e.target.value)}
-                      className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                      placeholder="Enter your last name"
-                      required
-                    />
-                  </div>
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+                  <Image
+                    className="absolute w-[17px] h-[17px] top-5 left-5"
+                    alt="User icon"
+                    src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                    width={17}
+                    height={17}
+                  />
+                  <input
+                    type="text"
+                    value={formData.lastname}
+                    onChange={(e) => handleInputChange("lastname", e.target.value)}
+                    className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
+                    placeholder="Enter your last name"
+                    required
+                  />
                 </div>
               </div>
               {error.lastname && <p className="text-red-400 text-xs -mt-3">{error.lastname}</p>}
@@ -338,24 +344,22 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Email <span className="text-red-500">*</span>
                 </label>
-                <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
-                    <Image
-                      className="absolute w-[17px] h-[17px] top-5 left-5"
-                      alt="Email icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
-                      width={17}
-                      height={17}
-                    />
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+                  <Image
+                    className="absolute w-[17px] h-[17px] top-5 left-5"
+                    alt="Email icon"
+                    src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                    width={17}
+                    height={17}
+                  />
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
+                    placeholder="Enter your email"
+                    required
+                  />
                 </div>
               </div>
               {error.email && <p className="text-red-400 text-xs -mt-3">{error.email}</p>}
@@ -365,50 +369,48 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Mobile Number <span className="text-red-500">*</span>
                 </label>
-                <div className="relative w-[314px] h-[55px]">
-                  <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
-                    <Image
-                      className="absolute w-[17px] h-[17px] top-5 left-5"
-                      alt="Phone icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
-                      width={17}
-                      height={17}
-                    />
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="absolute top-[17px] left-[50px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] bg-transparent border-none outline-none w-[50px] disabled:opacity-50"
-                      disabled={isOtpSent || isMobileVerified}
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+                  <Image
+                    className="absolute w-[17px] h-[17px] top-5 left-5"
+                    alt="Phone icon"
+                    src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                    width={17}
+                    height={17}
+                  />
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="absolute top-[17px] left-[50px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] bg-transparent border-none outline-none w-[50px] disabled:opacity-50"
+                    disabled={isOtpSent || isMobileVerified}
+                  >
+                    <option value="+91" className="bg-[#272052] text-[#d3d3d3]">+91</option>
+                    <option value="+1" className="bg-[#272052] text-[#d3d3d3]">+1</option>
+                    <option value="+44" className="bg-[#272052] text-[#d3d3d3]">+44</option>
+                    <option value="+61" className="bg-[#272052] text-[#d3d3d3]">+61</option>
+                  </select>
+                  <input
+                    type="tel"
+                    value={formData.mobile}
+                    onChange={(e) => handleInputChange("mobile", e.target.value.replace(/\D/g, ''))}
+                    maxLength={10}
+                    className="absolute top-[17px] left-[105px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[190px] disabled:opacity-50"
+                    // placeholder="Enter mobile number"
+                    required
+                    disabled={isOtpSent || isMobileVerified}
+                  />
+                  {!isOtpSent && !isMobileVerified && formData.mobile.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={isLoading}
+                      className="absolute right-4 top-[10px] h-[35px] px-4 rounded-lg bg-gradient-to-r from-[#a18aff] to-[#6d4aff] text-white text-sm font-semibold shadow-md disabled:opacity-50 transition-all"
                     >
-                      <option value="+91" className="bg-[#272052] text-[#d3d3d3]">+91</option>
-                      <option value="+1" className="bg-[#272052] text-[#d3d3d3]">+1</option>
-                      <option value="+44" className="bg-[#272052] text-[#d3d3d3]">+44</option>
-                      <option value="+61" className="bg-[#272052] text-[#d3d3d3]">+61</option>
-                    </select>
-                    <input
-                      type="tel"
-                      value={formData.mobile}
-                      onChange={(e) => handleInputChange("mobile", e.target.value.replace(/\D/g, ''))}
-                      maxLength={10}
-                      className="absolute top-[17px] left-[105px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[190px] disabled:opacity-50"
-                      // placeholder="Enter mobile number"
-                      required
-                      disabled={isOtpSent || isMobileVerified}
-                    />
-                    {!isOtpSent && !isMobileVerified && (
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        disabled={isLoading}
-                        className="absolute right-4 top-[10px] h-[35px] px-4 rounded-lg bg-gradient-to-r from-[#a18aff] to-[#6d4aff] text-white text-sm font-semibold shadow-md disabled:opacity-50 transition-all"
-                      >
-                        {isLoading ? 'Sending...' : 'Send OTP'}
-                      </button>
-                    )}
-                    {isMobileVerified && (
-                      <div className="absolute right-4 text-green-400 text-sm font-semibold flex items-center">✓ Verified</div>
-                    )}
-                  </div>
+                      {isLoading ? 'Sending...' : 'Send OTP'}
+                    </button>
+                  )}
+                  {isMobileVerified && (
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-400 text-sm font-semibold flex items-center">✓ Verified</div>
+                  )}
                 </div>
                 {error.mobile && <p className="text-red-400 text-xs -mt-3">{error.mobile}</p>}
               </div>
@@ -430,6 +432,7 @@ const SignUp = () => {
                         maxLength="1"
                         value={data}
                         onChange={e => handleOtpChange(e.target, index)}
+                        onKeyDown={e => handleOtpKeyDown(e, index)}
                         onFocus={e => e.target.select()}
                         ref={el => otpInputs.current[index] = el}
                         disabled={isMobileVerified}
@@ -461,7 +464,7 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
                   <div className="absolute w-[17px] h-[17px] top-5 left-5">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
                       <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />
@@ -502,7 +505,7 @@ const SignUp = () => {
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
-                <div className="relative bg-[url(https://c.animaapp.com/bkGH9LUL/img/card@2x.png)] w-[314px] h-[55px] bg-[100%_100%] rounded-[12px]">
+                <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/2 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
                   <div className="absolute w-[17px] h-[17px] top-5 left-5">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
                       <path d="M4 7V5C4 2.5 5.5 1 8 1C10.5 1 12 2.5 12 5V7M8 10C8.5 10 9 10.5 9 11C9 11.5 8.5 12 8 12C7.5 12 7 11.5 7 11C7 10.5 7.5 10 8 10ZM3 7H13C13.5 7 14 7.5 14 8V14C14 14.5 13.5 15 13 15H3C2.5 15 2 14.5 2 14V8C2 7.5 2.5 7 3 7Z" stroke="#d3d3d3" strokeWidth="1" fill="none" />

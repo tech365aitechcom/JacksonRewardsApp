@@ -643,7 +643,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                   <div className="w-[25%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
                   <div className="absolute w-6 h-6 bg-white rounded-full top-[-3px] border-[3px] border-[#FFB74D]" style={{left: 'calc(25% - 12px)'}}></div>
                 </div>
-                <div className="w-[69px] top-[7px] left-[230px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
+                <div className="w-[78px] top-[7px] left-[226px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
                   <div className="relative h-14 flex flex-col justify-center items-center px-2">
                     <div className="flex items-center justify-center gap-1">
                       <div className="font-medium text-base leading-5 [font-family:'Poppins',Helvetica] text-white tracking-[0]">
@@ -681,8 +681,8 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                   <div className="w-[10%] h-full bg-[linear-gradient(90deg,rgba(255,221,143,1)_0%,rgba(255,183,77,1)_100%)] rounded-[10px]"></div>
                   <div className="absolute w-6 h-6 bg-white rounded-full top-[-3px] border-[3px] border-[#FFB74D]" style={{left: 'calc(10% - 12px)'}}></div>
                 </div>
-                <div className="w-14 top-2 left-[245px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
-                  <div className="relative h-14 flex flex-col justify-center items-center px-1">
+                <div className="w-[78px] top-2 left-[226px] absolute h-14 rounded-[8px] overflow-hidden bg-[linear-gradient(331deg,rgba(237,131,0,1)_0%,rgba(237,166,0,1)_100%)]">
+                  <div className="relative h-14 flex flex-col justify-center items-center px-2">
                     <div className="flex items-center justify-center gap-1">
                       <div className="font-medium text-base leading-5 [font-family:'Poppins',Helvetica] text-white tracking-[0]">
                         10
