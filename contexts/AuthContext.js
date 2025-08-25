@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUserFlow, setIsNewUserFlow] = useState(false);
 
   useEffect(() => {
     const listener = App.addListener("appUrlOpen", (event) => {
@@ -68,7 +69,6 @@ export function AuthProvider({ children }) {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-      } else {
       }
     } catch (error) {
       console.error("❌ Failed to load session from storage", error);
@@ -78,6 +78,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // --- BUG FIX: Rewritten Gatekeeper Logic ---
   useEffect(() => {
     if (isLoading) {
       console.log("🛡️ [Gatekeeper] Waiting for session to load...");
@@ -86,7 +87,7 @@ export function AuthProvider({ children }) {
 
     const isAuthenticated = !!user;
     console.log(
-      `🛡️ [Gatekeeper] Running check: isAuthenticated=${isAuthenticated}, pathname=${pathname}`
+      `🛡️ [Gatekeeper] Check: auth=${isAuthenticated}, path=${pathname}, newUserFlow=${isNewUserFlow}`
     );
 
     const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
@@ -97,34 +98,39 @@ export function AuthProvider({ children }) {
     );
     const isWelcomeRoute = pathname === "/";
 
-    // Rule: Logged-in users should not see public or welcome pages.
     if (isAuthenticated && (isPublicOnlyRoute || isWelcomeRoute)) {
+      const destination = isNewUserFlow ? "/permissions" : "/homepage";
       console.log(
-        "🛡️ [Gatekeeper] Redirecting authenticated user from public page to /homepage"
+        `🛡️ [Gatekeeper] Authenticated on public page. Redirecting to ${destination}`
       );
-      router.replace("/homepage");
+      router.replace(destination);
+      return; // Exit early to prevent other rules from firing in the same render.
     }
 
-    // Rule: Logged-out users should not see protected pages.
     if (!isAuthenticated && isProtectedRoute) {
       console.log(
-        "🛡️ [Gatekeeper] Redirecting unauthenticated user from protected page to /login"
+        "🛡️ [Gatekeeper] Unauthenticated on protected page. Redirecting to /login"
       );
       router.replace("/login");
+      return;
     }
-  }, [isLoading, user, pathname, router]); // Dependency array is key
+
+    // Rule 3: Cleanup. If the new user flow was active but we are now on a
+    // protected page (like /permissions), it's safe to reset the flag.
+    if (isAuthenticated && isProtectedRoute && isNewUserFlow) {
+      console.log("🛡️ [Gatekeeper] New user flow complete. Resetting flag.");
+      setIsNewUserFlow(false);
+    }
+  }, [isLoading, user, pathname, router, isNewUserFlow]);
 
   const handleAuthSuccess = (data) => {
     console.log("🔑 handleAuthSuccess called with:", data);
     const { token, user } = data;
-
     if (!token || !user) {
       console.warn("⚠️ Missing token or user in response!", { token, user });
     }
-
     setUser(user);
     setToken(token);
-
     try {
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("authToken", token);
@@ -133,7 +139,6 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("❌ Failed to save to localStorage", err);
     }
-
     return { ok: true, user };
   };
 
@@ -146,8 +151,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("❌ signIn failed:", error);
       return { ok: false, error: error.body || { error: error.message } };
-    } finally {
-      console.log("⏹️ signIn finished, isLoading =", false);
     }
   };
 
@@ -158,15 +161,15 @@ export function AuthProvider({ children }) {
       console.log("📩 signup API response:", data);
       useOnboardingStore.getState().resetOnboarding();
       console.log("🔄 Onboarding store reset");
+      setIsNewUserFlow(true);
       return handleAuthSuccess(data);
     } catch (error) {
       console.error("❌ signUpAndSignIn failed:", error);
       return { ok: false, error: error.body || { error: error.message } };
-    } finally {
-      console.log("⏹️ signUpAndSignIn finished, isLoading =", false);
     }
   };
 
+  // ... (signOut, handleSocialAuthCallback, updateUserInContext, and return statement are unchanged) ...
   const signOut = () => {
     console.log("🚪 signOut called. Clearing session...");
     setUser(null);

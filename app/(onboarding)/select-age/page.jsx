@@ -59,11 +59,11 @@ export default function AgeSelection() {
 
   const handleScroll = (e) => {
     if (!ageOptions.length) return
-    
+
     const scrollTop = e.target.scrollTop
     const index = Math.round(scrollTop / itemHeight)
     const clampedIndex = Math.max(0, Math.min(index, ageOptions.length - 1))
-    
+
     if (clampedIndex !== selectedIndex) {
       setSelectedIndex(clampedIndex)
     }
@@ -105,7 +105,7 @@ export default function AgeSelection() {
           {!isLoading && !error && (
             <div className='relative h-[250px] rounded-xl bg-[rgba(255,255,255,0.1)] backdrop-blur-sm'>
               {/* Wheel picker container */}
-              <div 
+              <div
                 ref={wheelRef}
                 className='h-full overflow-y-scroll scrollbar-hide'
                 onScroll={handleScroll}
@@ -116,42 +116,40 @@ export default function AgeSelection() {
               >
                 {/* Padding items for centering */}
                 <div style={{ height: `${itemHeight * 2}px` }} />
-                
+
                 {ageOptions.map((option, index) => (
                   <div
                     key={option.id}
                     onClick={() => handleWheelClick(index)}
-                    className={`flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                      selectedIndex === index 
-                        ? 'bg-white rounded-lg mx-4 shadow-lg transform scale-105' 
-                        : 'bg-transparent hover:bg-white/10'
-                    }`}
-                    style={{ 
+                    className={`flex items-center justify-center cursor-pointer transition-all duration-200 ${selectedIndex === index
+                      ? 'bg-white rounded-lg mx-4 shadow-lg transform scale-105'
+                      : 'bg-transparent hover:bg-white/10'
+                      }`}
+                    style={{
                       height: `${itemHeight}px`,
                       scrollSnapAlign: 'center'
                     }}
                   >
                     <div
-                      className={`[font-family:'Poppins',Helvetica] text-lg text-center tracking-[0] leading-6 transition-all duration-200 ${
-                        selectedIndex === index 
-                          ? 'text-[#6433aa] font-semibold' 
-                          : 'text-white font-normal opacity-60'
-                      }`}
+                      className={`[font-family:'Poppins',Helvetica] text-lg text-center tracking-[0] leading-6 transition-all duration-200 ${selectedIndex === index
+                        ? 'text-[#6433aa] font-semibold'
+                        : 'text-white font-normal opacity-60'
+                        }`}
                     >
                       {option.label}
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Padding items for centering */}
                 <div style={{ height: `${itemHeight * 2}px` }} />
               </div>
-              
+
               {/* Center selection indicator */}
               <div className='pointer-events-none absolute inset-0 flex items-center justify-center'>
                 <div className='w-full h-[50px] border-t-2 border-b-2 border-white/30 bg-white/5' />
               </div>
-              
+
               {/* Fade overlay */}
               <div className='pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-b from-[rgba(39,32,82,0.8)] via-transparent to-[rgba(39,32,82,0.8)]' />
             </div>

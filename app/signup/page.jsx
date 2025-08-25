@@ -126,7 +126,6 @@ const SignUp = () => {
       return;
     }
 
-    // --- BUG FIX: Implement robust, field-specific client-side validation ---
     const clientErrors = {};
     if (!formData.firstname.trim()) {
       clientErrors.firstname = "First name is required.";
@@ -159,7 +158,7 @@ const SignUp = () => {
 
     if (Object.keys(clientErrors).length > 0) {
       setError(clientErrors);
-      return; // Stop submission if there are client-side errors
+      return;
     }
 
     setIsLoading(true);
@@ -183,10 +182,9 @@ const SignUp = () => {
 
       const result = await signUpAndSignIn(fullSignupData);
 
-      if (result.ok) {
-        router.push('/permissions');
-      } else {
-        // BUG FIX: Handle structured backend errors correctly
+      // CHANGE: The AuthProvider now handles the redirect.
+      // We only need to handle the error case here.
+      if (!result.ok) {
         const backendError = result?.error;
         if (backendError && backendError.errors) {
           const newErrors = {};
@@ -201,7 +199,6 @@ const SignUp = () => {
       }
     }
     catch (err) {
-      // BUG FIX: Set a 'form' error for generic failures
       setError({ form: err.message || "An error occurred. Please check your details and try again." });
     } finally {
       setIsLoading(false);
