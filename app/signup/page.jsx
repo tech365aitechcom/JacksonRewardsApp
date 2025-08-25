@@ -89,6 +89,16 @@ const SignUp = () => {
     }
   };
 
+  const handleOtpKeyDown = (e, index) => {
+    // Handle backspace to move to previous field
+    if (e.key === 'Backspace' && !formData.otp[index] && index > 0) {
+      const newOtp = [...formData.otp];
+      newOtp[index - 1] = '';
+      setFormData({ ...formData, otp: newOtp });
+      otpInputs.current[index - 1]?.focus();
+    }
+  };
+
   const handleSendOtp = async () => {
     setError({});
     if (!formData.mobile.trim() || (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile))) {
@@ -388,7 +398,7 @@ const SignUp = () => {
                     required
                     disabled={isOtpSent || isMobileVerified}
                   />
-                  {!isOtpSent && !isMobileVerified && (
+                  {!isOtpSent && !isMobileVerified && formData.mobile.length > 0 && (
                     <button
                       type="button"
                       onClick={handleSendOtp}
@@ -399,7 +409,7 @@ const SignUp = () => {
                     </button>
                   )}
                   {isMobileVerified && (
-                    <div className="absolute right-4 text-green-400 text-sm font-semibold flex items-center">✓ Verified</div>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-400 text-sm font-semibold flex items-center">✓ Verified</div>
                   )}
                 </div>
                 {error.mobile && <p className="text-red-400 text-xs -mt-3">{error.mobile}</p>}
@@ -422,6 +432,7 @@ const SignUp = () => {
                         maxLength="1"
                         value={data}
                         onChange={e => handleOtpChange(e.target, index)}
+                        onKeyDown={e => handleOtpKeyDown(e, index)}
                         onFocus={e => e.target.select()}
                         ref={el => otpInputs.current[index] = el}
                         disabled={isMobileVerified}
