@@ -223,41 +223,39 @@ export default function MyProfile() {
               <img
                 src="/badge.png"
                 alt="Badge"
-                className="w-12 h-12 pt-2 flex-shrink-0 object-contain"
+                className="w-14 h-14 pt-2 flex-shrink-0 object-contain"
               />
-              <span className="text-[#fefefe] pb-2 text-base font-medium">
-                {vipStatus?.level || "BRONZE"} Badge
+              <span className="text-[#fefefe] pb-2  text-lg pr-2  font-medium">
+                {vipStatus?.level ? vipStatus.level.charAt(0).toUpperCase() + vipStatus.level.slice(1).toLowerCase() : "Bronze"} Badge
               </span>
             </div>
 
-            {/* JACK_54: Contact row baseline-aligned */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2 text-gray-300 text-sm leading-5">
+            {/* Contact section with improved spacing */}
+            <div className="flex flex-col items-center gap-2 -mt-3">
+              <div className="flex items-center gap-3 text-gray-300 text-sm leading-5">
                 <Image
                   width={16}
                   height={16}
                   alt="Mail"
                   src="https://c.animaapp.com/V1uc3arn/img/image-3958@2x.png"
-                  className="w-4 h-4"
+                  className="w-4 h-4 flex-shrink-0"
                 />
-                <span className="truncate max-w-[180px]">
+                <span className="truncate max-w-[160px]">
                   {profile?.email || "youremail@domain.com"}
                 </span>
-                <span className="opacity-60">|</span>
-                <span className="truncate max-w-[120px]">{profile?.mobile || "+01 234 567 89"}</span>
+                <span className="opacity-60 mx-1">|</span>
+                <span className="truncate max-w-[100px]">{profile?.mobile || "+01 234 567 89"}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-300 text-sm leading-5">
-                <div className="w-4 h-4 opacity-0"></div>
-                <span className="opacity-60">|</span>
+              <div className="flex items-center gap-3 text-gray-300 text-sm leading-5">
                 <Image
                   width={32}
                   height={32}
-                  className="w-8 h-8 object-cover"
+                  className="w-6 h-6 object-cover flex-shrink-0"
                   alt="Flag"
                   src="https://c.animaapp.com/V1uc3arn/img/image-3956@2x.png"
                 />
-                <span className="tracking-wide">GamePro</span>
+                <span className="tracking-wide font-medium">GamePro</span>
               </div>
             </div>
           </section>
@@ -461,11 +459,9 @@ export default function MyProfile() {
                 </div>
                 <button
                   onClick={handleVipUpgrade}
-                  className="inline-flex px-3.5 py-2 bg-[#ffdd8f] rounded-xl hover:opacity-90"
+                  className="px-3 py-1.5 bg-[#ffdd8f] rounded-xl hover:opacity-90 [font-family:'Poppins',Helvetica] font-semibold text-[#736de8] text-[13px] tracking-[0] leading-[normal]"
                 >
-                  <span className="font-semibold text-[#736de8] text-[13px]">
-                    Check Plans
-                  </span>
+                  Check Plans
                 </button>
               </div>
             </section>

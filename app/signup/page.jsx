@@ -239,7 +239,7 @@ const SignUp = () => {
         className="relative w-full min-h-screen bg-[#272052] flex justify-center"
         data-model-id="1322:2980"
       >
-        <div className="relative w-[375px] min-h-[1061px] bg-[#272052] overflow-hidden"
+        <div className="relative w-[375px] min-h-screen bg-[#272052] overflow-y-auto"
         >
           <div className="absolute w-[470px] h-[883px] -top-32 -left-3.5">
             <div className="absolute w-[358px] h-[358px] top-0 left-7 bg-[#af7de6] rounded-[179px] blur-[250px]" />
@@ -282,7 +282,7 @@ const SignUp = () => {
 
             <form
               onSubmit={handleSubmit}
-              className="w-[314px] absolute top-[274px] left-[50px] flex flex-col items-start gap-5"
+              className="w-[314px] absolute top-[274px] left-[50px] flex flex-col items-start gap-5 pb-20"
             >
               <div className="relative self-stretch w-full flex-[0_0_auto] flex flex-col items-start gap-3">
                 <label className="relative self-stretch mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">

@@ -181,7 +181,10 @@ export default function LoginPage() {
               </div>
             </button>
 
-            <div className="absolute w-[316px] h-[55px] top-[403px] left-[246px]">
+            <div className="absolute w-[316px] top-[369px] left-[246px] flex flex-col gap-2">
+              <label className="[font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
+                Email/ Phone Number
+              </label>
               <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
                 <Image
                   className="absolute w-[17px] h-[17px] top-5 left-5"
@@ -190,9 +193,8 @@ export default function LoginPage() {
                   width={17}
                   height={17}
                 />
-
                 <input
-                  type="text" // Allow both email and text for phone number
+                  type="text"
                   value={emailOrMobile}
                   onChange={(e) => setEmailOrMobile(e.target.value)}
                   className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
@@ -200,30 +202,26 @@ export default function LoginPage() {
                   aria-label="Email or Mobile Number"
                 />
               </div>
+              {error.emailOrMobile && (
+                <p className="text-red-400 text-xs mt-1">
+                  {error.emailOrMobile}
+                </p>
+              )}
             </div>
-            {error.emailOrMobile && (
-              <p className="absolute top-[460px] left-[246px] text-red-400 text-xs">
-                {error.emailOrMobile}
-              </p>
-            )}
 
-            <label className="absolute top-[369px] left-[246px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
-              Email/ Phone Number
-            </label>
-
-            <label className="absolute top-[473px] left-[246px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal] z-10">
-              Password
-            </label>
-
-            <button
-              className="absolute top-[560px] left-[457px] [font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[11.3px] tracking-[0] leading-[normal] cursor-pointer z-10"
-              onClick={handleForgotPassword}
-              type="button"
-            >
-              Forgot Password?
-            </button>
-
-            <div className="absolute w-[314px] h-[55px] top-[497px] left-[247px]">
+            <div className="absolute w-[316px] top-[473px] left-[246px] flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <label className="[font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[14.3px] tracking-[0] leading-[normal]">
+                  Password
+                </label>
+                <button
+                  className="[font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[11.3px] tracking-[0] leading-[normal] cursor-pointer"
+                  onClick={handleForgotPassword}
+                  type="button"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative w-[314px] h-[55px] rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
                 <div className="absolute w-[17px] h-[17px] top-5 left-5">
                   <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
@@ -239,10 +237,9 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px] z-50"
+                  className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px]"
                   placeholder="Enter your password"
                   aria-label="Password"
-                  style={{ position: "relative" }}
                 />
                 <button
                   type="button"
@@ -264,15 +261,15 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {error.password && (
+                <p className="text-red-400 text-xs mt-1">
+                  {error.password}
+                </p>
+              )}
             </div>
-            {error.password && (
-              <p className="absolute top-[554px] left-[246px] text-red-400 text-xs">
-                {error.password}
-              </p>
-            )}
 
             {error.form && (
-              <div className="absolute top-[554px] left-[246px] w-[316px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+              <div className="absolute top-[565px] left-[246px] w-[316px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
                 {error.form}
               </div>
             )}
