@@ -197,10 +197,9 @@ const RewardProgress = ({ stats }) => {
                     <div
                       className="absolute h-full rounded-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#f4d03f] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
                       style={{
-                        width: `${
-                          (pointsData.currentPoints / pointsData.targetPoints) *
+                        width: `${(pointsData.currentPoints / pointsData.targetPoints) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     ></div>
                     {/* Current level indicator */}
@@ -317,13 +316,13 @@ const XpTierTracker = ({ stats }) => {
           <div className="font-medium text-[#d2d2d2] leading-[normal] [font-family:'Poppins',Helvetica] text-sm tracking-[0]">
             {progressData.currentXP.toLocaleString()}
           </div>
-          
+
           <img
             className="w-5 h-[18px] mx-1"
             alt="XP points icon"
             src="https://c.animaapp.com/mHRmJGe1/img/pic-1.svg"
           />
-          
+
           <div className="font-medium text-[#dddddd] leading-[normal] [font-family:'Poppins',Helvetica] text-sm tracking-[0]">
             out of {progressData.totalXP.toLocaleString()}
           </div>
@@ -333,13 +332,12 @@ const XpTierTracker = ({ stats }) => {
           {progressData.levels.map((level, index) => (
             <div
               key={level}
-              className={`h-3.5 font-normal text-white leading-[14px] whitespace-nowrap absolute -top-px [font-family:'Poppins',Helvetica] text-sm tracking-[0] ${
-                index === 0
-                  ? "left-0"
-                  : index === 1
-                    ? "left-[114px]"
-                    : "left-[259px]"
-              }`}
+              className={`h-3.5 font-normal text-white leading-[14px] whitespace-nowrap absolute -top-px [font-family:'Poppins',Helvetica] text-sm tracking-[0] ${index === 0
+                ? "left-0"
+                : index === 1
+                  ? "left-[114px]"
+                  : "left-[259px]"
+                }`}
             >
               {level}
             </div>
@@ -629,28 +627,26 @@ const MainContentSection = () => {
                 }}
               >
                 <div
-                  className={`relative w-16 h-16 top-1 left-1 rounded-[32px] shadow-inner ${
-                    game.bgGradient
-                      ? `bg-[${game.bgGradient}]`
-                      : game.bgImage
+                  className={`relative w-16 h-16 top-1 left-1 rounded-[32px] shadow-inner ${game.bgGradient
+                    ? `bg-[${game.bgGradient}]`
+                    : game.bgImage
                       ? `bg-[url(${game.bgImage})] bg-cover bg-[50%_50%]`
                       : "bg-[#00000033]"
-                  }`}
+                    }`}
                 >
                   <img
-                    className={`absolute ${
-                      game.id === 1
-                        ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]"
-                        : game.id === 2
+                    className={`absolute ${game.id === 1
+                      ? "w-16 h-[61px] top-[3px] left-0 aspect-[1.05]"
+                      : game.id === 2
                         ? "w-10 h-[44px] top-[10px] left-3 aspect-[0.89] object-cover"
                         : game.id === 3
-                        ? "w-[67px] h-[58px] top-1.5 left-0"
-                        : game.id === 4
-                        ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover"
-                        : game.id === 5
-                        ? "w-[68px] h-[42px] top-[11px] left-0"
-                        : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"
-                    }`}
+                          ? "w-[67px] h-[58px] top-1.5 left-0"
+                          : game.id === 4
+                            ? "w-16 h-[49px] top-[15px] left-0 aspect-[1.3] object-cover"
+                            : game.id === 5
+                              ? "w-[68px] h-[42px] top-[11px] left-0"
+                              : "w-12 h-[54px] top-1.5 left-3 aspect-[0.88]"
+                      }`}
                     alt="Image"
                     src={game.image}
                   />
@@ -673,7 +669,7 @@ const MainContentSection = () => {
       <div className="flex flex-col items-start gap-4 relative w-full">
         <div className="flex w-full items-center justify-between">
           <p className="text-white [font-family:'Poppins',Helvetica] font-semibold text-xl tracking-[0] leading-[normal] text-nowrap ">
-          Fast Fun, Real Rewards!
+            Fast Fun, Real Rewards!
           </p>
         </div>
 
@@ -697,36 +693,32 @@ const MainContentSection = () => {
                 {nonGamingOffers.slice(0, 2).map((offer, index) => (
                   <div
                     key={offer.id}
-                    className={`absolute w-[44%] ${
-                      index === 0
-                        ? "h-40 top-px left-0"
-                        : "h-[161px] top-0 right-0"
-                    }`}
+                    className={`absolute w-[44%] ${index === 0
+                      ? "h-40 top-px left-0"
+                      : "h-[161px] top-0 right-0"
+                      }`}
                   >
                     <img
-                      className={`${
-                        index === 0
-                          ? "w-[80%] h-40 top-0 left-0"
-                          : "w-[80%] h-40 top-px right-0"
-                      } absolute object-cover`}
+                      className={`${index === 0
+                        ? "w-[80%] h-40 top-0 left-0"
+                        : "w-[80%] h-40 top-px right-0"
+                        } absolute object-cover`}
                       alt="Rectangle"
                       src={offer.bgImage}
                     />
                     <img
-                      className={`w-full h-[57px] ${
-                        index === 0
-                          ? "top-[103px] left-0"
-                          : "top-[104px] left-0"
-                      } absolute object-cover`}
+                      className={`w-full h-[57px] ${index === 0
+                        ? "top-[103px] left-0"
+                        : "top-[104px] left-0"
+                        } absolute object-cover`}
                       alt="Rectangle"
                       src={offer.bottomBg}
                     />
                     <div
-                      className={`absolute ${
-                        index === 0
-                          ? "top-[111px] left-[11px]"
-                          : "top-28 left-[11px]"
-                      } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
+                      className={`absolute ${index === 0
+                        ? "top-[111px] left-[11px]"
+                        : "top-28 left-[11px]"
+                        } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
                     >
                       {offer.name.split(" ").map((word, i) => (
                         <span key={i}>
@@ -737,20 +729,18 @@ const MainContentSection = () => {
                       ))}
                     </div>
                     <img
-                      className={`absolute ${
-                        index === 0
-                          ? "w-[62%] h-[102px] top-px left-[3px] aspect-[1.01]"
-                          : "w-[62%] h-[104px] top-0 right-[5%] aspect-[1.01]"
-                      }`}
+                      className={`absolute ${index === 0
+                        ? "w-[62%] h-[102px] top-px left-[3px] aspect-[1.01]"
+                        : "w-[62%] h-[104px] top-0 right-[5%] aspect-[1.01]"
+                        }`}
                       alt="Image"
                       src={offer.image}
                     />
                     <div
-                      className={`w-24 h-[23px] ${
-                        index === 0
-                          ? "top-[72px] left-2.5"
-                          : "top-[73px] left-11"
-                      } rounded absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
+                      className={`w-24 h-[23px] ${index === 0
+                        ? "top-[72px] left-2.5"
+                        : "top-[73px] left-11"
+                        } rounded absolute overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]`}
                     >
                       <div className="absolute top-[3px] left-1.5 [font-family:'Poppins',Helvetica] font-medium text-white text-[10.2px] tracking-[0] leading-[normal]">
                         {offer.earnAmount}
@@ -869,16 +859,14 @@ const MainContentSection = () => {
                   .map((provider, index) => (
                     <div
                       key={provider.id}
-                      className={`absolute w-[35%] h-40 top-0 ${
-                        index === 0 ? "left-0" : "right-0"
-                      } bg-[url(${provider.bgImage})] bg-cover bg-[50%_50%]`}
+                      className={`absolute w-[35%] h-40 top-0 ${index === 0 ? "left-0" : "right-0"
+                        } bg-[url(${provider.bgImage})] bg-cover bg-[50%_50%]`}
                     >
                       <div
-                        className={`absolute ${
-                          index === 0
-                            ? "top-[97px] left-[21px]"
-                            : "top-[90px] left-[37px]"
-                        } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
+                        className={`absolute ${index === 0
+                          ? "top-[97px] left-[21px]"
+                          : "top-[90px] left-[37px]"
+                          } [font-family:'Poppins',Helvetica] font-semibold text-white text-base text-center tracking-[0] leading-5`}
                       >
                         {provider.name.split(" ").map((word, i) => (
                           <span key={i}>
@@ -891,11 +879,10 @@ const MainContentSection = () => {
                         ))}
                       </div>
                       <img
-                        className={`absolute ${
-                          index === 0
-                            ? "w-[65px] h-[65px] top-6 left-[18px] aspect-[1]"
-                            : "w-[70px] h-[51px] top-[31px] left-[41px] aspect-[1.37]"
-                        }`}
+                        className={`absolute ${index === 0
+                          ? "w-[65px] h-[65px] top-6 left-[18px] aspect-[1]"
+                          : "w-[70px] h-[51px] top-[31px] left-[41px] aspect-[1.37]"
+                          }`}
                         alt="Image"
                         src={provider.image}
                       />
