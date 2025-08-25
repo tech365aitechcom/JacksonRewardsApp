@@ -8,7 +8,7 @@ import { getProfile, getProfileStats, getVipStatus, updateProfile } from "@/lib/
 
 export default function MyProfile() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, signOut } = useAuth();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [vipStatus, setVipStatus] = useState(null);
@@ -104,9 +104,9 @@ export default function MyProfile() {
     setProfile((prev) =>
       prev
         ? {
-            ...prev,
-            profile: { ...(prev.profile || {}), notifications: next },
-          }
+          ...prev,
+          profile: { ...(prev.profile || {}), notifications: next },
+        }
         : prev
     );
 
@@ -118,9 +118,9 @@ export default function MyProfile() {
       setProfile((prev) =>
         prev
           ? {
-              ...prev,
-              profile: { ...(prev.profile || {}), notifications: original },
-            }
+            ...prev,
+            profile: { ...(prev.profile || {}), notifications: original },
+          }
           : prev
       );
     }
@@ -203,7 +203,7 @@ export default function MyProfile() {
                   border-4 border-[#2C2C2C]
                   shadow-[0_4px_14px_rgba(0,0,0,0.5)]
                 "
-                /* holder sits outside avatar circle */
+              /* holder sits outside avatar circle */
               >
                 <Image
                   width={20}
@@ -738,16 +738,14 @@ export default function MyProfile() {
                   <span className="text-white text-base">Notifications</span>
                 </div>
                 <button
-                  className={`w-[42px] h-[22px] rounded-[10px] relative transition-all ${
-                    notificationsEnabled ? "bg-[#8b92de]" : "bg-gray-500"
-                  }`}
+                  className={`w-[42px] h-[22px] rounded-[10px] relative transition-all ${notificationsEnabled ? "bg-[#8b92de]" : "bg-gray-500"
+                    }`}
                   onClick={handleToggleNotifications}
                   aria-label="Toggle Notifications"
                 >
                   <span
-                    className={`absolute top-[3px] w-4 h-4 bg-white rounded-full transition-all ${
-                      notificationsEnabled ? "left-[22px]" : "left-[3px]"
-                    }`}
+                    className={`absolute top-[3px] w-4 h-4 bg-white rounded-full transition-all ${notificationsEnabled ? "left-[22px]" : "left-[3px]"
+                      }`}
                   />
                 </button>
               </div>
@@ -875,6 +873,41 @@ export default function MyProfile() {
                   />
                 </button>
               </div>
+              <div className="flex items-center justify-between w-full mt-6">
+                <div className="flex items-center gap-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6 text-white"
+                    onClick={signOut}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+                    />
+                  </svg>
+                  <span onClick={signOut} className="text-white text-base">Log out</span>
+                </div>
+                <button
+                  className="w-6 h-6"
+                  aria-label="Log out of your account"
+                  onClick={signOut}
+                >
+                  {/* Using a forward arrow for UI consistency with other items in the block */}
+                  <Image
+                    width={24}
+                    height={24}
+                    alt="Perform action"
+                    src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
+                    className="w-6 h-6"
+                  />
+                </button>
+              </div>
+
             </div>
           </section>
         </main>
