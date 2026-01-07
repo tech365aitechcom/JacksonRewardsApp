@@ -70,9 +70,9 @@ export const ProgressSection = ({
 
     // Check if day should show chest box (special milestone days)
     // Days are now 1-indexed (1-30)
-    // Milestone days: 7, 14, 21, 28
+    // Milestone days: 7, 14, 21, 30
     const shouldShowChestBox = (day) => {
-        return [7, 14, 21, 28].includes(day);
+        return [7, 14, 21, 30].includes(day);
     };
 
     // Get the appropriate icon for each day
@@ -315,10 +315,10 @@ export const ProgressSection = ({
     return (
         <section
             ref={scrollContainerRef}
-            className="w-full max-w-[375px] scrollbar-hide overflow-y-auto h-screen"
+            className="w-full max-w-[375px] scrollbar-hide pt-[184px]"
             aria-label="Progress tracker"
         >
-            <div className="w-full flex justify-center relative px-4 pt-0 ladder-3d" style={{ height: '2900px' }}>
+            <div className="w-full flex justify-center relative px-4 pt-0 ladder-3d" style={{ height: '2940px' }}>
                 {/* Loading State - Non-blocking, show UI while loading */}
                 {activityLoading && !activityStats && (
                     <div className="absolute top-4 right-4 z-50">
@@ -434,18 +434,18 @@ export const ProgressSection = ({
                         )}
 
                         {/* Day Icons - Show leaves progressively based on current streak */}
-                        {/* Only show leaf if day is within current streak range */}
+                        {/* Only show leaf if day is within current streak range OR is a milestone day */}
                         {/* Uses activity stats to track user activity streak */}
-                        {(dayData.day <= currentStreak) && (
+                        {(dayData.day <= currentStreak || [7, 14, 21, 30].includes(dayData.day)) && (
                             <div
                                 className="absolute flex items-center z-30 transform transition-all duration-300 hover:scale-110"
                                 style={{
                                     top: `${dayData.top + getCircleOffset(dayData.day) - 38 - (dayData.day === 28 || dayData.day === 29 ? 15 : 0)}px`, // Aligned with circle position, moved up more
-                                    left: `130px` // Aligned with circle position (circles at 80px, leaves at 130px for proper spacing)
+                                    left: `${[7, 14, 21, 30].includes(dayData.day) ? '120px' : '120px'}` // Move milestone days slightly left
                                 }}
                             >
-                                {/* Show leaf with treasure box for milestone days (7, 14, 21, 28) */}
-                                {shouldShowChestBox(dayData.day) && dayData.day <= currentStreak ? (
+                                {/* Show leaf with treasure box for milestone days (7, 14, 21, 30) */}
+                                {shouldShowChestBox(dayData.day) ? (
                                     <div className="relative group">
                                         {/* Leaf background - natural proportions - increased size */}
                                         <img

@@ -299,6 +299,7 @@ export default function LoginPage() {
         console.log("🔗 [Login] Opening OAuth with mobile callback:", {
           authUrl,
           deepLinkCallback,
+
           webCallbackUrl,
         });
 
@@ -313,14 +314,13 @@ export default function LoginPage() {
         // Try to listen for browser page load events
         // Note: Capacitor Browser plugin may not support this, so we'll also use a fallback
         try {
-          browserListener = Browser.addListener('browserPageLoaded', (event) => {
-            console.log("📄 [Login] Browser page loaded:", event.url);
+          browserListener = Browser.addListener('browserPageLoaded', () => {
+            console.log("📄 [Login] Browser page loaded");
 
-            // Check if the loaded URL is our callback URL (web version)
-            if (event.url && event.url.includes('/auth/callback')) {
-              console.log("✅ [Login] Callback URL detected in browser");
-              // The callback page will handle the deep link redirect
-            }
+            // The 'browserPageLoaded' event doesn't carry a URL.
+            // The /auth/callback page is responsible for closing the browser
+            // and redirecting back to the app via a deep link.
+            // We just log that a page loaded for debugging.
           });
         } catch (listenerError) {
           console.warn("⚠️ [Login] Browser page load listener not available:", listenerError);

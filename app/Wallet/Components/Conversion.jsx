@@ -284,7 +284,7 @@ export const Conversion = () => {
                 </div>
 
                 <div
-                    className="inline-flex items-center gap-4  relative flex-[0_0_auto]"
+                    className="inline-flex items-center gap-14  relative flex-[0_0_auto]"
                     role="group"
                     aria-label="Conversion options"
                 >

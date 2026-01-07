@@ -19,7 +19,7 @@ export const DailyChallenge = ({ game }) => {
 
     return (
         <section
-            className="flex flex-col w-[375px] mt-4 mb-30 items-start gap-4 relative"
+            className="flex flex-col w-[375px] mt-4 mb-8 items-start gap-4 relative"
             data-model-id="2247:7132"
             aria-label="Daily Challenges Section"
         >

@@ -145,23 +145,23 @@ export const OptInModal = ({
                             loyalty points by choosing opt-in to long-term campaigns.
                         </p>
                         <div className="flex items-start gap-3">
-                            <img
+                            {/* <img
                                 className="w-11 h-11 aspect-[1] object-cover"
                                 alt="Game controller icon"
                                 src="https://c.animaapp.com/hVj7UvM7/img/image-4075@2x.png"
-                            />
+                            /> */}
                             <div className="flex-1">
                                 <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
                                     Choose a Game & Opt-In to Earn More
                                 </h2>
                                 <ul className="mt-2 [font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[0] leading-[normal] list-none">
-                                    <li>🎮 Select a game you enjoy and want to play consistently.</li>
+                                    <li> Select a game you enjoy and want to play consistently.</li>
                                     <li>
-                                        🎮 Opt-in campaigns offer boosted rewards compared to standard
+                                        Opt-in campaigns offer boosted rewards compared to standard
                                         ones.
                                     </li>
                                     <li>
-                                        🎮 Simply check the box and tap "Opt-In" to join the
+                                        Simply check the box and tap "Opt-In" to join the
                                         campaign.
                                     </li>
                                 </ul>

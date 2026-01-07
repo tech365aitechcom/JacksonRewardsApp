@@ -80,9 +80,9 @@ export default function LocationPage() {
         try {
           // Try CORS-friendly IP services
           const ipServices = [
-            { url: 'https://jsonip.com', parser: (data) => ({ ip: data.ip, isp: "Unknown" }) },
             { url: 'https://ipapi.co/json/', parser: (data) => ({ ip: data.ip, isp: data.org || "Unknown" }) },
-            { url: 'https://ipinfo.io/json', parser: (data) => ({ ip: data.ip, isp: data.org || "Unknown" }) }
+            { url: 'https://ipinfo.io/json', parser: (data) => ({ ip: data.ip, isp: data.org || "Unknown" }) },
+            { url: 'https://jsonip.com', parser: (data) => ({ ip: data.ip, isp: "Unknown" }) }
           ];
 
           for (const service of ipServices) {
@@ -105,6 +105,7 @@ export default function LocationPage() {
                 break;
               }
             } catch (serviceError) {
+              console.error(`[Location] IP service ${service.url} failed:`, serviceError);
               continue; // Try next service
             }
           }

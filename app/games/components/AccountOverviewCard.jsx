@@ -123,21 +123,22 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                         {/* Header Background */}
                         <div className="absolute w-full h-12 top-[78px] left-0 bg-[#80279e]" />
 
-                        {/* Total Earnings Label */}
-                        <div className="absolute top-[89px] left-4 [font-family:'Poppins',Helvetica] font-normal text-[#FFFFFF] text-[16px] tracking-[0] leading-6 whitespace-nowrap">
-                            Total Earnings:
-                        </div>
+                        {/* Total Earnings Section - Responsive */}
+                        <div className="absolute top-[78px] left-0 w-full h-12 flex items-center justify-between px-4 bg-[#80279e]">
+                            <div className="[font-family:'Poppins',Helvetica] font-normal text-[#FFFFFF] text-[14px] sm:text-[16px] tracking-[0] leading-6 whitespace-nowrap">
+                                Total Earnings:
+                            </div>
 
-                        {/* Total Earnings Badge - Dynamic values from backend */}
-                        <div className="left-[140px] flex w-[87px] h-[30px] items-center absolute top-[87px]">
-                            <div className="relative w-[87px] h-[30px]">
-                                <div className="relative h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-center px-2">
+                            {/* Earnings Badges - Responsive */}
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                {/* Coins Badge */}
+                                <div className="flex items-center h-[30px] px-2 sm:px-3 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
                                     <div className="flex items-center gap-1">
-                                        <div className="font-semibold text-[18px] leading-[normal] [font-family:'Poppins',Helvetica] text-[#FFFFFF] tracking-[0]">
+                                        <div className="font-semibold text-[14px] sm:text-[18px] leading-[normal] [font-family:'Poppins',Helvetica] text-[#FFFFFF] tracking-[0]">
                                             {formatNumber(totalCoins)}
                                         </div>
                                         <Image
-                                            className="w-[23px] h-[23px]"
+                                            className="w-[18px] h-[18px] sm:w-[23px] sm:h-[23px]"
                                             alt="Coin"
                                             src="https://c.animaapp.com/3mn7waJw/img/image-3937-4@2x.png"
                                             width={20}
@@ -145,19 +146,15 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                                         />
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Balance Badge - Dynamic values from backend */}
-                        <div className="left-[235px] flex w-[90px] h-[30px] items-center absolute top-[87px]">
-                            <div className="relative w-[90px] h-[30px]">
-                                <div className="relative h-[29px] rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-center px-2">
+                                {/* XP Badge */}
+                                <div className="flex items-center h-[30px] px-2 sm:px-3 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)]">
                                     <div className="flex items-center gap-1">
-                                        <div className="font-semibold text-[18px] leading-[normal] [font-family:'Poppins',Helvetica] text-[#FFFFFF] tracking-[0]">
+                                        <div className="font-semibold text-[14px] sm:text-[18px] leading-[normal] [font-family:'Poppins',Helvetica] text-[#FFFFFF] tracking-[0]">
                                             {formatNumber(totalXP)}
                                         </div>
                                         <Image
-                                            className="w-[23px] h-[18px]"
+                                            className="w-[18px] h-[18px] sm:w-[23px] sm:h-[18px]"
                                             alt="XP"
                                             src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
                                             width={18}

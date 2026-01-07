@@ -15,6 +15,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [showRulesModal, setShowRulesModal] = useState(false);
     const [modalPosition, setModalPosition] = useState(null);
+
     const [claiming, setClaiming] = useState(false);
     const [milestoneLevel, setMilestoneLevel] = useState(3); // Configurable milestone - Complete 3 tasks to claim
     const [isGameDownloaded, setIsGameDownloaded] = useState(false);
@@ -257,7 +258,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     // Calculate: baseXP × (multiplier ^ taskIndex)
                     // index is 0-based, so Task 1 = index 0, Task 2 = index 1, etc.
                     // This ensures each task's XP is progressively multiplied
-                    const calculatedXP = Math.floor(baseXP * Math.pow(multiplier, index));
+                    const calculatedXP = Math.round((baseXP * Math.pow(multiplier, index)) * 100) / 100;
                     // XP reward is only given if task is completed, but XP value is shown for all tasks
                     const xpReward = isCompleted ? calculatedXP : 0;
 
@@ -700,7 +701,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 {/* Progress Line - Dynamic Height - Connects first to last card */}
                 {activeLevels.length > 0 && (
                     <div
-                        className="absolute left-[35px] top-6 z-0"
+                        className="absolute left-[38px] top-6 z-0"
                         style={{
                             width: '2px',
                             height: `${activeLineHeight}px`
@@ -821,22 +822,22 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                             </div>
 
                             {/* Bottom Row: XP Bonus */}
-                            <div className="flex justify-center ">
+                            <div className="flex justify-center">
                                 <div className="w-[89px] h-[22px]  top-2 relative">
                                     <div className="absolute top-0 left-[18px] w-[52px] h-[22px] bg-[#201f59] rounded-t-[4px] shadow-[0px_0px_4px_#fef47e33]" />
                                     <img className="absolute top-0.5 left-0 w-[19px] h-5" alt="Vector Left" src={level.vectorLeft} />
                                     <img className="absolute top-[3px] left-[70px] w-[18px] h-[19px]" alt="Vector Right" src={level.vectorRight} />
-                                    <div className="absolute top-px left-[26px] h-5 w-[calc(100%_-_71px)] flex items-center justify-center font-medium text-white text-[13px]">
-                                        {level.points}
+                                    <div className="absolute top-0 left-[18px] w-[52px] h-[22px] flex items-center justify-center space-x-1">
+                                        <span className="font-medium text-white text-[13px]">{level.points}</span>
+                                        <img className="w-4 h-[13px]" alt="XP Icon" src={level.pic} />
                                     </div>
-                                    <img className="absolute top-1 left-[46px] w-4 h-[13px]" alt="XP Icon" src={level.pic} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Arrow between levels */}
                         {index < activeLevels.length - 1 && (
-                            <div className="absolute top-[120px] left-[4px] z-20">
+                            <div className="absolute top-[120px] left-[6.9px] z-20">
                                 <img
                                     className="w-[23px] h-[23px]"
                                     alt="Arrow back ios new"
@@ -920,7 +921,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 {/* Progress Line for Locked Levels - Dynamic Height - Connects first to last card */}
                 {lockedLevels.length > 0 && (
                     <div
-                        className="absolute left-[36px] top-6 z-0 bg-[#2f344a] "
+                        className="absolute left-[38px] top-6 z-0 bg-[#2f344a] "
                         style={{
                             width: '2px',
                             height: `${lockedLineHeight}px`
@@ -965,7 +966,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
                         {/* Arrow between locked levels */}
                         {index < lockedLevels.length - 1 && (
-                            <div className="absolute top-[84px] left-[5px] z-20">
+                            <div className="absolute top-[84px] left-[6.9px] z-20">
                                 <img
                                     className="w-[23px] h-[23px]"
                                     alt="Arrow back ios new"

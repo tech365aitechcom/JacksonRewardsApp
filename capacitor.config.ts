@@ -6,7 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     allowNavigation: [
-      'http://94.249.151.176:4001'
+      'http://94.249.151.176:4001',
+       'jackson-3c4bc.firebaseapp.com', // Your Firebase Auth Domain
+      '*.googleapis.com',             // Google APIs
+      '*.firebasejs.com'              // Firebase JS library
     ],
     cleartext: true
   },

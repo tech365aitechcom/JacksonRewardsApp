@@ -144,13 +144,16 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
         const totalGames = sortedGames.length;
         const highestEarningCount = Math.ceil(totalGames * 0.4); // Top 40% as highest earning
         const mediumEarningCount = Math.ceil(totalGames * 0.3); // Next 30% as medium earning
+        const lowEarningCount = totalGames - highestEarningCount - mediumEarningCount; // Remaining as low earning
 
         const highestEarningGames = sortedGames.slice(0, highestEarningCount);
         const mediumEarningGames = sortedGames.slice(highestEarningCount, highestEarningCount + mediumEarningCount);
+        const lowEarningGames = sortedGames.slice(highestEarningCount + mediumEarningCount, highestEarningCount + mediumEarningCount + lowEarningCount);
 
         return {
             highestEarning: highestEarningGames,
-            mediumEarning: mediumEarningGames
+            mediumEarning: mediumEarningGames,
+            lowEarning: lowEarningGames
         };
     };
 
@@ -207,12 +210,13 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
         if (mostPlayedScreenGames && mostPlayedScreenGames.length > 0) {
             return categorizeGamesByEarning(mostPlayedScreenGames);
         }
-        return { highestEarning: [], mediumEarning: [] };
+        return { highestEarning: [], mediumEarning: [], lowEarning: [] };
     }, [mostPlayedScreenGames]);
 
-    // Apply search filters to both categories
+    // Apply search filters to all categories
     const filteredHighestEarning = filterGamesBySearch(categorizedGames.highestEarning, searchQuery);
     const filteredMediumEarning = filterGamesBySearch(categorizedGames.mediumEarning, searchQuery);
+    const filteredLowEarning = filterGamesBySearch(categorizedGames.lowEarning, searchQuery);
 
     return (
         <div className={`flex flex-col max-w-[335px] w-full mx-auto items-start gap-8 relative animate-fade-in ${showSearch ? 'top-[180px]' : 'top-[130px]'}`}>
@@ -299,6 +303,54 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
                         </div>
                     ) : filteredMediumEarning.length > 0 ? (
                         filteredMediumEarning.map((game) => (
+                            <GameItemCard
+                                key={game.id}
+                                game={game}
+                                isEmpty={false}
+                                onClick={() => handleGameClick(game)}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center w-full py-8 px-4">
+                            <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-base text-center">
+                                No games available at the moment
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ==================== LOW EARNING GAMES SECTION ==================== */}
+            <div className="flex flex-col items-start gap-2.5 relative self-stretch w-full flex-[0_0_auto]">
+                <div className="flex flex-col w-full items-start gap-[49px] relative flex-[0_0_auto]">
+                    <div className="flex w-full items-center justify-between">
+                        <div className="inline-flex items-center gap-0.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-[normal]">
+                                Low Earning Games
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col w-full items-start gap-2.5 px-0 py-2.5 relative flex-[0_0_auto] overflow-y-scroll">
+                    {mostPlayedScreenStatus === "failed" ? (
+                        <div className="text-red-400 text-center py-4 w-full">
+                            <p>Failed to load games</p>
+                            <button
+                                onClick={() => {
+                                    dispatch(fetchMostPlayedScreenGames({
+                                        user: userProfile,
+                                        page: 1,
+                                        limit: 50
+                                    }));
+                                }}
+                                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : filteredLowEarning.length > 0 ? (
+                        filteredLowEarning.map((game) => (
                             <GameItemCard
                                 key={game.id}
                                 game={game}

@@ -99,26 +99,59 @@ export const QuestCard = ({ game }) => {
                     </div>
                 )}
 
-                <div className="absolute top-5 left-5 w-[74px] h-[74px] bg-[url(https://c.animaapp.com/FYtIEbRF/img/oval.svg)] bg-[100%_100%]">
-                    <img
-                        className="absolute top-1 left-1 w-[66px] h-[66px] object-cover rounded-full"
-                        alt="Game Image"
-                        src={game?.square_image || game?.image}
-                    />
+                <div className="absolute top-5 left-5 right-5 flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="relative w-[74px] h-[74px] shrink-0 bg-[url(https://c.animaapp.com/FYtIEbRF/img/oval.svg)] bg-[100%_100%]">
+                        <img
+                            className="absolute top-1 left-1 w-[66px] h-[66px] object-cover rounded-full"
+                            alt="Game Image"
+                            src={game?.square_image || game?.image}
+                        />
+                    </div>
+
+                    {/* Title + Rewards */}
+                    <div className="flex flex-col justify-between  min-w-0">
+                        {/* Title */}
+                        <span className="font-poppins font-bold text-white text-lg leading-tight break-words">
+                            {(() => {
+                                const title = game?.title || game?.details?.name;
+                                // Remove "Android" text from the title
+                                return title
+                                    .replace(/\s*Android\s*/gi, '') // Removes "Android"
+                                    .replace(/-/g, ' ')             // Replaces all hyphens with a space
+                                    .trim();
+                            })()}
+                        </span>
+
+                        {/* Coins + XP */}
+                        <div className="flex flex-wrap   gap-2 mt-2">
+                            {/* Coins */}
+                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm">
+                                <span className="text-white font-semibold text-sm">
+                                    {game?.coins || 100}
+                                </span>
+                                <img
+                                    src="/dollor.png"
+                                    alt="Coins"
+                                    className="w-4 h-4 object-contain"
+                                />
+                            </div>
+
+                            {/* XP */}
+                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm">
+                                <span className="text-white font-semibold text-sm">
+                                    {game?.xp || 20}
+                                </span>
+                                <img
+                                    src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
+                                    alt="XP"
+                                    className="w-4 h-4 object-contain"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="absolute top-[38px] left-[90px] w-[155px] h-[37px] flex items-center justify-center">
-                    <span className="[font-family:'Poppins',Helvetica] font-bold text-white text-lg tracking-[0] leading-[normal] text-center">
-                        {(() => {
-                            const title = game?.title || game?.details?.name;
-                            // Remove "Android" text from the title
-                            return title
-                                .replace(/\s*Android\s*/gi, '') // Removes "Android"
-                                .replace(/-/g, ' ')             // Replaces all hyphens with a space
-                                .trim();
-                        })()}
-                    </span>
-                </div>
                 {questItems.map((quest, index) => (
                     <div
                         key={quest.id}
@@ -154,7 +187,7 @@ export const QuestCard = ({ game }) => {
                             </p>
 
                             <div
-                                className={`absolute ${quest.status === "Completed" ? "w-[28%] h-[22.67%]" : "w-[22%] h-[22.67%]"} top-[50%] right-[12px] [font-family:'Poppins',Helvetica] font-bold text-sm text-right tracking-[0] leading-[17px] whitespace-nowrap transform -translate-y-1/2`}
+                                className={`absolute w-[28%] h-[22.67%] top-[50%] right-[4px] [font-family:'Poppins',Helvetica] font-bold text-sm text-start tracking-[0] leading-[17px] whitespace-nowrap transform -translate-y-1/2`}
                                 style={{ color: quest.statusColor }}
                             >
                                 {quest.status}

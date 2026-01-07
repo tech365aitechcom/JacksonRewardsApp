@@ -916,8 +916,8 @@ function GameDetailsContent() {
                             </>
                         )}
                     </div>
-                    <div className="flex w-full items-center justify-start mt-3 relative">
-                        <div className="flex flex-row items-center justify-center gap-1.5 bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] rounded-[10px] py-1.5 px-2.5 w-fit">
+                    <div className="flex w-full items-center justify-center mt-3 relative">
+                        <div className="flex flex-row items-center justify-center gap-1.5 bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] rounded-[10px] py-1.5 px-2.5 w-full">
                             <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[14px] flex items-center justify-center gap-1.5 whitespace-nowrap">
                                 <span className="whitespace-nowrap text-[14px] font-medium">Earn up to</span>
                                 <span className="flex items-center gap-0.5 whitespace-nowrap">
@@ -973,7 +973,7 @@ function GameDetailsContent() {
                                         })()}
                                     </span>
                                     <img
-                                        className="w-[19px] h-[20px] object-contain flex-shrink-0"
+                                        className="w-[19px]  mb-[2px] h-[20px] object-contain flex-shrink-0"
                                         alt="XP icon"
                                         src="https://c.animaapp.com/ltgoa7L3/img/pic-7.svg"
                                     />
@@ -1033,13 +1033,13 @@ function GameDetailsContent() {
                     />
                 </div>
 
-                <HomeIndicator />
+
 
                 {/* Session Status Component */}
-                <SessionStatus
+                {/* <SessionStatus
                     game={selectedGame}
                     currentSession={currentSession}
-                />
+                /> */}
 
             </div>
         </LoadingOverlay>

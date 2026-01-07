@@ -17,7 +17,7 @@ import Image from "next/image";
  */
 export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
     return (
-        <section className="flex flex-col w-full max-w-[375px] mx-auto items-start gap-1 pt-2 pb-0 px-0">
+        <section className="flex flex-col w-full max-w-[375px] fixed top-0 left-0 right-0 mx-auto items-start gap-1 pt-2 pb-0 px-0 z-10 bg-black">
             <header className="flex items-start justify-between pl-[90px] pr-4 pt-1 pb-0 relative self-stretch w-full flex-[0_0_auto]">
                 {/* Rotating Badge with Streak Day */}
                 <div

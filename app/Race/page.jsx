@@ -1,13 +1,180 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Race } from "./components/Race";
 import { HomeIndicator } from "../../components/HomeIndicator";
+import { getXPTierProgressBar } from "@/lib/api";
+import { useWalletUpdates } from "@/hooks/useWalletUpdates";
+
 
 const RacePage = () => {
     const router = useRouter();
     const [showTooltip, setShowTooltip] = useState(false);
     const tooltipRef = useRef(null);
+
+    const [xpTierData, setXPTierData] = useState(null);
+    const [isLoadingXP, setIsLoadingXP] = useState(true);
+    const [errorXP, setErrorXP] = useState(null);
+    const [token, setToken] = useState(null);
+
+    const { realTimeXP } = useWalletUpdates(token);
+    const xpCurrent = realTimeXP;
+
+    // Cache key for localStorage
+    const CACHE_KEY = 'xpTierProgressBarRace'; // Unique cache key for RacePage
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+
+    // Effect to get token from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const storedToken = localStorage.getItem('authToken');
+            setToken(storedToken);
+        }
+    }, []);
+
+    // Load cached data immediately on mount (non-blocking)
+    useEffect(() => {
+        if (typeof window === 'undefined' || !token) return;
+
+        try {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedData) {
+                const parsed = JSON.parse(cachedData);
+                const cacheAge = Date.now() - (parsed.timestamp || 0);
+
+                if (cacheAge < CACHE_TTL && parsed.data) {
+                    setXPTierData(parsed.data);
+                } else if (parsed.data) {
+                    setXPTierData(parsed.data);
+                }
+            }
+        } catch (err) {
+            console.warn("⚠️ [RacePage] Failed to load cache:", err);
+        }
+    }, [token]);
+
+    // Fetch fresh data in background
+    useEffect(() => {
+        if (!token) {
+            setIsLoadingXP(false);
+            return;
+        }
+
+        const fetchXPTierData = async () => {
+            setIsLoadingXP(true);
+            setErrorXP(null);
+            try {
+                const response = await getXPTierProgressBar(token);
+                if (response.success && response.data) {
+                    const cacheData = {
+                        data: response.data,
+                        timestamp: Date.now(),
+                    };
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+                    setXPTierData(response.data);
+                } else {
+                    setErrorXP(response.error || 'Failed to fetch XP data');
+                }
+            } catch (err) {
+                setErrorXP('Failed to fetch XP data');
+                console.error("❌ [RacePage] Error fetching XP tier data:", err);
+            } finally {
+                setIsLoadingXP(false);
+            }
+        };
+
+        fetchXPTierData();
+    }, [token]);
+
+    // OPTIMIZED: Memoize progress data from API response with real-time XP updates
+    const progressData = useMemo(() => {
+        if (!xpTierData) {
+            return {
+                title: "Loading XP data...",
+                currentXP: 0,
+                totalXP: 1000,
+                currentTier: null,
+                tiers: [],
+                progressBarStart: 0,
+                progressBarWidth: 0,
+                indicatorPosition: 0,
+            };
+        }
+
+        const currentXP = (xpCurrent !== null && xpCurrent !== undefined) ? xpCurrent : (xpTierData.currentXP || 0);
+        const currentTier = xpTierData.currentTier || null;
+        const tiers = xpTierData.tiers || [];
+
+        const BAR_WIDTH = 288;
+        const JUNIOR_POS = 0;
+        const MID_LEVEL_POS = 114;
+        const SENIOR_POS = 259;
+
+        let progressBarStart = 0;
+        let progressBarWidth = 0;
+        let indicatorPosition = 0;
+        let totalXP = 1000;
+
+        if (currentTier && tiers.length > 0) {
+            const maxTier = tiers.reduce((max, tier) =>
+                (tier.xpMax > (max?.xpMax || 0)) ? tier : max, tiers[0]
+            );
+            totalXP = maxTier.xpMax || currentTier.xpMax || 1000;
+
+            const tierName = currentTier.name || "";
+            const tierRange = currentTier.xpMax - currentTier.xpMin;
+
+            const adjustedXP = Math.max(currentXP, currentTier.xpMin);
+            const tierProgress = tierRange > 0
+                ? Math.min(Math.max((adjustedXP - currentTier.xpMin) / tierRange, 0), 1)
+                : 0;
+
+            if (tierName === "Junior" || tierName.toLowerCase() === "junior") {
+                progressBarStart = JUNIOR_POS;
+                const segmentWidth = MID_LEVEL_POS - JUNIOR_POS;
+                progressBarWidth = segmentWidth * tierProgress;
+                indicatorPosition = JUNIOR_POS + progressBarWidth;
+            } else if (tierName === "Middle" || tierName === "Mid-level" || tierName.toLowerCase() === "middle" || tierName.toLowerCase() === "mid-level") {
+                progressBarStart = JUNIOR_POS;
+                const juniorSegmentWidth = MID_LEVEL_POS - JUNIOR_POS;
+                const midSegmentWidth = SENIOR_POS - MID_LEVEL_POS;
+                progressBarWidth = juniorSegmentWidth + (midSegmentWidth * tierProgress);
+                indicatorPosition = JUNIOR_POS + progressBarWidth;
+            } else if (tierName === "Senior" || tierName.toLowerCase() === "senior") {
+                progressBarStart = JUNIOR_POS;
+                const juniorSegmentWidth = MID_LEVEL_POS - JUNIOR_POS;
+                const midSegmentWidth = SENIOR_POS - MID_LEVEL_POS;
+                const seniorSegmentWidth = BAR_WIDTH - SENIOR_POS;
+                progressBarWidth = juniorSegmentWidth + midSegmentWidth + (seniorSegmentWidth * tierProgress);
+                indicatorPosition = JUNIOR_POS + progressBarWidth;
+            } else {
+                progressBarStart = 0;
+                progressBarWidth = BAR_WIDTH * tierProgress;
+                indicatorPosition = progressBarWidth;
+            }
+
+            progressBarWidth = Math.min(progressBarWidth, BAR_WIDTH - progressBarStart);
+            indicatorPosition = Math.max(0, Math.min(indicatorPosition, BAR_WIDTH - 6));
+        } else {
+            totalXP = xpTierData.totalXP || 1000;
+            const progressPercentage = totalXP > 0 ? Math.min((currentXP / totalXP) * 100, 100) : 0;
+            progressBarStart = 0;
+            progressBarWidth = (BAR_WIDTH * progressPercentage) / 100;
+            indicatorPosition = progressBarWidth;
+        }
+
+        return {
+            title: xpTierData.title || "You're off to a great start!",
+            currentXP: currentXP,
+            totalXP: totalXP,
+            currentTier: currentTier,
+            tiers: tiers,
+            progressBarStart: progressBarStart,
+            progressBarWidth: progressBarWidth,
+            indicatorPosition: indicatorPosition,
+        };
+    }, [xpTierData, xpCurrent]);
+
     return (
         <div
             className="relative w-full min-h-screen bg-black pb-[150px]"
@@ -84,7 +251,19 @@ const RacePage = () => {
                         >
                             <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal">
                                 <div className="text-center text-gray-200">
-                                    Race is a competition feature! Compete with other users by finishing tasks. The faster you complete, the higher you'll place and the better rewards you can win. Keep an eye on your progress and see if you can reach the top!
+                                    {isLoadingXP ? (
+                                        "Loading XP data..."
+                                    ) : errorXP ? (
+                                        `Error: ${errorXP}`
+                                    ) : (
+                                        <>
+                                            <p className="font-semibold mb-2">Your XP Progress</p>
+                                            <p>Current XP: {progressData.currentXP}</p>
+                                            <p>Next Tier: {progressData.currentTier?.name}</p>
+                                            <p>XP to next tier: {progressData.currentTier ? progressData.currentTier.xpMax - progressData.currentXP : 'N/A'}</p>
+                                            <p>Total XP: {progressData.totalXP}</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             <div className="absolute top-[-8px] right-[25px] w-4 h-4 bg-black/95 border-t border-l border-gray-600/50 transform rotate-45"></div>
@@ -95,7 +274,7 @@ const RacePage = () => {
 
             {/* Main Content */}
             <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-6 pt-24 px-4">
-                <Race />
+                <Race progressData={progressData} isLoadingXP={isLoadingXP} />
             </div>
 
             {/* Home Indicator */}

@@ -1,95 +1,62 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
-import { getBonusDays } from "../../../lib/api";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../contexts/AuthContext";
+import { fetchBonusDays } from "../../../lib/redux/slice/dailyChallengeSlice";
 
 export const ChallengeGroupSection = ({ streak }) => {
+    const dispatch = useDispatch();
     const { token } = useAuth() || {};
-    const [bonusDays, setBonusDays] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [apiCurrentStreak, setApiCurrentStreak] = useState(null);
+    
+    // Get bonus days data from Redux store
+    const {
+        bonusDays: bonusDaysData,
+        bonusDaysStatus,
+    } = useSelector((state) => state.dailyChallenge || {});
 
-    // Fetch bonus days on component mount
+    // Extract bonus days array and current streak from Redux state
+    const bonusDays = bonusDaysData?.bonusDays || [];
+    const apiCurrentStreak = bonusDaysData?.currentStreak || null;
+
+    // Fetch bonus days data - show cached data immediately, refresh in background
     useEffect(() => {
-        console.log("🎁 [CHALLENGE GROUP] Component mounted, fetching bonus days:", {
+        console.log("🎁 [CHALLENGE GROUP] Component mounted:", {
             hasToken: !!token,
+            hasCachedData: !!bonusDaysData,
+            bonusDaysStatus,
             timestamp: new Date().toISOString(),
         });
 
         if (!token) {
             console.warn("⚠️ [CHALLENGE GROUP] No token available, skipping bonus days fetch");
-            setLoading(false);
             return;
         }
 
-        const fetchBonusDaysData = async () => {
-            try {
-                console.log("🎁 [CHALLENGE GROUP] Starting bonus days API call...");
-                setLoading(true);
-                setError(null);
+        // Only fetch if status is idle (not already loading or succeeded with fresh data)
+        if (bonusDaysStatus === "idle") {
+            console.log("🎁 [CHALLENGE GROUP] Fetching bonus days (idle status)");
+            dispatch(fetchBonusDays({ token }));
+        } else {
+            // If we have cached data, trigger background refresh after showing cached data
+            if (bonusDaysData) {
+                console.log("🎁 [CHALLENGE GROUP] Showing cached data, refreshing in background");
+                const refreshTimer = setTimeout(() => {
+                    dispatch(fetchBonusDays({ token, force: true }));
+                }, 100); // Small delay to let cached data render first
 
-                const response = await getBonusDays(token);
-                console.log("🎁 [CHALLENGE GROUP] Bonus days API response:", {
-                    success: response?.success,
-                    hasData: !!response?.data,
-                    bonusDaysCount: response?.data?.bonusDays?.length || 0,
-                    currentStreak: response?.data?.currentStreak,
-                    fullResponse: response,
-                });
-
-                if (response?.success && response?.data?.bonusDays) {
-                    console.log("🎁 [CHALLENGE GROUP] Bonus days received:", {
-                        count: response.data.bonusDays.length,
-                        currentStreak: response.data.currentStreak,
-                        totalBonusDays: response.data.totalBonusDays,
-                        reachedBonusDays: response.data.reachedBonusDays,
-                        upcomingBonusDays: response.data.upcomingBonusDays,
-                        userTier: response.data.userTier,
-                        tierMultiplier: response.data.tierMultiplier,
-                        bonusDays: response.data.bonusDays.map(bd => ({
-                            dayNumber: bd.dayNumber,
-                            coins: bd.coins,
-                            xp: bd.xp,
-                            isReached: bd.isReached,
-                            rewardType: bd.rewardType,
-                        })),
-                    });
-                    setBonusDays(response.data.bonusDays);
-                    // Store currentStreak from API response
-                    setApiCurrentStreak(response.data.currentStreak || null);
-                    console.log("🎁 [CHALLENGE GROUP] Stored currentStreak from API:", response.data.currentStreak);
-                } else {
-                    console.warn("⚠️ [CHALLENGE GROUP] Invalid response structure:", response);
-                    setBonusDays([]);
-                    setApiCurrentStreak(null);
-                }
-            } catch (err) {
-                console.error("❌ [CHALLENGE GROUP] Error fetching bonus days:", {
-                    error: err.message,
-                    stack: err.stack,
-                    timestamp: new Date().toISOString(),
-                });
-                setError(err.message);
-                setBonusDays([]);
-            } finally {
-                setLoading(false);
-                console.log("🎁 [CHALLENGE GROUP] Bonus days fetch completed");
+                return () => clearTimeout(refreshTimer);
             }
-        };
+        }
+    }, [token, dispatch, bonusDaysStatus, bonusDaysData]);
 
-        fetchBonusDaysData();
-    }, [token]);
-
-    // Generate milestones dynamically from bonus days or fallback to streak data
+    // Generate milestones dynamically from bonus days - only use API data, no fallbacks
     const generateMilestones = () => {
         console.log("🎁 [CHALLENGE GROUP] Generating milestones:", {
             bonusDaysCount: bonusDays.length,
-            hasStreak: !!streak,
-            streakMilestones: streak?.milestones,
+            bonusDaysStatus,
         });
 
-        // If we have bonus days, use them
+        // Only use bonus days from API - no fallback to streak prop
         if (bonusDays.length > 0) {
             // Calculate positions dynamically based on number of bonus days
             const positions = bonusDays.length === 3
@@ -127,32 +94,19 @@ export const ChallengeGroupSection = ({ streak }) => {
             return milestones;
         }
 
-        // Fallback to streak milestones if available
-        if (streak?.milestones && Array.isArray(streak.milestones) && streak.milestones.length > 0) {
-            const positions = ["7.35%", "31.76%", "56.17%", "80.58%"];
-            const milestones = streak.milestones.map((milestone, index) => ({
-                value: milestone,
-                leftPosition: positions[index] || `${(index + 1) * 20}%`,
-            }));
-            console.log("🎁 [CHALLENGE GROUP] Generated milestones from streak (fallback):", milestones);
-            return milestones;
-        }
-
-        console.warn("⚠️ [CHALLENGE GROUP] No bonus days or streak milestones, returning empty array");
+        console.warn("⚠️ [CHALLENGE GROUP] No bonus days available, returning empty array");
         return [];
     };
 
     const milestones = generateMilestones();
 
-    // Get current streak from API response or fallback to streak prop
-    const currentStreak = apiCurrentStreak !== null
-        ? apiCurrentStreak
-        : (streak?.current ?? 0);
+    // Only use current streak from API response - no fallback to streak prop
+    const currentStreak = apiCurrentStreak !== null ? apiCurrentStreak : 0;
 
-    // Calculate max milestone for progress calculation
+    // Calculate max milestone for progress calculation - only from API data
     const maxMilestone = milestones.length > 0
         ? Math.max(...milestones.map(m => m.value))
-        : (streak?.nextMilestone ?? 0);
+        : 0;
 
     // Calculate progress percentage
     const progressPercentage = maxMilestone > 0
@@ -164,10 +118,17 @@ export const ChallengeGroupSection = ({ streak }) => {
         maxMilestone,
         progressPercentage: `${progressPercentage.toFixed(2)}%`,
         milestonesCount: milestones.length,
+        bonusDaysStatus,
+        hasCachedData: !!bonusDaysData,
     });
 
-    // Don't render if no milestones available
-    if (milestones.length === 0) {
+    // Only show loading if we have NO cached data at all
+    // This allows showing cached data immediately while refreshing in background
+    const hasCachedData = bonusDaysData && bonusDays.length > 0;
+    const isLoading = !hasCachedData && bonusDaysStatus === "loading";
+
+    // Don't render if still loading (and no cache) or no milestones available
+    if (isLoading || milestones.length === 0) {
         return null;
     }
 

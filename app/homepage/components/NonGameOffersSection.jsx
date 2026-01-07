@@ -231,7 +231,7 @@ const NonGameOffersSection = () => {
     return (
         <div className="flex justify-between items-center transition-transform pt-8 px-2 mb-4 duration-200 ease-in-out">
             <section className="flex flex-col w-full max-w-[335px] justify-center items-start gap-2.5 mx-auto">
-                <h3 className="font-bold text-xl leading-[normal] text-start mr-26 tracking-[0] text-[#F4F3FC] pb-12   opacity-[100%]">
+                <h3 className="font-bold text-xl leading-[normal] mb-4  text-start mr-26 tracking-[0] text-[#F4F3FC] pb-12   opacity-[100%]">
                     Non-gaming Offer
                 </h3>
                 <div
@@ -263,9 +263,9 @@ const NonGameOffersSection = () => {
 
                             // Calculate positioning for circular animation - same size as survey cards
                             const cardWidth = 'w-28';
-                            const cardHeight = 'min-h-[180px]'; // Same size as survey cards
+                            const cardHeight = 'min-h-[190px]'; // Increased height for better spacing
                             const imageHeight = 'h-[110px]';
-                            const bannerHeight = 'h-[55px]'; // Height to accommodate title, coins/XP, and time
+                            const bannerHeight = 'h-[62px]'; // Increased banner height for better layout
 
                             // Get circular transform
                             const circularTransform = getCardTransform(index, nonGameOffers.length);
@@ -329,30 +329,30 @@ const NonGameOffersSection = () => {
                                             <div className="absolute inset-0 bg-black/10" />
                                         </div>
 
-                                        {/* Gradient Banner Section - Same structure as survey */}
+                                        {/* Gradient Banner Section - Professional app-like layout */}
                                         <div
-                                            className={`relative w-full ${bannerHeight} overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] flex flex-col justify-center px-3 py-1 gap-0.5`}
+                                            className={`relative w-full ${bannerHeight} overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] flex flex-col p-2`}
                                             role="banner"
                                             aria-label="Offer rewards banner"
                                         >
-                                            {/* First Row - Title */}
+                                            {/* Title Section - Top aligned */}
                                             {(offer.title || offer.merchant_name || offer.anchor) && (
-                                                <div className="flex items-center justify-start w-full">
-                                                    <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-[9px] tracking-[0] leading-tight break-words text-left">
-                                                        {offer.title || offer.merchant_name || offer.anchor}
+                                                <div className="flex items-start justify-center w-full min-h-[16px] max-h-[28px] mb-1">
+                                                    <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-[8px] tracking-[0] leading-[9px] whitespace-normal break-words text-center line-clamp-2">
+                                                        {String(offer.title || offer.merchant_name || offer.anchor)}
                                                     </span>
                                                 </div>
                                             )}
 
-                                            {/* Second Row - Coins and XP */}
-                                            <div className="flex items-center justify-center w-full gap-3">
+                                            {/* Rewards Section - Center aligned */}
+                                            <div className="flex items-center  justify-center w-full mt-[2px] gap-2 ">
                                                 <div className="flex items-center gap-1">
-                                                    <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[11px] tracking-[0] leading-[normal]">
-                                                        {coins}
+                                                    <span className="[font-family:'Poppins',Helvetica] font-bold text-white text-[11px] tracking-[0] leading-[normal]">
+                                                        {String(coins)}
                                                     </span>
                                                     {coins > 0 && (
                                                         <img
-                                                            className="w-[11px] h-[11px] aspect-[0.97] translate-x-[1px] -translate-y-[1px]"
+                                                            className="w-[12px] h-[12px] mb-[2px] aspect-[0.97]"
                                                             alt="Dollar coin icon"
                                                             src="/dollor.png"
                                                         />
@@ -362,11 +362,11 @@ const NonGameOffersSection = () => {
                                                 {/* XP */}
                                                 {xp > 0 && (
                                                     <div className="flex items-center gap-1">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[11px] tracking-[0] leading-[normal]">
-                                                            {xp}
+                                                        <span className="[font-family:'Poppins',Helvetica] font-bold text-white text-[11px] tracking-[0] leading-[normal]">
+                                                            {String(xp)}
                                                         </span>
                                                         <img
-                                                            className="w-[11px] h-[11px] translate-x-[1px] -translate-y-[1px]"
+                                                            className="w-[12px] mb-[3px] h-[12px]"
                                                             alt="XP points icon"
                                                             src="/xp.svg"
                                                             onError={(e) => {
@@ -375,30 +375,31 @@ const NonGameOffersSection = () => {
                                                         />
                                                     </div>
                                                 )}
+
                                             </div>
 
-                                            {/* Third Row - Time */}
+                                            {/* Time Section - Bottom aligned */}
                                             {offer.type === "cashback" ? (
                                                 offer.reward_delay_days !== undefined && offer.reward_delay_days !== null && (
                                                     <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[10px] tracking-[0] leading-[normal]">
-                                                            {offer.reward_delay_days}d
+                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
+                                                            {String(offer.reward_delay_days)}d
                                                         </span>
                                                     </div>
                                                 )
                                             ) : (offer.type === "shopping" || offer.offerType === "shopping") ? (
                                                 offer.estimatedTime !== undefined && offer.estimatedTime !== null && (
                                                     <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[10px] tracking-[0] leading-[normal]">
-                                                            {offer.estimatedTime} min
+                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
+                                                            {String(offer.estimatedTime)} min
                                                         </span>
                                                     </div>
                                                 )
                                             ) : (
                                                 timeDisplay && (
                                                     <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[10px] tracking-[0] leading-[normal]">
-                                                            {timeDisplay}
+                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
+                                                            {String(timeDisplay)}
                                                         </span>
                                                     </div>
                                                 )

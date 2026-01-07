@@ -405,13 +405,13 @@ export const DailyChallenge = () => {
             </header>
 
             {/* Progress bar - always below heading */}
-            <div className="w-full max-w-[375px] px-4 pb-1 mt-18 mb-2">
+            <div className="w-full max-w-[375px] px-4 pb-1 mt-[8vh] mb-2">
                 <ChallengeGroupSection streak={streak} />
             </div>
 
-            <div className="flex-1 w-full max-w-[375px] flex flex-col items-center justify-center px-4 py-4 -mt-8">
+            <div className="flex-1 w-full max-w-[375px] flex flex-col items-center justify-start px-4 pt-8 ">
                 {isLoading && !pendingCalendar ? (
-                    <section className="flex flex-col w-full max-w-[335px] h-[343px] items-center gap-2.5">
+                    <section className="flex flex-col w-full max-w-[335px] h-[343px]  items-center gap-2.5">
                         <article className="relative w-full max-w-[335px] h-[343px] rounded-[17.96px] border border-gray-700/40 bg-gray-900 animate-pulse" />
                     </section>
                 ) : (
@@ -488,34 +488,34 @@ export const DailyChallenge = () => {
                     return null;
                 }
 
-                return (
-                    <div
-                        key={index}
-                        className="absolute w-[8.54%] h-[3.63%] top-[24.63%] opacity-50"
-                        style={{ left: badge.left }}
-                    >
-                        <div className="absolute w-[30px] h-[29px] top-0 left-0 flex">
-                            <div
-                                className="flex-1 w-[30.03px] bg-[100%_100%]"
-                                style={{ backgroundImage: `url(${badge.bgImage})` }}
-                            >
-                                <div className="relative w-[50.00%] h-[46.43%] top-[27.62%] left-[25.00%] overflow-hidden">
-                                    <img
-                                        className="absolute w-full h-full top-[-477406.21%] left-[99394.81%]"
-                                        alt="Coin icon"
-                                        src="/img/vector.png"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        {/* Hide numbers 40, 50, 90, and 100 that appear below chest icons */}
-                        {!shouldHideText && (
-                            <div className="absolute w-[59.33%] h-[74.01%] top-[13.72%] left-[19.56%] [font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[14.9px] tracking-[0.02px] leading-[normal]">
-                                {badge.value}
-                            </div>
-                        )}
-                    </div>
-                );
+                // return (
+                //     <div
+                //         key={index}
+                //         className="absolute w-[8.54%] h-[3.63%] top-[24.63%] opacity-50"
+                //         style={{ left: badge.left }}
+                //     >
+                //         <div className="absolute w-[30px] h-[29px] top-0 left-0 flex">
+                //             <div
+                //                 className="flex-1 w-[30.03px] bg-[100%_100%]"
+                //                 style={{ backgroundImage: `url(${badge.bgImage})` }}
+                //             >
+                //                 <div className="relative w-[50.00%] h-[46.43%] top-[27.62%] left-[25.00%] overflow-hidden">
+                //                     <img
+                //                         className="absolute w-full h-full top-[-477406.21%] left-[99394.81%]"
+                //                         alt="Coin icon"
+                //                         src="/img/vector.png"
+                //                     />
+                //                 </div>
+                //             </div>
+                //         </div>
+                //         {/* Hide numbers 40, 50, 90, and 100 that appear below chest icons */}
+                //         {!shouldHideText && (
+                //             <div className="absolute w-[59.33%] h-[74.01%] top-[13.72%] left-[19.56%] [font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[14.9px] tracking-[0.02px] leading-[normal]">
+                //                 {badge.value}
+                //             </div>
+                //         )}
+                //     </div>
+                // );
             })}
 
 

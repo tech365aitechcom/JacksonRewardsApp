@@ -304,14 +304,14 @@ export const BannerSection = ({ calendar, today, onDayClick, onPreviousMonth, on
                                     }}
                                 >
                                     <div className={getTextClasses(dayData)}>{dayData.day}</div>
-                                    <div className="absolute top-[19px] left-[19px] w-3 h-3">
+                                    {/* <div className="absolute top-[19px] left-[19px] w-3 h-3">
                                         <img
                                             className="absolute top-px left-px w-2.5 h-2.5 aspect-[1] object-cover"
                                             alt=""
-                                            src="https://c.animaapp.com/b23YVSTi/img/image-3943-6@2x.png"
+                                            src=""
                                         />
-                                        <div className="absolute top-0 left-0 w-3 h-3 bg-[#d6d6d680] rounded-md" />
-                                    </div>
+
+                                    </div> */}
                                 </div>
                             );
                         }

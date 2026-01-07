@@ -111,7 +111,7 @@ export default function WinStreakPage() {
                 const apiMilestones = historyResponse.data.milestones || [];
                 setMilestones(apiMilestones);
                 console.log("📊 [WinStreak] Milestones loaded from API:", apiMilestones);
-                
+
                 // Log day 7 milestone specifically for debugging
                 const day7Milestone = apiMilestones.find(m => m.day === 7);
                 if (day7Milestone) {
@@ -147,10 +147,10 @@ export default function WinStreakPage() {
         if (!milestone || !milestone.rewards) {
             return null;
         }
-        
+
         const coins = milestone.rewards.find(r => r.type === 'coins')?.value || 0;
         const xp = milestone.rewards.find(r => r.type === 'xp')?.value || 0;
-        
+
         return { coins, xp };
     };
 
@@ -166,7 +166,7 @@ export default function WinStreakPage() {
                     coins: reachedMilestone === 7 ? 50 : reachedMilestone === 14 ? 100 : reachedMilestone === 21 ? 150 : 250,
                     xp: reachedMilestone === 7 ? 25 : reachedMilestone === 14 ? 50 : reachedMilestone === 21 ? 75 : 125
                 };
-                
+
                 if (reward) {
                     setRewardData({
                         milestone: reachedMilestone,
@@ -188,7 +188,7 @@ export default function WinStreakPage() {
             // Get reward from API milestones, fallback to defaults if not available
             const milestone = milestones.find(m => m.day === day);
             let reward = null;
-            
+
             if (isMilestoneDay) {
                 if (milestone && milestone.rewards) {
                     const coins = milestone.rewards.find(r => r.type === 'coins')?.value || 0;
@@ -202,7 +202,7 @@ export default function WinStreakPage() {
                     };
                 }
             }
-            
+
             tree.push({
                 day,
                 isCompleted: completedDays.includes(day),
@@ -226,7 +226,7 @@ export default function WinStreakPage() {
                     coins: day === 7 ? 50 : day === 14 ? 100 : day === 21 ? 150 : 250,
                     xp: day === 7 ? 25 : day === 14 ? 50 : day === 21 ? 75 : 125
                 };
-                
+
                 rewards.push({
                     day,
                     isReached: true,
@@ -331,7 +331,7 @@ export default function WinStreakPage() {
             </div>
 
             {/* Reward Modal */}
-            {showRewardModal && rewardData && (
+            {/* {showRewardModal && rewardData && (
                 <RewardModal
                     isVisible={showRewardModal}
                     milestone={rewardData.milestone}
@@ -340,7 +340,7 @@ export default function WinStreakPage() {
                     badge={rewardData.badge}
                     onClose={handleRewardClaim}
                 />
-            )}
+            )} */}
 
             {/* Info Modal */}
             <InfoModal

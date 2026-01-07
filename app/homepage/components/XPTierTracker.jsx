@@ -322,14 +322,14 @@ const XPTierTracker = ({ stats, token }) => {
                                 endPosition = 288 - 6;
                             }
 
-                            return (
-                                <div
-                                    className="absolute w-6 h-6 top-0 bg-white rounded-full border-5 border-[#FFD700] z-10"
-                                    style={{
-                                        left: `${Math.max(0, Math.min(endPosition, 288 - 6))}px`,
-                                    }}
-                                />
-                            );
+                            // return (
+                            //     <div
+                            //         className="absolute w-6 h-6 top-0 bg-white rounded-full border-5 border-[#FFD700] z-10"
+                            //         style={{
+                            //             left: `${Math.max(0, Math.min(endPosition, 288 - 6))}px`,
+                            //         }}
+                            //     />
+                            // );
                         })()}
 
                     </div>

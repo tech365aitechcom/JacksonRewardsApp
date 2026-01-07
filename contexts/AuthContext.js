@@ -38,6 +38,7 @@ import { store, persistor } from "@/lib/redux/store";
 import {
   fetchCalendar as fetchDailyCalendar,
   fetchToday as fetchDailyToday,
+  fetchBonusDays,
 } from "@/lib/redux/slice/dailyChallengeSlice";
 
 const AuthContext = createContext({});
@@ -202,6 +203,8 @@ export function AuthProvider({ children }) {
     const {
       calendarStatus: dailyCalendarStatus,
       todayStatus: dailyTodayStatus,
+      bonusDaysStatus,
+      bonusDays: bonusDaysData,
     } = currentState.dailyChallenge || {};
 
     // OPTIMIZED: Check if data exists and is valid before fetching
@@ -211,6 +214,7 @@ export function AuthProvider({ children }) {
     const hasUserData = userData && userDataStatus === "succeeded";
     const hasWalletData = walletScreen && walletScreenStatus === "succeeded";
     const hasGamesData = gamesBySection && gamesBySection.length > 0;
+    const hasBonusDaysData = bonusDaysData && bonusDaysStatus === "succeeded";
 
     console.log("🔍 [AuthContext] Data availability check:", {
       hasProfileData,
@@ -218,12 +222,14 @@ export function AuthProvider({ children }) {
       hasUserData,
       hasWalletData,
       hasGamesData,
+      hasBonusDaysData,
       detailsStatus,
       statsStatus,
       userDataStatus,
       walletScreenStatus,
       dailyCalendarStatus,
       dailyTodayStatus,
+      bonusDaysStatus,
     });
 
     // PRIORITY 1: Only fetch essential data if not already loaded and valid
@@ -264,6 +270,10 @@ export function AuthProvider({ children }) {
           token,
         })
       );
+    }
+    if (bonusDaysStatus === "idle") {
+      console.log("🎁 [AuthContext] Prefetching bonus days for progress bar");
+      dispatch(fetchBonusDays({ token }));
     }
 
     // PRIORITY 2: Defer heavy data fetching to prevent app slowdown
@@ -425,65 +435,76 @@ export function AuthProvider({ children }) {
     // Check if we're in a Capacitor environment
     if (typeof window !== "undefined" && window.Capacitor && App) {
       try {
-        backButtonListener = App.addListener('backButton', ({ canGoBack }) => {
-          console.log('🔙 Hardware back button pressed', { canGoBack, pathname });
-          
+        backButtonListener = App.addListener("backButton", ({ canGoBack }) => {
+          console.log("🔙 Hardware back button pressed", {
+            canGoBack,
+            pathname,
+          });
+
           // Always check authentication from localStorage first (most reliable)
-          const storedToken = localStorage.getItem('authToken');
-          const storedUser = localStorage.getItem('user');
+          const storedToken = localStorage.getItem("authToken");
+          const storedUser = localStorage.getItem("user");
           const isAuthenticated = !!storedToken && !!storedUser;
-          
+
           if (!isAuthenticated) {
             // Not authenticated - allow default behavior (go to login)
-            console.log('🔙 Not authenticated, allowing default back behavior');
+            console.log("🔙 Not authenticated, allowing default back behavior");
             App.exitApp();
             return;
           }
 
           // User is authenticated - handle navigation safely
           const currentPath = window.location.pathname;
-          const isHomepage = currentPath === '/homepage' || currentPath === '/';
+          const isHomepage = currentPath === "/homepage" || currentPath === "/";
           const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
             currentPath.startsWith(route)
           );
 
           // Check if we can go back in browser history
           const hasHistory = window.history.length > 1;
-          
+
           if (hasHistory && !isHomepage) {
             // Has history and not on homepage - navigate back
-            console.log('🔙 Navigating back in history');
+            console.log("🔙 Navigating back in history");
             router.back();
           } else if (isHomepage) {
             // On homepage with no history or can't go back - exit app
-            console.log('🔙 On homepage, exiting app');
+            console.log("🔙 On homepage, exiting app");
             App.exitApp();
           } else if (isProtectedRoute) {
             // On protected route with no history - go to homepage instead of login
-            console.log('🔙 On protected route with no history, navigating to homepage');
-            router.push('/homepage');
+            console.log(
+              "🔙 On protected route with no history, navigating to homepage"
+            );
+            router.push("/homepage");
           } else {
             // On public route - navigate to homepage
-            console.log('🔙 On public route, navigating to homepage');
-            router.push('/homepage');
+            console.log("🔙 On public route, navigating to homepage");
+            router.push("/homepage");
           }
         });
-        
-        console.log('✅ Hardware back button listener registered');
+
+        console.log("✅ Hardware back button listener registered");
       } catch (error) {
-        console.warn('⚠️ Hardware back button listener not available:', error);
+        console.warn("⚠️ Hardware back button listener not available:", error);
       }
     }
 
     return () => {
       if (backButtonListener) {
         try {
-          if (backButtonListener.remove && typeof backButtonListener.remove === "function") {
+          if (
+            backButtonListener.remove &&
+            typeof backButtonListener.remove === "function"
+          ) {
             backButtonListener.remove();
-            console.log('🧹 Hardware back button listener removed');
-          } else if (backButtonListener.unsubscribe && typeof backButtonListener.unsubscribe === "function") {
+            console.log("🧹 Hardware back button listener removed");
+          } else if (
+            backButtonListener.unsubscribe &&
+            typeof backButtonListener.unsubscribe === "function"
+          ) {
             backButtonListener.unsubscribe();
-            console.log('🧹 Hardware back button listener unsubscribed');
+            console.log("🧹 Hardware back button listener unsubscribed");
           }
         } catch (error) {
           console.warn("⚠️ Error cleaning up back button listener:", error);
@@ -788,49 +809,63 @@ export function AuthProvider({ children }) {
 
   // MODIFIED: This function now leverages our Redux thunk for cleaner logic
   const handleSocialAuthCallback = async (socialToken) => {
-    console.log("🔐 [AuthContext] handleSocialAuthCallback called:", {
-      hasToken: !!socialToken,
-      tokenLength: socialToken?.length || 0,
-      tokenPreview: socialToken?.substring(0, 20) + "...",
-    });
-
     setIsLoading(true);
+
     try {
-      // Dispatch the thunk and await its completion
-      console.log(
-        "📡 [AuthContext] Fetching user profile with social token..."
-      );
+      // 1. Fetch User Profile
       const resultAction = await dispatch(fetchUserProfile(socialToken));
 
-      // Check if the thunk was fulfilled (successful)
       if (fetchUserProfile.fulfilled.match(resultAction)) {
         const userProfile = resultAction.payload;
-        console.log("✅ [AuthContext] User profile fetched successfully:", {
-          userId: userProfile?.data?.user?._id || userProfile?.user?._id,
-          email: userProfile?.data?.user?.email || userProfile?.user?.email,
-        });
-        return handleAuthSuccess({
+
+        // --- FETCH USER STATUS (Disclosure/Location) ---
+        let statusData = { needsDisclosure: true, needsLocation: true }; // Safe defaults
+
+        try {
+          const statusRes = await fetch(
+            "https://rewardsapi.hireagent.co/api/location/status",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${socialToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const rawText = await statusRes.text();
+
+          try {
+            const statusJson = JSON.parse(rawText);
+
+            if (statusJson.success) {
+              statusData = statusJson.data;
+            }
+          } catch (_) {
+            // Silent JSON parse failure
+          }
+        } catch (_) {
+          // Silent network/CORS failure
+        }
+        // ----------------------------------------------------
+
+        // 2. Handle Auth Success (Save to state/Redux)
+        const authResult = await handleAuthSuccess({
           token: socialToken,
           user: userProfile.data?.user || userProfile.user || userProfile,
         });
+
+        return {
+          ...authResult,
+          statusData,
+        };
       } else {
-        // If the thunk was rejected, throw an error to be caught below
-        const errorMessage =
-          resultAction.payload || "Social auth profile fetch failed";
-        console.error("❌ [AuthContext] Profile fetch rejected:", errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(
+          resultAction.payload || "Social auth profile fetch failed"
+        );
       }
     } catch (error) {
-      console.error("❌ [AuthContext] handleSocialAuthCallback failed:", {
-        error: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-      // Don't sign out on error - let the callback page handle the error display
-      return {
-        ok: false,
-        error: error.message || "Failed to authenticate. Please try again.",
-      };
+      return { ok: false, error: error.message };
     } finally {
       setIsLoading(false);
     }

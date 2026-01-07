@@ -1,5 +1,5 @@
 ext {
-    minSdkVersion = 26
+    minSdkVersion = 23
     compileSdkVersion = 35
     targetSdkVersion = 35
     androidxActivityVersion = '1.9.2'
@@ -13,7 +13,4 @@ ext {
     androidxJunitVersion = '1.2.1'
     androidxEspressoCoreVersion = '3.6.1'
     cordovaAndroidVersion = '10.1.1'
-    
-    // Stripe Android configuration as per documentation
-    stripeAndroidVersion = '21.3.+'
 }

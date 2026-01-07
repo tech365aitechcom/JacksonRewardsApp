@@ -272,7 +272,7 @@ export const Coin = ({
 
                 {/* --- **MODIFIED** Progress Bar --- */}
                 {/* MODIFIED: Increased left and right padding to shorten the bar's length */}
-                <div className="absolute top-[90px] left-6 right-6">
+                <div className="absolute top-[90px] left-6 mt-2 right-6">
                     <div
                         className="relative w-full"
                         role="progressbar"
@@ -281,18 +281,15 @@ export const Coin = ({
                         aria-valuemax={rewardData.nextGroupTarget}
                         aria-label={`Task Progress: ${rewardData.nextGroupProgress} of ${rewardData.nextGroupTarget} tasks completed for next reward.`}
                     >
-                        {/* 1. Background Track */}
-                        {/* MODIFIED: Reduced height from h-5 to h-3 to make it thinner */}
+
                         <div className="w-full h-4 bg-[#373737] rounded-full border border-gray-700">
-                            {/* 2. Dynamic Progress Fill */}
                             <div
                                 className="h-full rounded-full bg-gradient-to-r from-[#25D42D] to-[#9DEF0F] transition-all duration-500 ease-out"
                                 style={{ width: `${finalProgressPercentage}%` }}
                             />
                         </div>
 
-                        {/* 3. Dynamic Thumb/Indicator */}
-                        {/* MODIFIED: Reduced thumb size from w-8 h-8 to w-6 h-6 for proportion */}
+
                         <div
                             className="absolute top-1/2 w-7 h-7 rounded-full bg-[#25D42D] flex items-center justify-center transition-all duration-500 ease-out"
                             style={{
@@ -300,8 +297,7 @@ export const Coin = ({
                                 transform: 'translate(-50%, -50%)'
                             }}
                         >
-                            {/* 4. Inner White Circle of the Thumb */}
-                            {/* MODIFIED: Reduced inner circle size from w-5 h-5 to w-3 h-3 */}
+
                             <div className="w-4 h-4 bg-white rounded-full" />
                         </div>
                     </div>
@@ -362,8 +358,7 @@ export const Coin = ({
                         {/* Progress indicator when coins are available but milestone not reached */}
                         {!locallyClaimed && sessionCoins > 0 && (
                             <div className="mt-2 space-y-2">
-                                {/* Task Group Progress */}
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                     <div
                                         className="flex-1 bg-gray-600 rounded-full h-1.5 overflow-hidden cursor-help"
                                         title={`Task Progress: ${rewardData.nextGroupProgress}/${rewardData.nextGroupTarget} tasks in current group`}
@@ -379,10 +374,10 @@ export const Coin = ({
                                     >
                                         {rewardData.nextGroupProgress}/{rewardData.nextGroupTarget}
                                     </span>
-                                </div>
+                                </div> */}
 
                                 {/* Reward Progress */}
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                     <div
                                         className="flex-1 bg-gray-600 rounded-full h-1.5 overflow-hidden cursor-help"
                                         title={`Reward Progress: ${availableCoins.toFixed(2)} earned`}
@@ -398,7 +393,7 @@ export const Coin = ({
                                     >
                                         {availableCoins.toFixed(2)}
                                     </span>
-                                </div>
+                                </div> */}
                             </div>
                         )}
                     </div>

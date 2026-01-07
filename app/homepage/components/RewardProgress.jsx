@@ -6,26 +6,30 @@ import { useSelector } from "react-redux";
 
 const RewardProgress = ({ stats }) => {
     const router = useRouter();
-    const rewardGoal = 6000;
+    const rewardGoal = 10000;
+
+    const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
+    const balance = walletScreen?.wallet?.balance || 0;
 
     // OPTIMIZED: Memoize expensive calculations to prevent re-computation
     const pointsData = useMemo(() => {
-        const currentProgress = stats?.currentXP ?? 0;
-        const pointsNeeded = Math.max(0, rewardGoal - currentProgress);
-        const progressPercentage = Math.min(
-            (currentProgress / rewardGoal) * 100,
-            100
-        );
+        const totalCoins = balance; // Use balance as total coins
+        const currentLevel = Math.floor(totalCoins / rewardGoal) + 1;
+        const nextLevel = currentLevel + 1;
+        const progressTowardsNext = totalCoins % rewardGoal;
+        const pointsNeeded = Math.max(0, rewardGoal - progressTowardsNext);
+        const progressPercentage = Math.min((progressTowardsNext / rewardGoal) * 100, 100);
 
         return {
-            currentPoints: currentProgress,
+            currentPoints: progressTowardsNext,
             targetPoints: rewardGoal,
             pointsNeeded: pointsNeeded,
-            currentLevel: stats?.tier ?? 2,
-            nextLevel: (stats?.tier ?? 2) + 1,
+            currentLevel: currentLevel,
+            nextLevel: nextLevel,
             progressPercentage,
+            totalCoins: totalCoins,
         };
-    }, [stats?.currentXP, stats?.tier]);
+    }, [balance]);
 
     // OPTIMIZED: Memoize click handler
     const handleHurryBoxClick = useCallback(() => {
@@ -34,8 +38,6 @@ const RewardProgress = ({ stats }) => {
     }, [router]);
 
 
-    const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
-    const balance = walletScreen?.wallet?.balance || 0;
 
     return (
         <div
@@ -64,7 +66,7 @@ const RewardProgress = ({ stats }) => {
                                             className="absolute h-full bg-gradient-to-r from-[#ffd700] via-[#ffed4e] to-[#f4d03f] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
                                             style={{
                                                 left: '10px', // Start from circle center to create curved connection
-                                                width: `calc(${(pointsData.currentPoints / pointsData.targetPoints) * 100}% - 10px)`,
+                                                width: `calc(${pointsData.progressPercentage}% - 10px)`,
                                                 borderRadius: '9999px',
                                                 borderTopLeftRadius: '12px', // Curved left edge to flow from circle
                                                 borderBottomLeftRadius: '12px',
@@ -81,7 +83,7 @@ const RewardProgress = ({ stats }) => {
                                         {/* Next level indicator - MOVED & FIXED */}
                                         <div className="absolute w-[24px] h-[25px] top-0.3 right-[-1px] bg-[#d4af37] rounded-full border-0.5 border-[#b8860b] flex items-center justify-center shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                                             <div className="[font-family:'Poppins',Helvetica] font-semibold text-[#815c23] text-[12px] tracking-[0.02px] leading-[normal]">
-                                                2
+                                                {pointsData.nextLevel}
                                             </div>
                                         </div>
                                     </div>
@@ -101,7 +103,7 @@ const RewardProgress = ({ stats }) => {
                                     >
                                         ⭐
                                     </span>{" "}
-                                    {balance}
+                                    {pointsData.currentPoints}
                                 </span>
 
                                 <span className="text-gray-400">
@@ -113,18 +115,15 @@ const RewardProgress = ({ stats }) => {
                         <header className="absolute w-[calc(100%-40px)] max-w-[299px] h-[42px] top-[19px]  left-5">
                             <div className="relative  w-full h-[42px]">
                                 <div className="absolute w-full h-[21px] top-0 left-0">
-                                    <h1 className="absolute w-full top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-lg sm:text-xl tracking-[-0.37px] leading-[27.2px] truncate">
-                                        {pointsData.pointsNeeded > 0
-                                            ? `Hurry! Earn ${pointsData.pointsNeeded} more & Claim`
-                                            : 'Congratulations! You\'ve reached your goal!'
-                                        }
+                                    <h1 className="absolute w-full top-0 left-0 [font-family:'Poppins',Helvetica] font-semibold text-white text-md sm:text-md tracking-[-0.37px] leading-[27.2px] truncate">
+                                        {"Keep a track your Coins"}
                                     </h1>
                                 </div>
 
                                 <p className="absolute w-full top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] truncate">
                                     {pointsData.pointsNeeded > 0
-                                        ? `${pointsData.pointsNeeded} Points until your next reward`
-                                        : 'You can now claim your reward!'
+                                        ? `${pointsData.pointsNeeded} Coins until level ${pointsData.nextLevel}`
+                                        : `Level ${pointsData.currentLevel} completed!`
                                     }
                                 </p>
                             </div>

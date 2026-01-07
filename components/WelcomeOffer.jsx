@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRealTimeCountdown } from "../hooks/useRealTimeCountdown";
+import { useAuth } from "@/contexts/AuthContext";
+import { getWelcomeBonusTimer } from "@/lib/api";
 
 // The SVG for the "Welcome Offer" label, converted to a reusable JSX component.
 const WelcomeOfferLabel = () => (
@@ -44,6 +46,12 @@ export const WelcomeOffer = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipRef = useRef(null);
+  const { token } = useAuth();
+
+  // Server-provided timer and message
+  const [serverEndTime, setServerEndTime] = useState(null);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [fetchingWelcome, setFetchingWelcome] = useState(true);
 
   // Use real-time countdown hook with 24-hour persistence
   const {
@@ -53,11 +61,76 @@ export const WelcomeOffer = () => {
     timeRemaining,
     resetTimer
   } = useRealTimeCountdown({
+    endTime: serverEndTime,
     defaultDuration: 24 * 60 * 60, // 24 hours in seconds
     persist: true,
     storageKey: 'welcomeOfferEndTime',
     autoReset: false // Don't auto reset when expired
   });
+
+  // Fetch welcome bonus timer and message from API
+  useEffect(() => {
+    let mounted = true;
+
+    const parseEndTimeFromResponse = (response) => {
+      if (!response) return null;
+
+      // ✅ Correct path from API response
+      const timer =
+        response?.data?.timer ||
+        response?.timer;
+
+      // 1️⃣ Preferred: milliseconds from backend
+      if (typeof timer?.timeUntilUnlock === "number") {
+        return Date.now() + timer.timeUntilUnlock;
+      }
+
+      // 2️⃣ Fallback: ISO unlockTime
+      if (timer?.unlockTime) {
+        const t = new Date(timer.unlockTime).getTime();
+        if (!isNaN(t)) return t;
+      }
+
+      return null;
+    };
+
+
+
+    const fetchWelcome = async () => {
+      try {
+        setFetchingWelcome(true);
+        const data = await getWelcomeBonusTimer(token);
+        if (!mounted) return;
+
+        // apiRequest returns an object on network/error with success:false
+        if (data && data.success === false) {
+          console.warn('WelcomeOffer: api returned error', data);
+          const msg = (data.body && data.body.message) || data.error || '';
+          setWelcomeMessage(msg);
+          setFetchingWelcome(false);
+          return;
+        }
+
+        const msg = data.message || data.msg || (data.data && data.data.message) || '';
+        setWelcomeMessage(msg || '');
+
+        const end = parseEndTimeFromResponse(data);
+        if (end) {
+          setServerEndTime(end);
+        }
+      } catch (error) {
+        console.error('Error fetching welcome-bonus-timer:', error);
+      } finally {
+        if (mounted) setFetchingWelcome(false);
+      }
+    };
+
+    fetchWelcome();
+
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -80,10 +153,11 @@ export const WelcomeOffer = () => {
     };
   }, []);
 
+
   return (
     <>
       <div
-        className={`relative w-full max-w-[375px] rounded-[22px] overflow-hidden bg-gradient-to-br from-[#7920CF] via-[#A832B8] to-[#CD4999] shadow-[0_8px_24px_rgba(121,32,207,0.4)] transition-all duration-300 ${isExpanded ? "h-[330px]" : "h-[245px]"
+        className={`relative w-full max-w-[375px] rounded-[22px] overflow-hidden bg-gradient-to-br from-[#7920CF] via-[#A832B8] to-[#CD4999] shadow-[0_8px_24px_rgba(121,32,207,0.4)] transition-all duration-300 ${isExpanded ? "h-[400px]" : "h-[245px]"
           }`}
         data-model-id="4001:7472"
         style={{
@@ -317,13 +391,23 @@ export const WelcomeOffer = () => {
           : 'bg-[linear-gradient(107deg,rgba(200,117,251,1)_0%,rgba(120,50,220,1)_50%,rgba(16,4,147,1)_100%)]'
           }`}>
           <div className="relative z-10 [font-family:'Poppins',Helvetica] font-semibold text-white text-[15px] tracking-[0.5px] leading-[normal] text-center drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
-            {isLoading ? (
+            {fetchingWelcome ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-75"></span>
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-150"></span>
               </span>
-            ) : (isExpired ? 'EXPIRED' : formatTime)}
+            ) : serverEndTime ? (
+              isLoading ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-75"></span>
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-150"></span>
+                </span>
+              ) : (isExpired ? 'EXPIRED' : formatTime)
+            ) : (
+              <span className="text-[12px] leading-[16px]">{welcomeMessage || 'Please start downloading your first game from below suggestions to claim your Welcome Bonus.'}</span>
+            )}
           </div>
           {!isExpired && !isLoading && (
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
@@ -333,12 +417,48 @@ export const WelcomeOffer = () => {
         {/* Expanded content */}
         {isExpanded && (
           <div className="absolute w-full top-[245px] left-0 bg-[#982fbb] -mt-2 rounded-[0px_0px_20px_20px] px-6 pt-5 pb-7 animate-fade-in shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
-            <div className="font-normal [font-family:'Poppins',Helvetica] text-white text-[14px] leading-[22px] break-words tracking-[0.1px]">
+
+            {/* Paragraph */}
+            <div className="font-normal font-['Poppins'] text-white text-[14px] leading-[22px] break-words tracking-[0.1px]">
               Please start downloading your first game from below suggestions to
               claim your Welcome Bonus.
             </div>
+
+            {/* New UI Section */}
+            {/* Rewards Section */}
+            <div className="mt-5 flex items-center justify-center gap-4">
+
+              {/* Coins */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
+
+                <span className="text-white font-semibold text-[14px]">
+                  100
+                </span>
+                <img
+                  src="/dollor.png"
+                  alt="Coins"
+                  className="w-5 h-5 object-contain"
+                />
+              </div>
+
+              {/* XP */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
+
+                <span className="text-white font-semibold text-[14px]">
+                  20
+                </span>
+                <img
+                  src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
+                  alt="XP"
+                  className="w-5 h-5 object-contain"
+                />
+              </div>
+
+            </div>
+
           </div>
         )}
+
 
         {/* Tooltip */}
 

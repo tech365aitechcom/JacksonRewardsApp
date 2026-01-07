@@ -294,7 +294,7 @@ export default function FaceVerificationPage() {
         try {
             const toggleResult = await toggleBiometric(token);
             console.log("🔐 [CONTINUE] Toggle biometric API response:", JSON.stringify(toggleResult));
-            
+
             if (toggleResult.success && toggleResult.data) {
                 console.log("✅ [CONTINUE] Biometric enabled:", toggleResult.data.biometric?.enabled);
             } else {
@@ -319,7 +319,7 @@ export default function FaceVerificationPage() {
                 deviceId: "device-12345",
                 scanType: "os_face_id" // Optional
             };
-            
+
             const setupResult = await registerFace(setupData, token);
             console.log("🔐 [CONTINUE] Setup API response:", JSON.stringify(setupResult));
 

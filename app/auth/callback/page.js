@@ -50,33 +50,22 @@ const ErrorIcon = () => (
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { handleSocialAuthCallback, user, isLoading } = useAuth();
+  const { handleSocialAuthCallback, user, isLoading, token } = useAuth();
 
   // State to manage UI: 'processing', 'success', or 'error'
   const [status, setStatus] = useState("processing");
   const [errorMessage, setErrorMessage] = useState("");
   const [authCompleted, setAuthCompleted] = useState(false);
-
+  const [userStatusFlags, setUserStatusFlags] = useState(null); // New state for flags
   useEffect(() => {
     const processAuth = async () => {
-      // Get all URL parameters for debugging
       const token = searchParams.get("token");
       const authError =
         searchParams.get("message") || searchParams.get("error");
       const provider = searchParams.get("provider");
       const userId = searchParams.get("userId");
 
-      console.log("🔐 [Auth Callback] Processing authentication:", {
-        hasToken: !!token,
-        tokenLength: token?.length || 0,
-        authError,
-        provider,
-        userId,
-        isNative: Capacitor.isNativePlatform(),
-        allParams: Object.fromEntries(searchParams.entries()),
-      });
-
-      // Handle native platform deep link redirect
+      // 1. Handle Native Deep Link (Keep as is)
       if (Capacitor.isNativePlatform()) {
         let deepLink = "com.jackson.app://auth/callback";
         if (token) {
@@ -87,123 +76,58 @@ function AuthCallbackContent() {
           const message = authError || "Authentication token not found.";
           deepLink += `?message=${encodeURIComponent(message)}`;
         }
-        console.log(
-          "📱 [Auth Callback] Processing deep link redirect:",
-          deepLink
-        );
-
-        // For mobile apps, we need to:
-        // 1. Close the Capacitor Browser
-        // 2. Redirect to the deep link which will be caught by the app's deep link handler
 
         try {
-          // Close the browser FIRST
           await Browser.close();
-          console.log("✅ [Auth Callback] Browser closed successfully");
-
-          // Wait a bit for browser to fully close, then redirect to deep link
           setTimeout(() => {
-            console.log(
-              "📱 [Auth Callback] Redirecting to deep link:",
-              deepLink
-            );
-            try {
-              // Try to redirect to deep link
-              window.location.href = deepLink;
-
-              // Fallback: If deep link doesn't work, try using App plugin
-              setTimeout(() => {
-                // If we're still here after 1 second, the deep link might not have worked
-                // Try alternative method using App.openUrl if available
-                if (
-                  typeof window !== "undefined" &&
-                  window.Capacitor &&
-                  window.Capacitor.Plugins &&
-                  window.Capacitor.Plugins.App
-                ) {
-                  window.Capacitor.Plugins.App.openUrl({ url: deepLink }).catch(
-                    (err) => {
-                      console.error(
-                        "❌ [Auth Callback] Failed to open deep link via App plugin:",
-                        err
-                      );
-                    }
-                  );
-                }
-              }, 1000);
-            } catch (redirectError) {
-              console.error(
-                "❌ [Auth Callback] Failed to redirect to deep link:",
-                redirectError
-              );
-              setErrorMessage("Failed to redirect to app. Please try again.");
-              setStatus("error");
-            }
-          }, 500); // Increased delay to ensure browser is fully closed
-        } catch (closeError) {
-          console.warn(
-            "⚠️ [Auth Callback] Browser close error (may already be closed):",
-            closeError
-          );
-          // Even if closing fails, try to redirect to deep link
-          setTimeout(() => {
-            console.log(
-              "📱 [Auth Callback] Attempting deep link redirect after close error"
-            );
             window.location.href = deepLink;
-          }, 300);
+          }, 500);
+        } catch (closeError) {
+          window.location.href = deepLink;
         }
         return;
       }
 
-      // Handle errors from backend
+      // 2. Handle Errors
       if (authError) {
-        console.error("❌ [Auth Callback] Authentication error:", authError);
-        setErrorMessage(authError || "An unknown error occurred.");
+        setErrorMessage(authError);
         setStatus("error");
         setTimeout(() => router.replace("/login"), 4000);
         return;
       }
 
-      // Process token if available
+      // 3. Process Login (WEB FLOW)
       if (token) {
         try {
-          console.log("✅ [Auth Callback] Token received, processing...");
+          console.log(
+            "✅ [Auth Callback] Token received, processing via Context..."
+          );
+
+          // result now contains: { ok: true, statusData: { needsDisclosure, needsLocation } }
           const result = await handleSocialAuthCallback(token);
+
           if (result.ok) {
-            console.log("✅ [Auth Callback] Authentication successful");
+            console.log("✅ [Auth Callback] Login and Status check successful");
+
+            // NEW: Set the flags directly from the AuthContext result
+            if (result.statusData) {
+              setUserStatusFlags(result.statusData);
+            }
+
             setStatus("success");
             setAuthCompleted(true);
-            // Wait for auth state to be fully set before redirecting
-            // This prevents the login page from flashing
           } else {
-            console.error(
-              "❌ [Auth Callback] Authentication failed:",
-              result.error
-            );
-            setErrorMessage(
-              result.error ||
-                "Failed to process authentication. Please try again."
-            );
+            setErrorMessage(result.error || "Authentication failed");
             setStatus("error");
             setTimeout(() => router.replace("/login"), 4000);
           }
         } catch (error) {
-          console.error(
-            "❌ [Auth Callback] Exception during authentication:",
-            error
-          );
-          setErrorMessage(
-            error.message || "An unexpected error occurred. Please try again."
-          );
+          setErrorMessage(error.message);
           setStatus("error");
           setTimeout(() => router.replace("/login"), 4000);
         }
       } else {
-        console.error("❌ [Auth Callback] No token found in URL parameters");
-        setErrorMessage(
-          "Authentication token not found. Redirecting to login..."
-        );
+        setErrorMessage("Authentication token not found.");
         setStatus("error");
         setTimeout(() => router.replace("/login"), 3000);
       }
@@ -213,15 +137,79 @@ function AuthCallbackContent() {
   }, [router, searchParams, handleSocialAuthCallback]);
 
   // Wait for auth state to be ready before redirecting
+  // useEffect(() => {
+  //   if (authCompleted && !isLoading && user) {
+  //     // Small delay to ensure state is fully propagated
+  //     const redirectTimer = setTimeout(() => {
+  //       router.replace("/permissions");
+  //     }, 500);
+  //     return () => clearTimeout(redirectTimer);
+  //   }
+  // }, [authCompleted, isLoading, user, router]);
+
   useEffect(() => {
-    if (authCompleted && !isLoading && user) {
-      // Small delay to ensure state is fully propagated
+    // 1. Log why the effect is (or isn't) running
+
+    if (authCompleted && !isLoading && user && userStatusFlags) {
+      const { needsDisclosure, needsLocation } = userStatusFlags;
+
+      // Start the redirect timer
+      console.log("⏱️ [DEBUG-REDIRECT] Starting 800ms redirect timer...");
+
       const redirectTimer = setTimeout(() => {
-        router.replace("/location");
-      }, 500);
-      return () => clearTimeout(redirectTimer);
+        console.log("🚀 [DEBUG-REDIRECT] Timer Fired. Executing Logic...");
+
+        // 2. Log LocalStorage Actions
+        if (!needsDisclosure) {
+          console.log(
+            "💾 [DEBUG-REDIRECT] Setting local: permissionsAccepted = true"
+          );
+          localStorage.setItem("permissionsAccepted", "true");
+        }
+        if (!needsLocation) {
+          console.log(
+            "💾 [DEBUG-REDIRECT] Setting local: locationCompleted = true"
+          );
+          localStorage.setItem("locationCompleted", "true");
+        }
+
+        // 3. Log the Final Decision
+        if (needsDisclosure) {
+          console.log(
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /permissions (Disclosure Required)"
+          );
+          router.replace("/permissions");
+        } else if (needsLocation) {
+          console.log(
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /location (Location Required)"
+          );
+          router.replace("/location");
+        } else {
+          console.log(
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /homepage (All steps complete)"
+          );
+          router.replace("/homepage");
+        }
+      }, 800);
+
+      return () => {
+        console.log("🧹 [DEBUG-REDIRECT] Cleaning up timer");
+        clearTimeout(redirectTimer);
+      };
+    } else {
+      // Log what is missing if the condition fails
+      const missing = [];
+      if (!authCompleted) missing.push("authCompleted");
+      if (isLoading) missing.push("isLoading (still true)");
+      if (!user) missing.push("user object");
+      if (!userStatusFlags) missing.push("userStatusFlags");
+
+      console.log(
+        "⚠️ [DEBUG-REDIRECT] Condition not met yet. Waiting for:",
+        missing.join(", ")
+      );
     }
-  }, [authCompleted, isLoading, user, router]);
+  }, [authCompleted, isLoading, user, userStatusFlags, router]);
 
   // Helper function to render content based on status
   const renderContent = () => {

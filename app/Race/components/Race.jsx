@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export const Race = () => {
+export const Race = ({ progressData, isLoadingXP }) => {
     const router = useRouter();
     const [currentLevel, setCurrentLevel] = useState(3);
     const [playerCount, setPlayerCount] = useState(4);
@@ -256,7 +256,6 @@ export const Race = () => {
                     }}
                 />
 
-                {/* Quest Progress Header */}
                 <section
                     className="absolute -top-px left-px w-[333px] h-[90px]"
                     data-model-id="2035:7719"
@@ -303,6 +302,35 @@ export const Race = () => {
                         </div>
                     </div>
                 </section>
+                {/* 
+                <section className="absolute top-[88px] left-0 w-full px-4 py-2">
+                    {isLoadingXP ? (
+                        <div className="flex justify-center items-center h-8">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+                            <span className="ml-2 text-white text-sm">Loading XP...</span>
+                        </div>
+                    ) : (
+                        <div className="relative w-full h-8 rounded-[32px] bg-[#373737] border-4 border-solid border-[#ffffff33]">
+                            <div
+                                className="absolute h-[18px] top-0.5 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-[32px] transition-all duration-300 ease-out"
+                                style={{
+                                    left: `${progressData.progressBarStart || 0}px`,
+                                    width: `${Math.max(0, Math.min(progressData.progressBarWidth || 0, 288 - (progressData.progressBarStart || 0)))}px`,
+                                }}
+                            />
+                            <div
+                                className="absolute w-6 h-6 top-0 bg-white rounded-full border-5 border-[#FFD700] z-10 transition-all duration-300 ease-out"
+                                style={{
+                                    left: `${Math.max(0, Math.min((progressData.indicatorPosition || 0) - 6, 288 - 6))}px`,
+                                }}
+                            />
+
+                            <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-semibold">
+                                {`${progressData.currentXP} / ${progressData.totalXP} XP`}
+                            </div>
+                        </div>
+                    )}
+                </section> */}
                 {/* Simple CSS Animations */}
                 <style jsx>{`
                     @keyframes gentleMove {
@@ -333,10 +361,10 @@ export const Race = () => {
                         transform: 'translateZ(10px)',
                         transformStyle: 'preserve-3d'
                     }}
-                    onClick={() => {
-                        // Instant navigation - no loading delay
-                        router.push('/Race/ListGame');
-                    }}
+                    // onClick={() => {
+                    //     // Instant navigation - no loading delay
+                    //     router.push('/Race/ListGame');
+                    // }}
                     aria-label="Start Playing - Begin Race"
                     type="button"
                 >
