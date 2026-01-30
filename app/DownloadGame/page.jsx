@@ -76,6 +76,9 @@ export default function GamesPage() {
                 src="https://c.animaapp.com/3mn7waJw/img/search.svg"
                 width={48}
                 height={48}
+                loading="eager"
+                decoding="async"
+                priority
               />
             </button>
           </div>

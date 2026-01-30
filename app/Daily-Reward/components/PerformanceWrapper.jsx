@@ -58,6 +58,7 @@ export const MemoizedImage = memo(({
             alt={alt}
             className={imageClasses}
             loading={loading}
+            decoding="async"
             {...props}
         />
     );

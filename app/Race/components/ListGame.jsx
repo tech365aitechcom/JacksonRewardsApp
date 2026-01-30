@@ -31,6 +31,8 @@ const RecommendationCard = React.memo(({ card, onCardClick }) => {
                         height={158}
                         sizes="158px"
                         priority
+                        loading="eager"
+                        decoding="async"
                         onError={handleImageError}
                     />
                 ) : (
@@ -58,6 +60,8 @@ const RecommendationCard = React.memo(({ card, onCardClick }) => {
                             width={18}
                             height={19}
                             priority
+                            loading="eager"
+                            decoding="async"
                             unoptimized
                         />
                     </div>
@@ -70,6 +74,8 @@ const RecommendationCard = React.memo(({ card, onCardClick }) => {
                             width={21}
                             height={16}
                             priority
+                            loading="eager"
+                            decoding="async"
                             unoptimized
                         />
                     </div>
@@ -85,7 +91,7 @@ export const ListGame = () => {
     const dispatch = useDispatch();
     const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
     const [loadingTimeout, setLoadingTimeout] = useState(false);
-    
+
     // Check if user came from race banner
     const fromRace = searchParams.get('fromRace') === 'true';
 
@@ -230,25 +236,18 @@ export const ListGame = () => {
             allGames.push(...downloadedGames);
         }
 
-        console.log('🎮 ListGame: Combined games:', {
-            apiGames: allSectionGames?.length || 0,
-            downloadedGames: inProgressGames?.length || 0,
-            totalGames: allGames.length,
-            sections: Object.keys(gamesBySection || {})
-        });
 
         return allGames;
     }, [allSectionGames, inProgressGames, gamesBySection]);
 
     // Optimized: Memoized game click handler
     const handleGameClick = useCallback((game) => {
-        console.log('🎮 ListGame: Game clicked:', {
-            game,
-            gameId: game.originalId,
-            title: game.title || game.name || game.details?.name,
-            isDownloaded: game.isDownloaded,
-            source: game.source
-        });
+
+        // If user came from race banner, redirect to race screen
+        if (fromRace) {
+            router.push('/Race');
+            return;
+        }
 
         // Clear Redux state BEFORE navigation to prevent showing old data
         dispatch({ type: 'games/clearCurrentGameDetails' });
@@ -258,11 +257,10 @@ export const ListGame = () => {
 
         if (game.isDownloaded && game.fullData) {
             // For downloaded games, use localStorage method
-            console.log('🎮 ListGame: Navigating to downloaded game via localStorage');
             try {
                 localStorage.setItem('selectedGameData', JSON.stringify(game.fullData));
             } catch (error) {
-                console.error('❌ Failed to store game data:', error);
+                // Failed to store game data
             }
             router.push(`/gamedetails?gameId=${game.originalId}&source=race`);
         } else {
@@ -270,27 +268,18 @@ export const ListGame = () => {
             if (game.fullData) {
                 try {
                     localStorage.setItem('selectedGameData', JSON.stringify(game.fullData));
-                    console.log('💾 [ListGame] Stored full game data with besitosRawData:', {
-                        hasBesitosRawData: !!game.fullData.besitosRawData,
-                        gameId: game.originalId
-                    });
                 } catch (error) {
-                    console.error('❌ Failed to store game data:', error);
+                    // Failed to store game data
                 }
             }
 
             const gameId = game.originalId || game.id;
             if (!gameId) {
-                console.error('❌ ListGame: No game ID found:', game);
                 return;
             }
-            console.log('🎮 ListGame: Navigating to API game via gameId:', {
-                gameId,
-                hasBesitosRawData: !!game.fullData?.besitosRawData
-            });
             router.push(`/gamedetails?gameId=${gameId}&source=race`);
         }
-    }, [router, dispatch]);
+    }, [router, dispatch, fromRace]);
 
     // Handle race button click
     const handleRaceButtonClick = useCallback(() => {
@@ -319,11 +308,6 @@ export const ListGame = () => {
 
             // Only fetch if section is idle and has no games
             if (sectionStatus === 'idle' && sectionGames.length === 0) {
-                console.log(`[ListGame] Fetching games for section: ${section}`, {
-                    age: userProfile?.age,
-                    ageRange: userProfile?.ageRange,
-                    gender: userProfile?.gender
-                });
 
                 dispatch(fetchGamesBySection({
                     uiSection: section,
@@ -348,7 +332,6 @@ export const ListGame = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [ListGame] Refreshing games from all sections in background to get admin updates...");
             sectionsToRefresh.forEach(section => {
                 dispatch(fetchGamesBySection({
                     uiSection: section,
@@ -374,7 +357,6 @@ export const ListGame = () => {
             : ["Swipe", "Most Played", "Cash Coach Recommendation", "New Games", "Trending"];
 
         const handleFocus = () => {
-            console.log("🔄 [ListGame] App focused - refreshing games from all sections to get admin updates");
             sectionsToRefresh.forEach(section => {
                 dispatch(fetchGamesBySection({
                     uiSection: section,
@@ -391,7 +373,6 @@ export const ListGame = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && userProfile) {
-                console.log("🔄 [ListGame] App visible - refreshing games from all sections to get admin updates");
                 sectionsToRefresh.forEach(section => {
                     dispatch(fetchGamesBySection({
                         uiSection: section,
@@ -484,22 +465,9 @@ export const ListGame = () => {
                                 <RecommendationCard
                                     card={card}
                                     onCardClick={handleGameClick}
-                                    showRaceButton={fromRace}
+                                    showRaceButton={false}
                                     onRaceClick={handleRaceButtonClick}
                                 />
-                                {fromRace && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRaceButtonClick();
-                                        }}
-                                        className="w-full h-10 mt-2 rounded-xl overflow-hidden bg-[linear-gradient(180deg,rgba(81,98,182,0.9)_0%,rgba(63,56,184,0.9)_100%)] flex items-center justify-center hover:opacity-90 transition-opacity duration-200 shadow-lg"
-                                    >
-                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[14px] tracking-[0] leading-normal">
-                                            Race
-                                        </span>
-                                    </button>
-                                )}
                             </div>
                         ))}
                     </div>

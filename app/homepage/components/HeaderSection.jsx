@@ -64,9 +64,12 @@ const HeaderSection = () => {
                             src={avatarUrl}
                             crossOrigin="anonymous"
                             onError={(e) => {
-                                console.log("Avatar failed to load, falling back to default");
                                 e.target.src = "/profile.png";
                             }}
+                            loading="eager"
+                            decoding="async"
+                            width="48"
+                            height="48"
                         />
                     </button>
                     <div className="flex flex-col items-start gap-1 flex-1 min-w-0">
@@ -97,6 +100,10 @@ const HeaderSection = () => {
                             className="w-[23px] h-6"
                             alt="Coin"
                             src="/dollor.png"
+                            loading="eager"
+                            decoding="async"
+                            width="23"
+                            height="24"
                         />
                     </button>
                 </div>

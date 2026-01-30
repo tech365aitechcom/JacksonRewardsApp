@@ -302,13 +302,13 @@ export default function LocationPage() {
                 </span>
               </button>
 
-              <button
+              {/* <button
                 onClick={handleSkip}
                 disabled={isLoading || isSkipping}
                 className="w-full py-3 [font-family:'Poppins',Helvetica] font-medium text-[#FFFFFF] text-sm text-center hover:text-white transition-colors duration-200 disabled:opacity-50"
               >
                 {isSkipping ? "Updating..." : "Skip for now (Jackson won't work)"}
-              </button>
+              </button> */}
             </div>
           ) : (
             <div className="w-full max-w-sm mx-auto">

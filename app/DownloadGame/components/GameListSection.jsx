@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { fetchUserData, fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
+import { fetchUserData, fetchGamesBySection, loadUserDataFromCache } from "@/lib/redux/slice/gameSlice";
 import { useAuth } from "@/contexts/AuthContext";
 import GameItemCard from "./GameItemCard";
 import WatchAdCard from "./WatchAdCard";
@@ -67,7 +67,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
         setFeaturedGames(games);
         setIsFromFeatured(true);
       } catch (error) {
-        console.error('Error parsing featured games data:', error);
+        // Error parsing featured games data
       }
     }
   }, []);
@@ -88,7 +88,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
         return user._id || user.id;
       }
     } catch (error) {
-      console.error('Error getting user ID from localStorage:', error);
+      // Error getting user ID from localStorage
     }
     return null;
   };
@@ -96,11 +96,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   // Fetch games from new API for "Most Played" section
   // Uses stale-while-revalidate: shows cached data immediately, fetches fresh if needed
   React.useEffect(() => {
-    console.log('🎮 GameListSection: Using user profile:', {
-      age: userProfile?.age,
-      ageRange: userProfile?.ageRange,
-      gender: userProfile?.gender
-    });
 
     // Always dispatch - stale-while-revalidate will handle cache logic automatically
     // Pass user object directly - API will extract age and gender dynamically
@@ -117,7 +112,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     if (!userProfile) return;
 
     const refreshTimer = setTimeout(() => {
-      console.log("🔄 [DownloadGame/GameListSection] Refreshing games in background to get admin updates...");
       dispatch(fetchGamesBySection({
         uiSection: "Most Played",
         user: userProfile,
@@ -136,7 +130,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     if (!userProfile) return;
 
     const handleFocus = () => {
-      console.log("🔄 [DownloadGame/GameListSection] App focused - refreshing games to get admin updates");
       dispatch(fetchGamesBySection({
         uiSection: "Most Played",
         user: userProfile,
@@ -151,7 +144,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
 
     const handleVisibilityChange = () => {
       if (!document.hidden && userProfile) {
-        console.log("🔄 [DownloadGame/GameListSection] App visible - refreshing games to get admin updates");
         dispatch(fetchGamesBySection({
           uiSection: "Most Played",
           user: userProfile,
@@ -171,6 +163,33 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     };
   }, [dispatch, userProfile]);
 
+  // Load cached data from localStorage immediately for instant display
+  React.useEffect(() => {
+    const userId = getUserId();
+    if (!userId) return;
+
+    // Load from localStorage cache immediately (before API call)
+    try {
+      const CACHE_KEY = `userData_${userId}`;
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        const cacheAge = Date.now() - (parsed.timestamp || 0);
+        const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+        // Load cache if it exists (even if stale - will refresh in background)
+        if (parsed.data && cacheAge < CACHE_TTL * 2) { // Allow stale cache up to 10 minutes
+          dispatch(loadUserDataFromCache({
+            userData: parsed.data,
+            timestamp: parsed.timestamp,
+          }));
+        }
+      }
+    } catch (err) {
+      // Failed to load cache - continue to API fetch
+    }
+  }, [dispatch]);
+
   // Fetch user data from Redux when component mounts (lazy loading) - fallback
   // Uses stale-while-revalidate: shows cached data immediately, fetches fresh if needed
   React.useEffect(() => {
@@ -186,7 +205,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     if (!userId) return;
 
     const refreshTimer = setTimeout(() => {
-      console.log("🔄 [DownloadGame/GameListSection] Refreshing user data in background to get admin updates...");
       dispatch(fetchUserData({ userId, token, force: true, background: true }));
     }, 100);
 
@@ -315,12 +333,8 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       // Store full game data including besitosRawData in localStorage for immediate access
       try {
         localStorage.setItem('selectedGameData', JSON.stringify(game.fullData));
-        console.log('💾 [GameListSection] Stored full game data with besitosRawData:', {
-          hasBesitosRawData: !!game.fullData.besitosRawData,
-          gameId: game.id
-        });
       } catch (error) {
-        console.error('❌ Failed to store game data:', error);
+        // Failed to store game data
       }
 
       const gameId = game.id || game.fullData?.gameId || game.fullData?._id;
@@ -369,6 +383,9 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
                 src="https://c.animaapp.com/3mn7waJw/img/badgecheck.svg"
                 width={20}
                 height={20}
+                loading="eager"
+                decoding="async"
+                priority
               />
               <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-medium text-white text-base tracking-[0] leading-[normal]">
                 {"Most Played Games"}

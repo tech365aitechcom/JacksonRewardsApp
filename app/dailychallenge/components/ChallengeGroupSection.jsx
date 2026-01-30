@@ -20,26 +20,16 @@ export const ChallengeGroupSection = ({ streak }) => {
 
     // Fetch bonus days data - show cached data immediately, refresh in background
     useEffect(() => {
-        console.log("🎁 [CHALLENGE GROUP] Component mounted:", {
-            hasToken: !!token,
-            hasCachedData: !!bonusDaysData,
-            bonusDaysStatus,
-            timestamp: new Date().toISOString(),
-        });
-
         if (!token) {
-            console.warn("⚠️ [CHALLENGE GROUP] No token available, skipping bonus days fetch");
             return;
         }
 
         // Only fetch if status is idle (not already loading or succeeded with fresh data)
         if (bonusDaysStatus === "idle") {
-            console.log("🎁 [CHALLENGE GROUP] Fetching bonus days (idle status)");
             dispatch(fetchBonusDays({ token }));
         } else {
             // If we have cached data, trigger background refresh after showing cached data
             if (bonusDaysData) {
-                console.log("🎁 [CHALLENGE GROUP] Showing cached data, refreshing in background");
                 const refreshTimer = setTimeout(() => {
                     dispatch(fetchBonusDays({ token, force: true }));
                 }, 100); // Small delay to let cached data render first
@@ -51,10 +41,6 @@ export const ChallengeGroupSection = ({ streak }) => {
 
     // Generate milestones dynamically from bonus days - only use API data, no fallbacks
     const generateMilestones = () => {
-        console.log("🎁 [CHALLENGE GROUP] Generating milestones:", {
-            bonusDaysCount: bonusDays.length,
-            bonusDaysStatus,
-        });
 
         // Only use bonus days from API - no fallback to streak prop
         if (bonusDays.length > 0) {
@@ -81,20 +67,10 @@ export const ChallengeGroupSection = ({ streak }) => {
                     xp: xp,
                     rewardType: rewardType,
                 };
-                console.log(`🎁 [CHALLENGE GROUP] Milestone ${index + 1}:`, {
-                    dayNumber: milestone.value,
-                    isReached: milestone.isReached,
-                    coins: milestone.coins,
-                    xp: milestone.xp,
-                    rewardType: milestone.rewardType,
-                });
                 return milestone;
             });
-            console.log("🎁 [CHALLENGE GROUP] Generated milestones from bonus days:", milestones);
             return milestones;
         }
-
-        console.warn("⚠️ [CHALLENGE GROUP] No bonus days available, returning empty array");
         return [];
     };
 
@@ -103,24 +79,72 @@ export const ChallengeGroupSection = ({ streak }) => {
     // Only use current streak from API response - no fallback to streak prop
     const currentStreak = apiCurrentStreak !== null ? apiCurrentStreak : 0;
 
-    // Calculate max milestone for progress calculation - only from API data
+    // Calculate min and max milestone for progress calculation - only from API data
+    const minMilestone = milestones.length > 0
+        ? Math.min(...milestones.map(m => m.value))
+        : 0;
     const maxMilestone = milestones.length > 0
         ? Math.max(...milestones.map(m => m.value))
         : 0;
 
-    // Calculate progress percentage
-    const progressPercentage = maxMilestone > 0
-        ? Math.min((currentStreak / maxMilestone) * 100, 100)
-        : 0;
-
-    console.log("🎁 [CHALLENGE GROUP] Progress calculation:", {
-        currentStreak,
-        maxMilestone,
-        progressPercentage: `${progressPercentage.toFixed(2)}%`,
-        milestonesCount: milestones.length,
-        bonusDaysStatus,
-        hasCachedData: !!bonusDaysData,
-    });
+    // Calculate progress percentage based on actual milestone positions
+    // Interpolate current streak position between milestones to get accurate visual position
+    let progressPercentage = 0;
+    if (milestones.length > 0 && currentStreak > 0) {
+        // Sort milestones by day number to ensure correct order
+        const sortedMilestones = [...milestones].sort((a, b) => a.value - b.value);
+        
+        // If streak is less than first milestone, interpolate from 0% to first milestone position
+        if (currentStreak < minMilestone) {
+            const firstMilestone = sortedMilestones[0];
+            const firstPosition = parseFloat(firstMilestone.leftPosition);
+            const firstDay = firstMilestone.value;
+            
+            // Linear interpolation from Day 1 (0%) to first milestone
+            progressPercentage = (currentStreak / firstDay) * firstPosition;
+        }
+        // If streak is at or beyond last milestone, show 100% progress
+        else if (currentStreak >= maxMilestone) {
+            progressPercentage = 100;
+        }
+        // Otherwise, interpolate between milestones to find exact position
+        else {
+            // Find the two milestones that bracket the current streak
+            let lowerMilestone = null;
+            let upperMilestone = null;
+            
+            for (let i = 0; i < sortedMilestones.length; i++) {
+                // Check if current streak exactly matches this milestone
+                if (currentStreak === sortedMilestones[i].value) {
+                    progressPercentage = parseFloat(sortedMilestones[i].leftPosition);
+                    break;
+                }
+                // Find milestones that bracket the current streak
+                if (currentStreak > sortedMilestones[i].value) {
+                    lowerMilestone = sortedMilestones[i];
+                } else {
+                    upperMilestone = sortedMilestones[i];
+                    break;
+                }
+            }
+            
+            // If we have both milestones, interpolate between them
+            if (lowerMilestone && upperMilestone && progressPercentage === 0) {
+                const lowerPosition = parseFloat(lowerMilestone.leftPosition);
+                const upperPosition = parseFloat(upperMilestone.leftPosition);
+                const lowerDay = lowerMilestone.value;
+                const upperDay = upperMilestone.value;
+                
+                // Linear interpolation
+                const dayRange = upperDay - lowerDay;
+                const progressInRange = (currentStreak - lowerDay) / dayRange;
+                progressPercentage = lowerPosition + (progressInRange * (upperPosition - lowerPosition));
+            }
+        }
+        
+        // Ensure progress is between 0 and 100
+        progressPercentage = Math.max(0, Math.min(100, progressPercentage));
+    }
 
     // Only show loading if we have NO cached data at all
     // This allows showing cached data immediately while refreshing in background
@@ -159,17 +183,6 @@ export const ChallengeGroupSection = ({ streak }) => {
                             const containerWidth = 340; // Max width of container
                             const position = parseFloat(milestone.leftPosition) / 100 * containerWidth; // Convert percentage to pixels
                             const isLastMilestone = index === milestones.length - 1;
-
-                            console.log(`🎁 [CHALLENGE GROUP] Rendering milestone ${index + 1}:`, {
-                                dayNumber: milestone.value,
-                                isCompleted,
-                                currentStreak,
-                                position: `${milestone.leftPosition} (${position}px)`,
-                                coins: milestone.coins,
-                                xp: milestone.xp,
-                                rewardType: milestone.rewardType,
-                                isLastMilestone,
-                            });
 
                             // Green treasure chest images (for all except last)
                             const greenChestImages = [
@@ -218,6 +231,8 @@ export const ChallengeGroupSection = ({ streak }) => {
                                             }}
                                             alt={`Reward ${index + 1} - Day ${milestone.value} ${isLastMilestone ? '(Golden)' : '(Green)'}`}
                                             src={imageUrl}
+                                            loading="eager"
+                                            decoding="async"
                                             onError={(e) => {
                                                 // Fallback to default chest image if custom image fails
                                                 e.target.src = isLastMilestone
@@ -266,6 +281,9 @@ export const ChallengeGroupSection = ({ streak }) => {
                                                         width={14}
                                                         height={14}
                                                         className="inline-block"
+                                                        loading="eager"
+                                                        decoding="async"
+                                                        priority
                                                     />
                                                 </div>
                                             )}
@@ -280,6 +298,9 @@ export const ChallengeGroupSection = ({ streak }) => {
                                                         width={14}
                                                         height={14}
                                                         className="inline-block"
+                                                        loading="eager"
+                                                        decoding="async"
+                                                        priority
                                                     />
                                                 </div>
                                             )}

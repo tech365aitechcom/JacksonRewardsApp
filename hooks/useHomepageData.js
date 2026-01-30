@@ -27,32 +27,32 @@ export const useHomepageData = (token, user) => {
   );
 
   // OPTIMIZED: Enhanced data availability check with persistence awareness
+  // OPTIMIZED: Only require walletScreen for core UI (RewardProgress, XPTierTracker)
+  // Don't block homepage render waiting for stats or userData
   const dataAvailability = useMemo(() => {
     const hasStats =
       (dashboardData?.stats || stats) &&
       (statsStatus === "succeeded" || dashboardStatus === "succeeded");
     const hasUserData =
       userData && (userDataStatus === "succeeded" || userDataStatus === "idle");
-    const hasWalletData =
-      walletScreen &&
-      (walletScreenStatus === "succeeded" || walletScreenStatus === "idle");
+    // Check for walletScreen data existence (persisted data is available even if status is "idle")
+    // This is CRITICAL for RewardProgress and XPTierTracker to show immediately
+    const hasWalletData = walletScreen && (walletScreenStatus === "succeeded" || walletScreenStatus === "idle");
     const hasDashboardData = dashboardData && dashboardStatus === "succeeded";
 
-    // OPTIMIZED: More intelligent loading state
-    const isLoading =
-      statsStatus === "loading" ||
-      userDataStatus === "loading" ||
-      walletScreenStatus === "loading";
-    const hasAnyData =
-      hasStats || hasUserData || hasWalletData || hasDashboardData;
+    // OPTIMIZED: Only check loading for walletScreen (core data)
+    // Stats and userData are nice-to-have and shouldn't block homepage render
+    const isCoreLoading = walletScreenStatus === "loading";
+    const hasCoreData = hasWalletData; // Only walletScreen is required for homepage to feel "ready"
 
     return {
       hasStats,
       hasUserData,
       hasWalletData,
       hasDashboardData,
-      // Only show loading if we have NO data at all and are actively loading
-      shouldShowLoading: !hasAnyData && isLoading,
+      // Only show loading if we have NO core data (walletScreen) and are actively loading
+      // This allows homepage to render immediately with walletScreen data, even if stats/userData are still loading
+      shouldShowLoading: !hasCoreData && isCoreLoading,
     };
   }, [
     dashboardData,
@@ -65,24 +65,20 @@ export const useHomepageData = (token, user) => {
     dashboardStatus,
   ]);
 
-  // STALE-WHILE-REVALIDATE: Always fetch stats and wallet screen - will use cache if available and fresh
+  // STALE-WHILE-REVALIDATE: Always fetch stats - will use cache if available and fresh
+  // OPTIMIZED: Removed walletScreen fetch - handled in handleAuthSuccess to avoid duplicate fetches
   useEffect(() => {
     if (!token || !user?._id) return;
-
+    
     // Always dispatch - stale-while-revalidate will handle cache logic automatically
     // This ensures:
     // 1. Shows cached data immediately if available (< 5 min old)
     // 2. Refreshes in background if cache is stale or 80% expired
     // 3. Fetches fresh if no cache exists
-    console.log(
-      "💰 [useHomepageData] Fetching stats and wallet screen (stale-while-revalidate)"
-    );
     dispatch(fetchProfileStats({ token }));
-    dispatch(fetchWalletScreen({ token }));
 
     // Only fetch user data if not already loaded
     if (userDataStatus === "idle" && !userData) {
-      console.log("🎮 [useHomepageData] Fetching user data (not cached)");
       dispatch(
         fetchUserData({
           userId: user._id,
@@ -97,9 +93,6 @@ export const useHomepageData = (token, user) => {
     if (!token) return;
 
     const handleFocus = () => {
-      console.log(
-        "🔄 [useHomepageData] App focused - refreshing balance and XP"
-      );
       // Force refresh to get latest admin changes
       dispatch(fetchProfileStats({ token, force: true }));
       dispatch(fetchWalletScreen({ token, force: true }));

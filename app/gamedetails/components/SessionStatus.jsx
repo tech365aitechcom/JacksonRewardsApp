@@ -118,8 +118,7 @@ export const SessionStatus = ({ game, currentSession }) => {
                 <div className="mt-3 flex gap-2">
                     <button
                         onClick={() => {
-                            console.log('Session Manager Stats:', sessionManager.getSessionStats());
-                            console.log('Current Session:', currentSession);
+                            // Debug button - functionality removed for performance
                         }}
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-2 rounded transition-colors"
                     >

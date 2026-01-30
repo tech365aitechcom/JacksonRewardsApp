@@ -426,32 +426,75 @@ const SignUp = () => {
     router.push('/login');
   };
 
+  // const handleSendOtp = async () => {
+  //   setError({});
+  //   const fullNumber = `${countryCode}${formData.mobile}`;
+
+  //   setIsLoadingss(true);
+  //   try {
+  //     // 1. Check Backend if number is used
+  //     // const check = await fetch('/api/auth/check-availability', {
+  //     //   method: 'POST',
+  //     //   headers: { 'Content-Type': 'application/json' },
+  //     //   body: JSON.stringify({ mobile: fullNumber })
+  //     // });
+  //     // const checkData = await check.json();
+  //     // if (!check.ok) throw new Error(checkData.message);
+
+  //     // 2. If free, send Firebase OTP
+  //     await sendFirebaseOtp(fullNumber);
+  //     setIsOtpSent(true);
+  //     setCountdown(180); // Start 3-minute timer
+  //   } catch (err) {
+  //     setError({ mobile: err.message });
+  //   } finally {
+  //     setIsLoadingss(false);
+  //   }
+  // };
   const handleSendOtp = async () => {
+    console.log("DEBUG: [handleSendOtp] Function triggered");
     setError({});
+
     const fullNumber = `${countryCode}${formData.mobile}`;
+    console.log("DEBUG: [handleSendOtp] Formatted phone number:", fullNumber);
 
     setIsLoadingss(true);
+    console.log("DEBUG: [handleSendOtp] Loading set to true. Calling sendFirebaseOtp helper...");
+
     try {
-      // 1. Check Backend if number is used
-      // const check = await fetch('/api/auth/check-availability', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ mobile: fullNumber })
-      // });
-      // const checkData = await check.json();
-      // if (!check.ok) throw new Error(checkData.message);
+      // 1. Check Backend if number is used (commented out in your original)
+      /*
+      console.log("DEBUG: [handleSendOtp] Performing backend availability check...");
+      const check = await fetch('/api/auth/check-availability', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ mobile: fullNumber })
+      });
+      console.log("DEBUG: [handleSendOtp] Backend check status:", check.status);
+      */
 
       // 2. If free, send Firebase OTP
-      await sendFirebaseOtp(fullNumber);
+      console.log("DEBUG: [handleSendOtp] Awaiting sendFirebaseOtp resolution...");
+      const result = await sendFirebaseOtp(fullNumber);
+
+      console.log("DEBUG: [handleSendOtp] ✅ sendFirebaseOtp successfully returned:", result);
+
       setIsOtpSent(true);
       setCountdown(180); // Start 3-minute timer
+      console.log("DEBUG: [handleSendOtp] UI state updated: OTP Sent = true, Timer started.");
+
     } catch (err) {
+      console.error("DEBUG: [handleSendOtp] ❌ Catch block reached!");
+      console.error("DEBUG: [handleSendOtp] Error Object:", err);
+      console.error("DEBUG: [handleSendOtp] Firebase Error Code:", err.code);
+      console.error("DEBUG: [handleSendOtp] Error Message:", err.message);
+
       setError({ mobile: err.message });
     } finally {
       setIsLoadingss(false);
+      console.log("DEBUG: [handleSendOtp] Flow finished. Loading set to false.");
     }
   };
-
   const handleResendOtp = async () => {
     if (countdown > 0) return;
     try {
@@ -475,7 +518,7 @@ const SignUp = () => {
 
   return (
     <>
-      <div id="firebase-recaptcha"></div>
+      <div id="recaptcha-container"></div>
       {/* ============================================================
           CLOUDFLARE TURNSTILE SCRIPT LOADING
           ============================================================

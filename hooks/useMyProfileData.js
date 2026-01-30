@@ -91,26 +91,22 @@ export const useMyProfileData = (token, user) => {
 
     // Fetch profile details if not loaded
     if (detailsStatus === "idle" && !profile) {
-      console.log("👤 [useMyProfileData] Fetching user profile (not cached)");
       dispatch(fetchUserProfile(token));
     }
 
     // Fetch stats if not loaded
     if (statsStatus === "idle" && !stats) {
-      console.log("📊 [useMyProfileData] Fetching profile stats (not cached)");
       // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
       dispatch(fetchProfileStats({ token }));
     }
 
     // Fetch VIP status if not loaded
     if (vipStatusState === "idle" && !vipStatus) {
-      console.log("👑 [useMyProfileData] Fetching VIP status (not cached)");
       dispatch(fetchVipStatus(token));
     }
 
     // Fetch achievements if not loaded
     if (achievementsStatus === "idle" && !achievements) {
-      console.log("🏆 [useMyProfileData] Fetching achievements (not cached)");
       dispatch(
         fetchUserAchievements({
           token,
@@ -122,7 +118,6 @@ export const useMyProfileData = (token, user) => {
 
     // Fetch user data if not loaded and user ID is available
     if (user?._id && userDataStatus === "idle" && !userData) {
-      console.log("🎮 [useMyProfileData] Fetching user data (not cached)");
       dispatch(
         fetchUserData({
           userId: user._id,
@@ -133,7 +128,6 @@ export const useMyProfileData = (token, user) => {
 
     // Fetch wallet data if not loaded
     if (walletScreenStatus === "idle" && !walletScreen) {
-      console.log("💰 [useMyProfileData] Fetching wallet data (not cached)");
       // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
       dispatch(fetchWalletScreen({ token }));
     }
@@ -167,19 +161,7 @@ export const useMyProfileData = (token, user) => {
       vipStatus?.data?.currentTier !== "Free";
     const currentTier = vipStatus?.data?.currentTier || "Bronze";
 
-    // DEBUG: Log the computed values to help debug
-    console.log("🔍 [useMyProfileData] Computed values:", {
-      coinBalance,
-      xpCurrent,
-      xpLevel,
-      isVipActive,
-      currentTier,
-      stats: stats ? "✅ Available" : "❌ Missing",
-      walletScreen: walletScreen ? "✅ Available" : "❌ Missing",
-      vipStatus: vipStatus ? "✅ Available" : "❌ Missing",
-      rawStats: stats, // Log the actual stats object structure
-      rawWalletScreen: walletScreen, // Log the actual walletScreen object structure
-    });
+   
 
     return {
       coinBalance,

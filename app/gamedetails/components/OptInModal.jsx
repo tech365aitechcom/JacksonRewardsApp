@@ -71,11 +71,8 @@ export const OptInModal = ({
 
     // Early return after all hooks
     if (!isVisible) {
-        console.log('OptInModal: isVisible is false, not rendering');
         return null;
     }
-
-    console.log('OptInModal: Rendering modal with isVisible:', isVisible);
 
     // Use portal to render modal at document body level
     const modalContent = (

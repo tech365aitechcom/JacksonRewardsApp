@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,8 @@ export const Coin = ({
     game,
     sessionCoins = 0,
     sessionXP = 0,
+    completedTasksCount = 0,
+    taskProgression = null,
     isClaimed = false,
     isMilestoneReached = false,
     onClaimRewards
@@ -33,50 +35,146 @@ export const Coin = ({
     const router = useRouter();
     const dispatch = useDispatch();
 
+    // Progressive reward system based on backend taskProgression batches
+    const calculateProgressiveRewards = (completedTasks, taskProgressionData, processedGoals) => {
+        // Ensure we have a valid number
+        const validCompletedTasks = Math.max(0, completedTasks || 0);
 
-    // Progressive reward system based on task completion groups
-    const calculateProgressiveRewards = (completedTasks) => {
-        const tasksPerGroup = 3;
-        const completedGroups = Math.floor(completedTasks / tasksPerGroup);
-        const remainingTasks = completedTasks % tasksPerGroup;
+        // Get batch sizes from taskProgression (from backend)
+        const hasProgressionRule = taskProgressionData?.hasProgressionRule || false;
+        const firstBatchSize = taskProgressionData?.firstBatchSize || 0;
+        const nextBatchSize = taskProgressionData?.nextBatchSize || 0;
 
-        // Base reward per group (increases with each group)
-        const baseRewardPerGroup = 10; // $10 for first group
-        const rewardIncrease = 5; // $5 increase per group
+        // If no progression rule, fallback to groups of 3 (legacy behavior)
+        const tasksPerBatch = hasProgressionRule && firstBatchSize > 0 ? firstBatchSize : 3;
+        const nextBatchSizeValue = hasProgressionRule && nextBatchSize > 0 ? nextBatchSize : 3;
+
+        let completedBatches = 0;
+        let remainingTasks = validCompletedTasks;
+
+        // Calculate how many full batches are completed
+        if (validCompletedTasks >= tasksPerBatch) {
+            // First batch completed
+            completedBatches = 1;
+            remainingTasks = validCompletedTasks - tasksPerBatch;
+
+            // Check for additional batches
+            if (hasProgressionRule && nextBatchSizeValue > 0) {
+                // Additional batches use nextBatchSize
+                completedBatches += Math.floor(remainingTasks / nextBatchSizeValue);
+                remainingTasks = remainingTasks % nextBatchSizeValue;
+            } else {
+                // Legacy: all batches use same size
+                completedBatches += Math.floor(remainingTasks / tasksPerBatch);
+                remainingTasks = remainingTasks % tasksPerBatch;
+            }
+        }
+
+        // If using backend progression and have processedGoals, check for completed unlocked batches
+        if (hasProgressionRule && processedGoals && Array.isArray(processedGoals)) {
+            const unlockedGoals = processedGoals.filter(g => !g.isLocked);
+            completedBatches = 0;
+            remainingTasks = 0;
+
+            if (firstBatchSize > 0) {
+                // Check first batch
+                const firstBatch = unlockedGoals.slice(0, firstBatchSize);
+                const firstBatchCompleted = firstBatch.length > 0 && firstBatch.every(g => g.isCompleted);
+
+                if (firstBatchCompleted) {
+                    completedBatches = 1;
+                    let currentIndex = firstBatchSize;
+
+                    // Check subsequent batches
+                    while (nextBatchSizeValue > 0 && currentIndex < unlockedGoals.length) {
+                        const nextBatch = unlockedGoals.slice(currentIndex, currentIndex + nextBatchSizeValue);
+                        if (nextBatch.length === nextBatchSizeValue && nextBatch.every(g => g.isCompleted)) {
+                            completedBatches++;
+                            currentIndex += nextBatchSizeValue;
+                        } else {
+                            // Calculate remaining tasks in current batch
+                            remainingTasks = nextBatch.filter(g => g.isCompleted).length;
+                            break;
+                        }
+                    }
+
+                    // If no more batches, remainingTasks = 0
+                    if (currentIndex >= unlockedGoals.length) {
+                        remainingTasks = 0;
+                    }
+                } else {
+                    // First batch not completed, calculate progress
+                    remainingTasks = firstBatch.filter(g => g.isCompleted).length;
+                }
+            }
+        }
+
+        // Base reward per batch (increases with each batch)
+        const baseRewardPerBatch = 10; // $10 for first batch
+        const rewardIncrease = 5; // $5 increase per batch
 
         let totalCoins = 0;
         let totalXP = 0;
 
-        // Calculate rewards for completed groups only (no partial rewards)
-        for (let group = 0; group < completedGroups; group++) {
-            const groupReward = baseRewardPerGroup + (group * rewardIncrease);
-            totalCoins += groupReward;
-            totalXP += 50; // Fixed XP per group
+        // Calculate rewards for completed batches only (no partial rewards)
+        for (let batch = 0; batch < completedBatches; batch++) {
+            const batchReward = baseRewardPerBatch + (batch * rewardIncrease);
+            totalCoins += batchReward;
+            totalXP += 50; // Fixed XP per batch
         }
+
+        // Calculate next batch target size
+        const nextBatchTarget = completedBatches === 0 ? tasksPerBatch : nextBatchSizeValue;
 
         return {
             totalCoins: Math.round(totalCoins * 100) / 100, // Round to 2 decimal places
             totalXP: totalXP,
-            completedGroups,
+            completedGroups: completedBatches, // Use completedBatches as completedGroups for consistency
             remainingTasks,
             nextGroupProgress: remainingTasks,
-            nextGroupTarget: tasksPerGroup,
-            canClaim: completedGroups > 0 && remainingTasks === 0 // Can claim only when a full group is completed
+            nextGroupTarget: nextBatchTarget,
+            canClaim: completedBatches > 0 // Can claim if there are any completed batches
         };
     };
 
-    // Calculate rewards based on session coins (assuming sessionCoins represents completed tasks)
-    const rewardData = calculateProgressiveRewards(sessionCoins);
+    // Calculate rewards based on completed tasks count (follows backend taskProgression rules)
+    // Use completedTasksCount (completed unlocked tasks) and taskProgression for accurate batch calculation
+    // Use useMemo to recalculate when completedTasksCount or taskProgression changes
+    const rewardData = useMemo(() => {
+        const processedGoals = taskProgression?.processedGoals || null;
+        return calculateProgressiveRewards(completedTasksCount, taskProgression, processedGoals);
+    }, [completedTasksCount, taskProgression]);
 
     // Calculate available rewards (excluding already claimed groups)
-    const availableGroups = Math.max(0, rewardData.completedGroups - claimedGroups);
-    const availableCoins = availableGroups > 0 ?
-        Array.from({ length: availableGroups }, (_, i) => {
-            const groupIndex = claimedGroups + i;
-            return 10 + (groupIndex * 5); // Base reward + increase per group
-        }).reduce((sum, reward) => sum + reward, 0) : 0;
+    // Use useMemo to ensure this recalculates when rewardData or claimedGroups changes
+    const availableGroups = useMemo(() => {
+        return Math.max(0, rewardData.completedGroups - claimedGroups);
+    }, [rewardData.completedGroups, claimedGroups]);
 
-    const availableXP = availableGroups * 50;
+    const availableCoins = useMemo(() => {
+        return availableGroups > 0 ?
+            Array.from({ length: availableGroups }, (_, i) => {
+                const groupIndex = claimedGroups + i;
+                return 10 + (groupIndex * 5); // Base reward + increase per group
+            }).reduce((sum, reward) => sum + reward, 0) : 0;
+    }, [availableGroups, claimedGroups]);
+
+    const availableXP = useMemo(() => {
+        return availableGroups * 50;
+    }, [availableGroups]);
+
+    // Reset locallyClaimed when new groups become available (after user completes more tasks)
+    // This ensures UI shows new available rewards instead of old claimed values
+    useEffect(() => {
+        // If new tasks are completed (completedTasksCount increased) and there are available groups,
+        // reset the claimed state to show new available rewards
+        const newAvailableGroups = Math.max(0, rewardData.completedGroups - claimedGroups);
+
+        if (newAvailableGroups > 0 && locallyClaimed) {
+            // New groups are available, reset claimed state to show new available rewards
+            setLocallyClaimed(false);
+        }
+    }, [rewardData.completedGroups, claimedGroups, locallyClaimed]);
 
     const taskProgressPercentage = rewardData.nextGroupTarget > 0
         ? (rewardData.nextGroupProgress / rewardData.nextGroupTarget) * 100
@@ -101,11 +199,16 @@ export const Coin = ({
     const handleClaimClick = () => {
         // Check if there are available groups to claim
         if (availableGroups === 0) {
-            setErrorMessage("🎯 Complete 3 more tasks to unlock your next reward group!");
+            // Calculate remaining tasks needed for next group
+            const remainingTasks = rewardData.nextGroupTarget - rewardData.nextGroupProgress;
+            const errorMsg = remainingTasks > 0
+                ? `🎯 Complete ${remainingTasks} more task${remainingTasks > 1 ? 's' : ''} to unlock your next reward group!`
+                : "🎯 Complete more tasks to unlock your next reward group!";
+            setErrorMessage(errorMsg);
             return;
         }
 
-        if (claiming || locallyClaimed) {
+        if (claiming) {
             return;
         }
 
@@ -117,19 +220,16 @@ export const Coin = ({
     const handleConfirmClaim = async () => {
         // Check if there are available groups to claim
         if (availableGroups === 0) {
-            console.warn('⚠️ No available groups to claim');
             setShowClaimWarning(false);
             return;
         }
 
-        if (claiming || locallyClaimed) {
-            console.warn('⚠️ Already claiming in progress');
+        if (claiming) {
             setShowClaimWarning(false);
             return;
         }
 
         if (!game?.id) {
-            console.warn('⚠️ No game ID provided');
             alert('Game information is missing. Cannot claim rewards.');
             setShowClaimWarning(false);
             return;
@@ -137,7 +237,6 @@ export const Coin = ({
 
         // Set claiming immediately to prevent duplicate calls
         setClaiming(true);
-        setLocallyClaimed(true);
         setShowClaimWarning(false);
 
         try {
@@ -154,10 +253,14 @@ export const Coin = ({
                 reason: `Game session completion - ${game.besitosRawData?.title || game.title || 'Unknown Game'} - ${availableGroups} groups claimed`
             };
 
-
             // Prefer parent-provided claim handler which also locks session
+            // Pass the claim data so parent can handle progressive group claims
             if (typeof onClaimRewards === 'function') {
-                await onClaimRewards();
+                await onClaimRewards({
+                    coins: availableCoins,
+                    xp: availableXP,
+                    groups: availableGroups
+                });
             } else {
                 // Fallback to direct transfer if parent handler not provided
                 const response = await transferGameEarnings(earningData, token);
@@ -168,12 +271,13 @@ export const Coin = ({
                 }
             }
 
-            // Update local state with claimed values
+            // Only update state after successful claim
+            setLocallyClaimed(true);
             setClaimedCoins(availableCoins);
             setClaimedXP(availableXP);
 
-            // Update claimed groups count
-            setClaimedGroups(claimedGroups + availableGroups);
+            // Update claimed groups count - this prevents claiming the same groups again
+            setClaimedGroups(prev => prev + availableGroups);
 
             // Refresh transaction history immediately after reward claim
             try {
@@ -181,9 +285,7 @@ export const Coin = ({
                     dispatch(fetchWalletTransactions({ token, limit: 5 })),
                     dispatch(fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }))
                 ]);
-                console.log("✅ Transaction history refreshed after reward claim");
             } catch (transactionError) {
-                console.warn("⚠️ Failed to refresh transaction history:", transactionError);
                 // Don't throw error - reward was still claimed successfully
             }
 
@@ -195,14 +297,13 @@ export const Coin = ({
                 setShowSuccessMessage(false);
             }, 5000);
         } catch (error) {
-            console.error('❌ Error claiming rewards:', error);
-
             const errorMessage = typeof error === 'string'
                 ? error
                 : error?.message || error?.error || error?.toString() || '';
             const userFriendlyError = getUserFriendlyErrorMessage(errorMessage);
             setErrorMessage(userFriendlyError);
-            setLocallyClaimed(false);
+            // Reset locallyClaimed since the claim failed - user can try again
+            // Only reset if we had set it (meaning this was a new claim attempt that failed)
         } finally {
             setClaiming(false);
         }
@@ -218,27 +319,27 @@ export const Coin = ({
             <div className="relative self-stretch w-full h-[227px] rounded-2xl border border-solid border-[#616161]">
                 <button
                     onClick={handleClaimClick}
-                    disabled={availableGroups === 0 || claiming || locallyClaimed}
+                    disabled={availableGroups === 0 || claiming}
                     className={`
                         absolute bottom-4 left-4 right-12 h-10 flex items-center justify-center rounded-lg overflow-hidden 
                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black
-                        ${availableGroups === 0 || claiming || locallyClaimed
+                        ${availableGroups === 0 || claiming
                             ? 'bg-gray-600 cursor-not-allowed opacity-50'
                             : 'bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 cursor-pointer'
                         }
                     `}
                     aria-label="Claim available rewards"
                     title={
-                        availableGroups === 0 ? 'Complete 3 more tasks to unlock rewards' :
-                            claiming ? 'Claiming rewards...' :
-                                'Click to claim your available rewards'
+                        availableGroups === 0
+                            ? `Complete ${rewardData.nextGroupTarget - rewardData.nextGroupProgress} more task${rewardData.nextGroupTarget - rewardData.nextGroupProgress !== 1 ? 's' : ''} to unlock rewards`
+                            : claiming ? 'Claiming rewards...' :
+                                `Click to claim ${availableGroups} group${availableGroups > 1 ? 's' : ''} (${availableCoins.toFixed(2)} coins + ${availableXP} XP)`
                     }
                 >
                     <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-sm text-center tracking-[0] leading-[normal]">
                         {claiming ? 'Claiming...' :
-                            locallyClaimed ? '✅ Rewards Claimed' :
-                                availableGroups === 0 ? '🔒 Claim Rewards Now' :
-                                    `🎉 Claim ${availableGroups} Group${availableGroups > 1 ? 's' : ''}!`}
+                            availableGroups === 0 ? '🔒 Claim Rewards Now' :
+                                `🎉 Claim ${availableGroups} Group${availableGroups > 1 ? 's' : ''}!`}
                     </span>
                 </button>
 
@@ -306,16 +407,19 @@ export const Coin = ({
 
                 <button
                     onClick={() => {
-                        console.log('Toolkit button clicked, opening modal...');
                         setShowOptInModal(true);
                     }}
-                    className="absolute bottom-4 right-2 w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black rounded-full"
+                    className="absolute bottom-5 right-2 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black rounded-full"
                     aria-label="Information"
                 >
                     <img
                         alt="Information icon"
                         src="https://c.animaapp.com/WucpRujl/img/frame-1000005263.svg"
-                        className="w-full h-full"
+                        className="w-6 h-6"
+                        loading="eager"
+                        decoding="async"
+                        width={24}
+                        height={24}
                     />
                 </button>
 
@@ -458,7 +562,6 @@ export const Coin = ({
             <OptInModal
                 isVisible={showOptInModal}
                 onClose={() => {
-                    console.log('Closing modal...');
                     setShowOptInModal(false);
                 }}
                 sessionData={{ sessionCoins, sessionXP }}

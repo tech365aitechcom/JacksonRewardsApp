@@ -50,7 +50,6 @@ export const RewardModal = ({
                 setClaiming(false);
             }, 500);
         } catch (error) {
-            console.error('Failed to claim reward:', error);
             setClaiming(false);
         }
     };
@@ -118,6 +117,10 @@ export const RewardModal = ({
                                         className="w-8 h-8"
                                         alt="Coins"
                                         src="/dollor.png"
+                                        loading="eager"
+                                        decoding="async"
+                                        width="32"
+                                        height="32"
                                     />
                                     <span className="text-3xl font-bold text-white [font-family:'Lilita_One',Helvetica]">
                                         {coins}
@@ -136,6 +139,10 @@ export const RewardModal = ({
                                         alt="XP"
                                         src="/xp.svg"
                                         onError={(e) => { e.target.src = "/xp.png"; }}
+                                        loading="eager"
+                                        decoding="async"
+                                        width="32"
+                                        height="32"
                                     />
                                     <span className="text-3xl font-bold text-white [font-family:'Lilita_One',Helvetica]">
                                         {xp}

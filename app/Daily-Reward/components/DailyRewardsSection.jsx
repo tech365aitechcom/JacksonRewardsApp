@@ -133,6 +133,12 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
 
     // Check if reward should be marked as missed
     const shouldMarkAsMissed = useCallback((dayData) => {
+        // Special case: Day 7 can always be claimed if API says it's claimable
+        // Users should be able to claim normal reward even if big reward is missed
+        if (dayData.dayNumber === 7 && dayData.status === 'claimable') {
+            return false; // Allow claiming day 7 normal reward
+        }
+
         // For future weeks: all rewards should be locked (not missed, just locked)
         if (isFutureWeek) {
             return false; // Future weeks show as locked, not missed
@@ -182,9 +188,23 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                 // Check if this is a future day
                 const isFutureDay = dayDate > today;
 
+                // Special handling for day 7: Allow claiming normal reward even if big reward is missed
+                if (dayData.dayNumber === 7) {
+                    // Day 7 can be claimed if API says it's claimable, regardless of big reward eligibility
+                    if (dayData.status === 'claimable') {
+                        effectiveStatus = 'claimable'; // Allow claiming normal reward
+                    } else if (dayData.status === 'claimed') {
+                        effectiveStatus = 'claimed'; // Show "CLAIMED"
+                    } else if (dayData.status === 'missed') {
+                        effectiveStatus = 'missed'; // Show "UNCLAIMED"
+                        isMissed = true;
+                    } else {
+                        effectiveStatus = dayData.status; // Use API status
+                    }
+                }
                 // AC2: Current day should show "CLAIM NOW" only if user logs in
                 // Use API's todayDayNumber as primary check, fallback to date comparison
-                if ((isTodayByAPI || isToday) && dayData.status === 'claimable') {
+                else if ((isTodayByAPI || isToday) && dayData.status === 'claimable') {
                     effectiveStatus = 'claimable'; // Show "CLAIM NOW"
                 }
                 // AC3: Once claimed, days should update to show "CLAIMED"
@@ -214,14 +234,17 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
 
                 // Special handling for day 7 in previous weeks
                 if (dayData.dayNumber === 7) {
-                    // If all days 1-6 were claimed, day 7 should be claimable
-                    if (isBigRewardEligible && dayData.status === 'claimable') {
-                        effectiveStatus = 'claimable';
+                    // Day 7 can be claimed if API says it's claimable, regardless of big reward eligibility
+                    // Users can claim normal reward even if big reward is missed
+                    if (dayData.status === 'claimable') {
+                        effectiveStatus = 'claimable'; // Allow claiming normal reward
                     } else if (dayData.status === 'claimed') {
                         effectiveStatus = 'claimed';
-                    } else {
+                    } else if (dayData.status === 'missed') {
                         effectiveStatus = 'missed';
                         isMissed = true;
+                    } else {
+                        effectiveStatus = dayData.status; // Use API status
                     }
                 } else {
                     if (shouldBeMissed) {
@@ -417,8 +440,13 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
 
                 const rewardData = weekData?.days?.find(day => day.dayNumber === dayNumber);
 
-                // Check if this reward should be marked as missed
-                if (rewardData && shouldMarkAsMissed(rewardData)) {
+                // Special case: Day 7 can be claimed for normal reward even if big reward is missed
+                // Allow claiming if API says it's claimable, regardless of big reward eligibility
+                const isDay7 = dayNumber === 7;
+                const canClaimDay7 = isDay7 && rewardData?.status === 'claimable';
+
+                // Check if this reward should be marked as missed (skip check for claimable day 7)
+                if (rewardData && !canClaimDay7 && shouldMarkAsMissed(rewardData)) {
                     setError("This reward is no longer available. You missed the claim window.");
                     return;
                 }
@@ -465,7 +493,7 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                     // Only if not already cleared by error handler
                     setTimeout(() => {
                         setClaimingDay((prev) => prev === dayNumber ? null : prev);
-                    }, 500);
+                    }, 200);
                 }
             }
         } catch (err) {
@@ -501,7 +529,10 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                     className="absolute top-[calc(50.00%_-_62px)] left-[calc(50.00%_-_73px)] w-[147px] h-[102px] object-cover"
                     alt={`Day ${reward.day} reward`}
                     src={reward.image}
-                    loading="lazy"
+                    loading="eager"
+                    decoding="async"
+                    width="147"
+                    height="102"
                 />
 
                 <div className="absolute top-[calc(50.00%_-_86px)] left-0 w-[166px] h-[35px] flex justify-center bg-[#ffffff1a]">
@@ -525,6 +556,10 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                         className="absolute w-[166px] h-11 top-0 left-0"
                         alt="Clip path group"
                         src="https://c.animaapp.com/ciot1lOr/img/clip-path-group-5@2x.png"
+                        loading="eager"
+                        decoding="async"
+                        width="166"
+                        height="44"
                     />
 
                     <div
@@ -649,7 +684,10 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                                 className="w-[92.41px] h-[92.41px] object-cover"
                                 alt="Future week treasure reward"
                                 src="https://c.animaapp.com/ciot1lOr/img/png-clipart-buried-treasure-treasure-miscellaneous-treasure-tran@2x.png"
-                                loading="lazy"
+                                loading="eager"
+                                decoding="async"
+                                width="92"
+                                height="92"
                             />
                         </div>
                     ) : isBigRewardEligible ? (
@@ -659,7 +697,10 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
                                 className="w-[92.41px] h-[92.41px] object-cover"
                                 alt="Big treasure reward"
                                 src="https://c.animaapp.com/ciot1lOr/img/png-clipart-buried-treasure-treasure-miscellaneous-treasure-tran@2x.png"
-                                loading="lazy"
+                                loading="eager"
+                                decoding="async"
+                                width="92"
+                                height="92"
                             />
                         </div>
                     ) : (

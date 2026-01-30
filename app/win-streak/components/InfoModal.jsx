@@ -103,6 +103,10 @@ export const InfoModal = ({ isVisible = false, onClose, milestones = [] }) => {
                                                     className="w-4 h-4"
                                                     alt="Coins"
                                                     src="/dollor.png"
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width="16"
+                                                    height="16"
                                                 />
                                                 <span className="text-yellow-400 font-bold text-sm">
                                                     {reward.coins}
@@ -116,6 +120,10 @@ export const InfoModal = ({ isVisible = false, onClose, milestones = [] }) => {
                                                     alt="XP"
                                                     src="/xp.svg"
                                                     onError={(e) => { e.target.src = "/xp.png"; }}
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width="16"
+                                                    height="16"
                                                 />
                                                 <span className="text-purple-400 font-bold text-sm">
                                                     {reward.xp}

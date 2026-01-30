@@ -1,8 +1,10 @@
 "use client";
 import Image from "next/image";
 import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import { fetchWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
+import { useAuth } from "@/contexts/AuthContext";
 import { HighestTransctionCard } from "./HighestTransctionCard";
 
 const SCALE_CONFIG = [
@@ -21,14 +23,60 @@ const SCALE_CONFIG = [
 
 
 export default function TransactionHistory() {
-    const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
+    const dispatch = useDispatch();
     const router = useRouter();
+    const { token } = useAuth();
+    const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
 
     // Get wallet transactions from Redux store
     const { transactions, status } = useSelector((state) => state.walletTransactions);
 
-    // Display only the first 5 transactions
-    const displayedData = transactions.slice(0, 5);
+    // Fetch transactions on mount if not already loaded (stale-while-revalidate pattern)
+    // Shows cached data immediately, fetches fresh data in background
+    useEffect(() => {
+        if (!token) return;
+
+        // Only fetch if status is idle (not already loading/fetched)
+        // The stale-while-revalidate pattern in the slice will handle cache checking
+        if (status === 'idle') {
+            dispatch(fetchWalletTransactions({ token, limit: 5 }));
+        } else if (status === 'succeeded' && transactions.length > 0) {
+            // If we have cached data, trigger background refresh to get latest
+            setTimeout(() => {
+                dispatch(fetchWalletTransactions({ token, limit: 5, background: true }));
+            }, 100);
+        }
+    }, [token, status, dispatch]);
+
+    // Auto-refresh transactions when app comes to foreground (in background, non-blocking)
+    useEffect(() => {
+        if (!token) return;
+
+        const handleFocus = () => {
+            // Refresh in background when user returns to app
+            dispatch(fetchWalletTransactions({ token, limit: 5, background: true }));
+        };
+
+        window.addEventListener("focus", handleFocus);
+
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+        };
+    }, [token, dispatch]);
+
+    // Ensure transactions is always an array (safety check)
+    const transactionsArray = Array.isArray(transactions) ? transactions : [];
+
+    // Sort transactions by date (newest first) to ensure latest transactions appear at top
+    // This ensures that after completing daily challenge, the new transaction appears first
+    const sortedTransactions = [...transactionsArray].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.updatedAt || 0);
+        const dateB = new Date(b.createdAt || b.updatedAt || 0);
+        return dateB - dateA; // Newest first
+    });
+
+    // Display only the first 5 transactions (newest first)
+    const displayedData = sortedTransactions.slice(0, 5);
 
     const handleSeeAll = () => {
         // Smooth navigation to full transaction history
@@ -85,6 +133,7 @@ export default function TransactionHistory() {
                                 width={40}
                                 height={40}
                                 className="opacity-80"
+                                loading="eager"
                             />
                         </div>
                         <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-[#F4F3FC] text-[18px] tracking-[-0.17px] leading-[22px] text-center mb-3">

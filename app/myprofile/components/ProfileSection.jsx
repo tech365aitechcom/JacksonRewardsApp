@@ -26,8 +26,9 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                             : "/profile.png"
                     }
                     crossOrigin="anonymous"
+                    loading="eager"
+                    decoding="async"
                     onError={(e) => {
-                        console.log(profile?.profile?.avatar)
                         e.target.src = "/profile.png";
                     }}
                 />
@@ -51,6 +52,9 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                         height={20}
                         alt="Edit"
                         src="https://c.animaapp.com/V1uc3arn/img/line-design-edit-line.svg"
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
                 </button>
             </div>
@@ -64,6 +68,10 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                     src="/badge.png"
                     alt="Badge"
                     className="w-14 h-14  flex-shrink-0 object-contain"
+                    loading="eager"
+                    decoding="async"
+                    width="56"
+                    height="56"
                 />
                 <span className="text-[#FEFEFE] pb-5  text-lg pr-2  font-normal">
                     {vipStatus?.data?.currentTier ? vipStatus.data.currentTier.charAt(0).toUpperCase() + vipStatus.data.currentTier.slice(1).toLowerCase() : "Nil"} Badge
@@ -78,6 +86,9 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                         alt="Mail"
                         src="/gmail.png"
                         className="w-[22px] h-[17px] flex-shrink-0"
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
                     <span className="text-[#FEFEFE] text-lg font-normal text-center truncate max-w-[120px]">
                         {profile?.email || "youremail@domain.com"}
@@ -93,6 +104,9 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                         className="w-[34px] h-[22px] object-cover flex-shrink-0"
                         alt="Flag"
                         src="/socailtag.png"
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
                     <span className="tracking-wide font-normal text-lg text-[#FEFEFE]">{profile?.socialTag || "GamePro"}</span>
                 </div>

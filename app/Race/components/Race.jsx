@@ -170,6 +170,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                     className="absolute top-[86px] left-0 w-[334px] h-[612px]"
                     alt="Image"
                     src="https://c.animaapp.com/j8smgVil/img/image-4037.png"
+                    loading="eager"
+                    decoding="async"
+                    width="334"
+                    height="612"
                 />
 
                 {/* Static Lava Background */}
@@ -193,6 +197,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                                 className="w-12 h-[50px]"
                                 alt={friend.alt}
                                 src={friend.src}
+                                loading="eager"
+                                decoding="async"
+                                width="48"
+                                height="50"
                                 style={{
                                     filter: 'drop-shadow(0 2px 8px rgba(255,255,255,0.2))'
                                 }}
@@ -227,6 +235,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                             className="w-[38.33%] h-[4.86%]"
                             alt={platform.alt}
                             src={platform.src}
+                            loading="eager"
+                            decoding="async"
+                            width="128"
+                            height="34"
                         />
                         {/* Simple Level Number */}
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
@@ -240,6 +252,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                     className="absolute top-[124px] left-24 w-[47px] h-10 object-cover"
                     alt="Image"
                     src="https://c.animaapp.com/j8smgVil/img/-@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    width="47"
+                    height="40"
                     style={{
                         filter: 'drop-shadow(0 2px 8px rgba(255,255,255,0.2))',
                         animation: 'gentleMove 3.5s ease-in-out infinite 0.5s'
@@ -250,6 +266,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                     className="absolute top-24 left-[17px] w-[83px] h-[72px] object-cover"
                     alt="Image"
                     src="https://c.animaapp.com/j8smgVil/img/--1@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    width="83"
+                    height="72"
                     style={{
                         filter: 'drop-shadow(0 2px 8px rgba(255,255,255,0.2))',
                         animation: 'gentleMove 3.5s ease-in-out infinite 1s'
@@ -266,6 +286,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                         alt=""
                         src="https://c.animaapp.com/iHEgzz6R/img/rectangle-274.svg"
                         role="presentation"
+                        loading="eager"
+                        decoding="async"
+                        width="333"
+                        height="87"
                     />
 
                     <img
@@ -273,6 +297,10 @@ export const Race = ({ progressData, isLoadingXP }) => {
                         alt=""
                         src="https://c.animaapp.com/iHEgzz6R/img/group-649@2x.png"
                         role="presentation"
+                        loading="eager"
+                        decoding="async"
+                        width="333"
+                        height="88"
                     />
 
                     <h2 className="absolute w-[80.05%] h-[13.29%] top-[26.03%] left-[8.45%] flex items-center justify-center font-bold text-white text-lg text-center leading-tight">

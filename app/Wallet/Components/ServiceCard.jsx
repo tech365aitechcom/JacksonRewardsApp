@@ -40,7 +40,8 @@ const ServiceCard = ({ card }) => {
                 width={45}
                 height={45}
                 className="object-contain"
-                loading="lazy"
+                loading="eager"
+                decoding="async"
             />
             <div className="font-bold text-[#B7B7B7] font-[Libre Franklin] text-[12px] tracking-tight leading-snug">
                 {card.title.split("\n").map((line, index) => (

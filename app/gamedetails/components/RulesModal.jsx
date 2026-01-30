@@ -3,6 +3,17 @@ import React, { useState, useEffect, useRef } from "react";
 export const RulesModal = ({ isVisible, onClose, position }) => {
     const modalRef = useRef(null);
 
+    useEffect(() => {
+        if (isVisible && modalRef.current) {
+            // Scroll modal into view to ensure it's always visible, positioned slightly higher
+            modalRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'center'
+            });
+        }
+    }, [isVisible]);
+
     const handleConfirm = () => {
         onClose();
     };
@@ -12,10 +23,10 @@ export const RulesModal = ({ isVisible, onClose, position }) => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
             <div
                 ref={modalRef}
-                className=" top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -mt-88 flex flex-col w-[335px] max-w-[90vw] h-[315px] max-h-[90vh] items-start pt-5 pb-0 px-0 relative bg-black rounded-[20px] border-t [border-top-style:solid] border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#595959]"
+                className="flex flex-col w-[335px] max-w-[90vw] h-[315px] max-h-[90vh] items-start pt-5 pb-0 px-0 relative bg-black rounded-[20px] border-t [border-top-style:solid] border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#595959] -mt-146"
                 data-model-id="2549:6803"
                 role="dialog"
                 aria-labelledby="modal-title"

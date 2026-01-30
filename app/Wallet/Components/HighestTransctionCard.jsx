@@ -11,11 +11,26 @@ export const HighestTransctionCard = ({
     finalXp,
     gameLogoSrc,
     metadata,
+    isAdjustment,
+    adjustmentType,
 }) => {
     // Priority: metadata.xp > finalXp > xpBonus
     // Use metadata.xp if available (for Daily Rewards), otherwise use finalXp, then xpBonus
-    const displayXp = (xp !== null && xp !== undefined) ? xp :
+    let displayXp = (xp !== null && xp !== undefined) ? xp :
         (finalXp !== null && finalXp !== undefined ? finalXp : xpBonus);
+    
+    // For subtract adjustments, show negative values
+    const isSubtractAdjustment = isAdjustment && adjustmentType === "subtract";
+    
+    // Apply negative sign for subtract adjustments
+    if (isSubtractAdjustment) {
+        if (coins !== undefined && coins !== null && coins !== 0) {
+            coins = -Math.abs(coins);
+        }
+        if (displayXp !== undefined && displayXp !== null && displayXp !== 0) {
+            displayXp = -Math.abs(displayXp);
+        }
+    }
     return (
         <article
             className="relative w-[335px] h-[92px] bg-black  rounded-[10px] shadow-[0_0_10px_6px_rgba(255,255,255,0.15)]"
@@ -40,6 +55,7 @@ export const HighestTransctionCard = ({
                         e.target.src = "/download.png";
                     }}
                     priority
+                    loading="eager"
                 />
             </div>
 
@@ -58,7 +74,10 @@ export const HighestTransctionCard = ({
                 aria-label={`${coins} coins`}
             >
                 <span className="[font-family:'Poppins',Helvetica] font-semibold text-[#FFFFFF] text-[20px] tracking-[0.02px] leading-[normal]">
-                    {coins}
+                    {coins !== undefined && coins !== null && coins !== 0 
+                        ? (isSubtractAdjustment ? `-${Math.abs(coins)}` : coins)
+                        : (coins || 0)
+                    }
                 </span>
 
                 <Image
@@ -67,6 +86,8 @@ export const HighestTransctionCard = ({
                     src="/dollor.png"
                     width={20}
                     height={21}
+                    loading="eager"
+                    priority
                 />
             </div>
 
@@ -81,11 +102,16 @@ export const HighestTransctionCard = ({
                         src="https://c.animaapp.com/UNpBPFIY/img/vector-4235.svg"
                         width={27}
                         height={28}
+                        loading="eager"
+                        decoding="async"
                     />
 
                     <div className="relative flex items-center gap-1 px-2 bg-[#201f59] rounded-[4px_4px_0px_0px] shadow-[0px_0px_4px_#fef47e33] min-w-[30px] -ml-[2px] -mr-[2px]">
                         <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[13px] tracking-[0] leading-[normal] whitespace-nowrap">
-                            +{displayXp}
+                            {displayXp !== undefined && displayXp !== null && displayXp !== 0 
+                                ? (isSubtractAdjustment ? `-${Math.abs(displayXp)}` : `+${displayXp}`)
+                                : `+${displayXp || 0}`
+                            }
                         </span>
 
                         <Image
@@ -94,6 +120,8 @@ export const HighestTransctionCard = ({
                             src="/xp.svg"
                             width={16}
                             height={15}
+                            loading="eager"
+                            priority
                         />
                     </div>
 
@@ -104,6 +132,8 @@ export const HighestTransctionCard = ({
                         src="https://c.animaapp.com/UNpBPFIY/img/vector-4234.svg"
                         width={26}
                         height={27}
+                        loading="eager"
+                        decoding="async"
                     />
                 </div>
             </div>

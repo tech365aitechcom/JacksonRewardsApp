@@ -35,12 +35,10 @@ export const SimpleSpinWheel = ({ onSpinComplete, isSpinning, disabled, onSpinSt
             while (!spinSuccessRef.current && attempts < maxAttempts) {
                 try {
                     attempts++;
-                    console.log(`🎰 [SIMPLE SPIN WHEEL] Attempting spin API call (attempt ${attempts})...`);
 
                     const spinResult = await spinForChallenge(token);
 
                     if (spinResult?.success) {
-                        console.log("🎰 [SIMPLE SPIN WHEEL] Spin API call successful:", spinResult);
                         spinSuccessRef.current = true;
                         setSpinMessage("✅ Spin successful!");
 
@@ -49,7 +47,6 @@ export const SimpleSpinWheel = ({ onSpinComplete, isSpinning, disabled, onSpinSt
                         }
                         break;
                     } else {
-                        console.warn(`🎰 [SIMPLE SPIN WHEEL] Spin API call failed (attempt ${attempts}):`, spinResult);
                         setSpinMessage(`Retrying... (${attempts}/${maxAttempts})`);
 
                         // Wait a bit before retrying (except on last attempt)
@@ -58,7 +55,6 @@ export const SimpleSpinWheel = ({ onSpinComplete, isSpinning, disabled, onSpinSt
                         }
                     }
                 } catch (error) {
-                    console.error(`🎰 [SIMPLE SPIN WHEEL] Spin API error (attempt ${attempts}):`, error);
                     setSpinMessage(`Retrying... (${attempts}/${maxAttempts})`);
 
                     if (onSpinError) {

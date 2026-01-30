@@ -96,18 +96,18 @@ export default function MyEarningCard({ token }) {
                             opacity: 0.85,
                         }}
                     >
-                        {/* Info icon for tooltip - custom blue rounded rectangle with white 'i' icon */}
+                        {/* Info icon for tooltip - smaller size similar to RaceSection */}
                         <button
                             onClick={toggleTooltip}
-                            className="absolute w-8 h-8 top-[3.5px] right-[3px] z-20 cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-md rounded-tr-2xl overflow-hidden flex items-center justify-center"
+                            className="absolute w-6 h-6 top-[3.5px] right-[3px] z-20 cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-md rounded-tr-2xl overflow-hidden flex items-center justify-center"
                             aria-label="More information"
                             style={{
                                 background: '#6BB5E8',
                             }}
                         >
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <circle cx="9" cy="9" r="7.5" fill="white" />
-                                <text x="9" y="13" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="bold" fill="#6BB5E8" textAnchor="middle">i</text>
+                                <text x="9" y="13" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="bold" fill="#6BB5E8" textAnchor="middle">i</text>
                             </svg>
                         </button>
 
@@ -128,6 +128,8 @@ export default function MyEarningCard({ token }) {
                                     alt="Coin"
                                     src="/dollor.png"
                                     className="flex-shrink-0"
+                                    priority
+                                    loading="eager"
                                 />
                             </button>
                         </div>
@@ -141,6 +143,8 @@ export default function MyEarningCard({ token }) {
                                 height={19}
                                 alt="XP"
                                 src="/xp.svg"
+                                priority
+                                loading="eager"
                             />
                         </div>
 
@@ -160,6 +164,8 @@ export default function MyEarningCard({ token }) {
                                             className="absolute top-0 left-0"
                                             alt="Level badge"
                                             src="/dot.svg"
+                                            priority
+                                            loading="eager"
                                         />
                                         <div className="relative font-semibold text-[#815c23] text-[14.9px] z-10">
                                             {actualLevel}
@@ -197,6 +203,8 @@ export default function MyEarningCard({ token }) {
                                 className="absolute top-[13px] left-[56px]"
                                 alt="Vector"
                                 src="https://c.animaapp.com/V1uc3arn/img/vector.svg"
+                                loading="eager"
+                                decoding="async"
                             />
                         </div>
                     </div>

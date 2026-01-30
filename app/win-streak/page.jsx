@@ -48,6 +48,49 @@ export default function WinStreakPage() {
     // Check if data is fresh (less than 5 minutes old)
     const isDataFresh = lastFetched && (Date.now() - lastFetched) < 5 * 60 * 1000;
 
+    // Preload critical images for faster display
+    useEffect(() => {
+        const criticalImages = [
+            "/tree.png",
+            "/treasure.png",
+            "/dollor.png",
+            "/xp.svg",
+            "https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png",
+            "https://c.animaapp.com/1RFP1hGC/img/image-3996@2x.png",
+            "https://c.animaapp.com/1RFP1hGC/img/close.svg",
+            "https://c.animaapp.com/1RFP1hGC/img/vector-349.svg",
+            "https://c.animaapp.com/1RFP1hGC/img/vector-350.svg",
+            "https://c.animaapp.com/1RFP1hGC/img/vector-351.svg",
+            "https://c.animaapp.com/1RFP1hGC/img/vector-352.svg"
+        ];
+
+        criticalImages.forEach((src) => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = src;
+            link.fetchPriority = 'high';
+            if (src.startsWith('http')) {
+                link.crossOrigin = 'anonymous';
+            }
+            document.head.appendChild(link);
+        });
+
+        // Also preload using Image objects for immediate caching
+        criticalImages.forEach((src) => {
+            const img = new Image();
+            img.src = src;
+            if (src.startsWith('http')) {
+                img.crossOrigin = 'anonymous';
+            }
+        });
+
+        // Cleanup function to remove preload links on unmount
+        return () => {
+            document.querySelectorAll('link[rel="preload"][href*="tree.png"], link[rel="preload"][href*="treasure.png"], link[rel="preload"][href*="dollor.png"], link[rel="preload"][href*="xp.svg"], link[rel="preload"][href*="animaapp.com"]').forEach(link => link.remove());
+        };
+    }, []);
+
     // Load streak data only if not already loaded or data is stale
     useEffect(() => {
         if (status === 'idle' || (!isDataFresh && status !== 'loading')) {
@@ -110,18 +153,6 @@ export default function WinStreakPage() {
             if (historyResponse && historyResponse.success && historyResponse.data && historyResponse.data.milestones) {
                 const apiMilestones = historyResponse.data.milestones || [];
                 setMilestones(apiMilestones);
-                console.log("📊 [WinStreak] Milestones loaded from API:", apiMilestones);
-
-                // Log day 7 milestone specifically for debugging
-                const day7Milestone = apiMilestones.find(m => m.day === 7);
-                if (day7Milestone) {
-                    console.log("📊 [WinStreak] Day 7 milestone from API:", {
-                        day: day7Milestone.day,
-                        rewards: day7Milestone.rewards,
-                        coins: day7Milestone.rewards?.find(r => r.type === 'coins')?.value,
-                        xp: day7Milestone.rewards?.find(r => r.type === 'xp')?.value
-                    });
-                }
             }
 
             // Scroll to bottom after additional data is loaded
@@ -137,7 +168,7 @@ export default function WinStreakPage() {
                 }
             }, 600); // Increased timeout to ensure all content is fully rendered
         } catch (error) {
-            console.error("Failed to load additional data:", error);
+            // Failed to load additional data - silently handle
         }
     };
 

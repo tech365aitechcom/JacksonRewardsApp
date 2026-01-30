@@ -65,8 +65,6 @@ export default function SpinWheel() {
         setError(null);
 
         try {
-            console.log("🔄 [SPIN] Loading spin config and status...");
-
             // Load config and status in parallel
             const [configResponse, statusResponse] = await Promise.all([
                 getSpinConfig(token),
@@ -77,7 +75,6 @@ export default function SpinWheel() {
                 const config = configResponse.data;
                 setSpinConfig(config);
                 setMaxDailySpins(config.config?.maxSpinsPerDay || 5);
-                console.log("✅ [SPIN] Config loaded:", config);
             }
 
             if (statusResponse.success && statusResponse.data) {
@@ -87,10 +84,8 @@ export default function SpinWheel() {
                 setSpins(status.remainingSpins || 0);
                 setDailySpinsUsed((status.dailyLimit || 5) - (status.remainingSpins || 0));
                 setCooldownRemaining(status.cooldownRemaining || 0);
-                console.log("✅ [SPIN] Status loaded:", status);
             }
         } catch (err) {
-            console.error("❌ [SPIN] Error loading spin data:", err);
             setError(err.message || "Failed to load spin data");
         } finally {
             setIsLoading(false);
@@ -102,18 +97,16 @@ export default function SpinWheel() {
         try {
             if (audioRef.current) {
                 audioRef.current.currentTime = 0; // Reset to beginning
-                audioRef.current.play().catch(error => {
-                    console.log("Audio play failed:", error);
+                audioRef.current.play().catch(() => {
+                    // Audio play failed - silently handle
                 });
             }
         } catch (error) {
-            console.log("Sound effect error:", error);
+            // Sound effect error - silently handle
         }
     };
 
     const handleSpin = async () => {
-        console.log("🎰 [SPIN] Spin button clicked!", { isSpinning, spins, canSpin, dailySpinsUsed, maxDailySpins });
-
         if (!token) {
             setError("Please log in to spin");
             setShowResult(true);
@@ -124,13 +117,10 @@ export default function SpinWheel() {
 
         // Check if already spinning - prevent multiple clicks
         if (isSpinning) {
-            console.log("⚠️ [SPIN] Already spinning...");
             return;
         }
 
         try {
-            console.log("🎰 [SPIN] Starting spin...");
-
             // Play sound effect when user clicks spin
             playSpinSound();
 
@@ -148,7 +138,6 @@ export default function SpinWheel() {
 
             if (spinResponse.success && spinResponse.data) {
                 const spinData = spinResponse.data;
-                console.log("✅ [SPIN] Spin result:", spinData);
 
                 // Wait for animation to complete (3 seconds)
                 setTimeout(() => {
@@ -179,7 +168,6 @@ export default function SpinWheel() {
                             // Ad-based spin: Store pending reward for redemption
                             setPendingReward(finalReward);
                             setPendingSpinId(spinData.spinId);
-                            console.log("⏳ [SPIN] Reward pending - requires redemption:", finalReward);
                         } else if (isCompleted) {
                             // Free spin: Reward already credited, no redemption needed
                             setPendingReward(0);
@@ -195,13 +183,6 @@ export default function SpinWheel() {
                                 dispatch(fetchWalletScreen({ token, force: true }));
                                 dispatch(fetchProfileStats({ token, force: true }));
                             }
-
-                            console.log("✅ [SPIN] Reward credited automatically:", {
-                                coinsEarned: spinData.coinsEarned,
-                                xpEarned: spinData.xpEarned,
-                                newBalance: spinData.newBalance,
-                                newXP: spinData.newXP
-                            });
                         } else {
                             // No reward or unknown status
                             setPendingReward(0);
@@ -230,9 +211,6 @@ export default function SpinWheel() {
             } else {
                 // Handle backend error response - ONLY show backend message
                 const backendMessage = spinResponse.message || spinResponse.error || "Spin failed";
-                const errorData = spinResponse.data || {};
-
-                console.error("❌ [SPIN] Backend error:", backendMessage, errorData);
                 setIsSpinning(false);
 
                 // ONLY display the message from backend API (no hardcoded text)
@@ -248,7 +226,6 @@ export default function SpinWheel() {
                 }, 5000);
             }
         } catch (err) {
-            console.error("❌ [SPIN] Spin error:", err);
             setIsSpinning(false);
 
             // Extract error message from API error - ONLY use backend message from api.js:33
@@ -258,10 +235,6 @@ export default function SpinWheel() {
 
             // The error message from api.js:33 is already in err.message
             // This is the message that should be displayed: "Not eligible for this spin wheel"
-            console.log("📝 [SPIN] Error object:", err);
-            console.log("📝 [SPIN] Error message (from api.js:33):", err.message);
-            console.log("📝 [SPIN] Error body:", err.body);
-
             // ONLY display the message from backend API (no hardcoded additions)
             setResult(errorMessage);
             setShowResult(true);
@@ -283,15 +256,12 @@ export default function SpinWheel() {
         }
 
         if (pendingReward > 0 && pendingSpinId) {
-            console.log("💰 [REDEEM] Watch to Redeem clicked - Redeeming reward...");
-
             try {
                 // Call API to redeem reward
                 const redeemResponse = await redeemSpinReward(pendingSpinId, token);
 
                 if (redeemResponse.success && redeemResponse.data) {
                     const redeemData = redeemResponse.data;
-                    console.log("✅ [REDEEM] Reward redeemed:", redeemData);
 
                     // Update coins with new balance
                     if (redeemData.newBalance !== undefined) {
@@ -323,14 +293,12 @@ export default function SpinWheel() {
                     throw new Error(redeemResponse.error || "Redemption failed");
                 }
             } catch (err) {
-                console.error("❌ [REDEEM] Redemption error:", err);
                 setError(err.message || "Failed to redeem reward. Please try again.");
                 setResult(`❌ Error: ${err.message || "Failed to redeem"}`);
                 setShowResult(true);
                 setTimeout(() => setShowResult(false), 5000);
             }
         } else {
-            console.log("⚠️ [REDEEM] No pending reward to redeem");
             setResult("❌ No pending reward to redeem!");
             setShowResult(true);
             setTimeout(() => setShowResult(false), 3000);
@@ -338,13 +306,11 @@ export default function SpinWheel() {
     };
 
     const handleBackToWallet = () => {
-        console.log("Back to Wallet clicked");
         // In a real app, this would navigate to the wallet screen
-        // For now, we'll just log it
     };
 
     const handleBackNavigation = () => {
-        console.log("Back navigation clicked");
+        // Back navigation handler
     };
 
     return (

@@ -31,6 +31,8 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                         alt=""
                         src="https://c.animaapp.com/1RFP1hGC/img/vector-352.svg"
                         role="presentation"
+                        loading="eager"
+                        decoding="async"
                     />
 
                     <img
@@ -38,6 +40,8 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                         alt=""
                         src="https://c.animaapp.com/1RFP1hGC/img/vector-351.svg"
                         role="presentation"
+                        loading="eager"
+                        decoding="async"
                     />
 
                     {/* Day Number Badge */}
@@ -47,6 +51,8 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                             alt=""
                             src="https://c.animaapp.com/1RFP1hGC/img/vector-349.svg"
                             role="presentation"
+                            loading="eager"
+                            decoding="async"
                         />
 
                         <img
@@ -54,6 +60,8 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                             alt=""
                             src="https://c.animaapp.com/1RFP1hGC/img/vector-350.svg"
                             role="presentation"
+                            loading="eager"
+                            decoding="async"
                         />
 
                         {/* Current Streak Day Number */}
@@ -79,6 +87,10 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                         className="relative flex-[0_0_auto] w-6 h-6"
                         alt="Close"
                         src="https://c.animaapp.com/1RFP1hGC/img/close.svg"
+                        loading="eager"
+                        decoding="async"
+                        width="24"
+                        height="24"
                     />
                 </button>
             </header>
@@ -89,6 +101,10 @@ export const TitleSection = ({ currentStreak = 1, onClose, onInfoClick }) => {
                     className="relative w-[305px] h-[73.86px] ml-[-1.00px] mt-1 mr-[-1.00px] aspect-[4.13]"
                     alt="Reach levels without falling down! The higher you reach, the cooler reward you will get."
                     src="https://c.animaapp.com/1RFP1hGC/img/image-3996@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    width="305"
+                    height="74"
                 />
 
                 {/* Info Button */}

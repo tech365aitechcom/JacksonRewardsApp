@@ -104,7 +104,6 @@ export const WelcomeOffer = () => {
 
         // apiRequest returns an object on network/error with success:false
         if (data && data.success === false) {
-          console.warn('WelcomeOffer: api returned error', data);
           const msg = (data.body && data.body.message) || data.error || '';
           setWelcomeMessage(msg);
           setFetchingWelcome(false);
@@ -119,7 +118,7 @@ export const WelcomeOffer = () => {
           setServerEndTime(end);
         }
       } catch (error) {
-        console.error('Error fetching welcome-bonus-timer:', error);
+        // Silently handle fetch errors
       } finally {
         if (mounted) setFetchingWelcome(false);
       }
@@ -350,16 +349,29 @@ export const WelcomeOffer = () => {
               className="absolute w-[109px] h-[109px] top-[45px] right-[2px] object-cover"
               alt="Png clipart buried"
               src="https://c.animaapp.com/iuW6cMRd/img/png-clipart-buried-treasure-treasure-miscellaneous-treasure-tran@2x.png"
+              loading="eager"
+              decoding="async"
+              width={109}
+              height={109}
             />
 
             {/* Removed big circular countdown timer per request */}
 
-            <img
-              className="absolute w-10 h-10 top-[-3px] right-[-1px] cursor-pointer hover:opacity-80 transition-opacity duration-200"
-              alt="Information circle"
-              src="https://c.animaapp.com/iuW6cMRd/img/informationcircle.svg"
+            <button
+              className="absolute w-8 h-8 top-[-4px] right-[-4px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tr-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
+              aria-label="More information"
               onClick={toggleTooltip}
-            />
+            >
+              <img
+                className="w-6 h-6"
+                alt="Information circle"
+                src="https://c.animaapp.com/iuW6cMRd/img/informationcircle.svg"
+                loading="eager"
+                decoding="async"
+                width={24}
+                height={24}
+              />
+            </button>
           </div>
 
           <div className="h-[73px] top-[172px] bg-[#982fbb] rounded-[0px_0px_20px_20px] absolute w-full left-0 shadow-[0_-4px_12px_rgba(0,0,0,0.2)]" />
@@ -376,6 +388,10 @@ export const WelcomeOffer = () => {
               className={`relative w-5 h-5 transition-all duration-300 ${isExpanded ? "rotate-90" : ""} group-hover:translate-x-1`}
               alt="Arrow"
               src="https://c.animaapp.com/iuW6cMRd/img/arrow.svg"
+              loading="eager"
+              decoding="async"
+              width={20}
+              height={20}
             />
           </div>
 
@@ -438,6 +454,10 @@ export const WelcomeOffer = () => {
                   src="/dollor.png"
                   alt="Coins"
                   className="w-5 h-5 object-contain"
+                  loading="eager"
+                  decoding="async"
+                  width={20}
+                  height={20}
                 />
               </div>
 
@@ -451,6 +471,10 @@ export const WelcomeOffer = () => {
                   src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
                   alt="XP"
                   className="w-5 h-5 object-contain"
+                  loading="eager"
+                  decoding="async"
+                  width={20}
+                  height={20}
                 />
               </div>
 

@@ -22,11 +22,6 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
     React.useEffect(() => {
         if (!userProfile) return;
 
-        console.log('🎮 MostPlayedCategories: Using user profile:', {
-            age: userProfile?.age,
-            ageRange: userProfile?.ageRange,
-            gender: userProfile?.gender
-        });
 
         // Always dispatch - stale-while-revalidate will handle cache logic automatically
         // Pass user object directly - API will extract age and gender dynamically
@@ -42,7 +37,6 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
         if (!userProfile) return;
 
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [MostPlayedCategories] Refreshing games in background to get admin updates...");
             dispatch(fetchMostPlayedScreenGames({
                 user: userProfile,
                 page: 1,
@@ -55,7 +49,6 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
         return () => clearTimeout(refreshTimer);
     }, [dispatch, userProfile]);
 
-    console.log("mostPlayedScreenGames", mostPlayedScreenGames)
 
 
 
@@ -161,19 +154,11 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
     // Matches the pattern used in Swipe, Highest Earning, TaskListSection, and other sections
     const handleGameClick = React.useCallback((game) => {
         if (!game || !game.fullData) {
-            console.warn('🎮 MostPlayedCategories: Game or fullData is missing');
+            // Game or fullData is missing
             return;
         }
 
         const fullGame = game.fullData;
-        console.log('🎮 MostPlayedCategories: Navigating to game details for:', {
-            title: fullGame.besitosRawData?.title || fullGame.details?.name || fullGame.title || fullGame.name,
-            _id: fullGame._id,
-            id: fullGame.id,
-            gameId: fullGame.gameId,
-            usingId: fullGame.id || fullGame._id || fullGame.gameId,
-            hasBesitosRawData: !!fullGame.besitosRawData
-        });
 
         // Clear Redux state BEFORE navigation to prevent showing old data
         dispatch({ type: 'games/clearCurrentGameDetails' });
@@ -182,12 +167,8 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
         // This matches the pattern used in Swipe, Highest Earning, TaskListSection, etc.
         try {
             localStorage.setItem('selectedGameData', JSON.stringify(fullGame));
-            console.log('💾 [MostPlayedCategories] Stored full game data with besitosRawData:', {
-                hasBesitosRawData: !!fullGame.besitosRawData,
-                gameId: fullGame.id || fullGame._id || fullGame.gameId
-            });
         } catch (error) {
-            console.error('❌ Failed to store game data:', error);
+            // Failed to store game data
         }
 
         // Use 'id' field first (as expected by API), fallback to '_id' or 'gameId'

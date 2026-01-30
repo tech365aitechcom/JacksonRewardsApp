@@ -181,7 +181,7 @@ export const useDailyRewards = () => {
       // Fetch data for the previous week
       await fetchWeekData(previousWeek);
     } catch (error) {
-      console.error("Error navigating to previous week:", error);
+      // Error navigating to previous week
     } finally {
       setIsNavigating(false);
     }
@@ -201,7 +201,7 @@ export const useDailyRewards = () => {
       // Fetch data for the next week
       await fetchWeekData(nextWeek);
     } catch (error) {
-      console.error("Error navigating to next week:", error);
+      // Error navigating to next week
     } finally {
       setIsNavigating(false);
     }
@@ -243,37 +243,32 @@ export const useDailyRewards = () => {
           try {
             await dispatch(fetchWalletScreen(token));
           } catch (walletError) {
-            console.warn("⚠️ Failed to refresh wallet screen:", walletError);
+            // Failed to refresh wallet screen
             // Don't throw error - reward was still claimed successfully
           }
 
-          // Refresh transaction history immediately after reward claim
-          try {
-            await Promise.all([
-              dispatch(fetchWalletTransactions({ token, limit: 5 })),
-              dispatch(
-                fetchFullWalletTransactions({
-                  token,
-                  page: 1,
-                  limit: 20,
-                  type: "all",
-                })
-              ),
-            ]);
-            console.log("✅ Transaction history refreshed after reward claim");
-          } catch (transactionError) {
-            console.warn(
-              "⚠️ Failed to refresh transaction history:",
-              transactionError
-            );
-            // Don't throw error - reward was still claimed successfully
-          }
+          // Refresh transaction history in background (non-blocking)
+          // Uses stale-while-revalidate pattern - shows cached data immediately, updates in background
+          Promise.all([
+            dispatch(fetchWalletTransactions({ token, limit: 5, background: true })).catch(() => {}),
+            dispatch(
+              fetchFullWalletTransactions({
+                token,
+                page: 1,
+                limit: 20,
+                type: "all",
+                background: true,
+              })
+            ).catch(() => {}),
+          ]).catch(() => {
+            // Silently fail - reward was already claimed successfully, transactions will refresh later
+          });
 
           // Refresh profile stats for homepage components (RewardProgress, XPTierTracker)
           try {
             await dispatch(fetchProfileStats(token));
           } catch (statsError) {
-            console.warn("⚠️ Failed to refresh profile stats:", statsError);
+            // Failed to refresh profile stats
             // Don't throw error - reward was still claimed successfully
           }
 
@@ -306,10 +301,7 @@ export const useDailyRewards = () => {
             try {
               await fetchWeekData(currentWeekStartRef.current, true);
             } catch (refreshError) {
-              console.warn(
-                "Failed to refresh week data after claim:",
-                refreshError
-              );
+              // Failed to refresh week data after claim
               // Don't throw - reward was already claimed successfully
             }
           }, 500);

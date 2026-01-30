@@ -69,7 +69,7 @@ const DailyReward = () => {
                 throw new Error(data.error || "Failed to recover missed day");
             }
         } catch (err) {
-            console.error("Recovery failed:", err);
+            // Recovery failed
             showError(err.message || "Failed to recover missed day");
             throw err;
         }

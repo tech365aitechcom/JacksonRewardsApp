@@ -12,7 +12,7 @@ export const MissedDayRecovery = ({ onRecover, onClose, isVisible }) => {
             await onRecover(recoveryMethod);
             onClose();
         } catch (error) {
-            console.error('Recovery failed:', error);
+            // Recovery failed
         } finally {
             setIsLoading(false);
         }

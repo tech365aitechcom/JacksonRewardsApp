@@ -233,6 +233,10 @@ export const Conversion = () => {
                             className="w-[23px] h-[23px] flex-shrink-0"
                             alt="Coin"
                             src="https://c.animaapp.com/GgG4W9O5/img/image-3937@2x.png"
+                            loading="eager"
+                            decoding="async"
+                            width={23}
+                            height={23}
                         />
                     </div>
 
@@ -311,7 +315,15 @@ export const Conversion = () => {
                         role="button"
                         tabIndex={0}
                     >
-                        <img className="w-7 h-7 mr-2" alt="Convert now icon" src="https://c.animaapp.com/GgG4W9O5/img/image-3941@2x.png" />
+                        <img 
+                            className="w-7 h-7 mr-2" 
+                            alt="Convert now icon" 
+                            src="https://c.animaapp.com/GgG4W9O5/img/image-3941@2x.png"
+                            loading="eager"
+                            decoding="async"
+                            width={28}
+                            height={28}
+                        />
                         <span className="font-semibold text-white text-[13px]">
                             Convert Now
                         </span>

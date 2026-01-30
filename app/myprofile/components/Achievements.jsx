@@ -19,6 +19,9 @@ const Achievements = () => {
                             height={44}
                             alt="Trophy"
                             src="/achivementtrophy.png"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <h3 className="font-semibold text-white text-base">
                             Achievements
@@ -54,6 +57,9 @@ const Achievements = () => {
                             height={44}
                             alt="Trophy"
                             src="/achivementtrophy.png"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <h3 className="font-semibold text-white text-base">
                             Achievements
@@ -103,6 +109,9 @@ const Achievements = () => {
                             className="absolute top-[15px] left-0"
                             alt={achievement.title || achievement.name}
                             src={achievement.image || achievement.icon || 'https://c.animaapp.com/V1uc3arn/img/image-3926@2x.png'}
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </div>
 
@@ -124,6 +133,9 @@ const Achievements = () => {
                             className="absolute top-1 left-[38px]"
                             alt="Coin"
                             src="/dollor.png"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <div className="absolute w-[59px] h-6 top-[33px] left-0 bg-[#201f58] rounded">
                             <div className="relative w-[49px] h-[15px] top-[5px] left-[5px] flex items-center">
@@ -136,6 +148,9 @@ const Achievements = () => {
                                     className="ml-1"
                                     alt="Trophy"
                                     src={`/xp.svg`}
+                                    loading="eager"
+                                    decoding="async"
+                                    priority
                                 />
                             </div>
                         </div>

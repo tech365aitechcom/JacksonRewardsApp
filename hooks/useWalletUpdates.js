@@ -31,11 +31,8 @@ export const useWalletUpdates = (token) => {
       return;
     }
 
-    try {
-      console.log("🔄 [useWalletUpdates] Refreshing wallet data...");
-      // STALE-WHILE-REVALIDATE: Force refresh to get latest admin changes
+    try {      // STALE-WHILE-REVALIDATE: Force refresh to get latest admin changes
       await dispatch(fetchWalletScreen({ token, force: true }));
-      console.log("✅ [useWalletUpdates] Wallet data refreshed successfully");
     } catch (error) {
       console.error(
         "❌ [useWalletUpdates] Error refreshing wallet data:",

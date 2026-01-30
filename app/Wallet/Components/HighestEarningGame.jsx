@@ -33,12 +33,6 @@ export const HighestEarningGame = () => {
 
     // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
     useEffect(() => {
-        console.log('🎮 HighestEarningGame: Using user profile:', {
-            age: userProfile?.age,
-            ageRange: userProfile?.ageRange,
-            gender: userProfile?.gender
-        });
-
         // Always dispatch - stale-while-revalidate will handle cache logic automatically
         // Pass user object directly - API will extract age and gender dynamically
         // This ensures:
@@ -61,7 +55,6 @@ export const HighestEarningGame = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [HighestEarningGame] Refreshing games in background to get admin updates...");
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
                 user: userProfile,
@@ -80,7 +73,6 @@ export const HighestEarningGame = () => {
         if (!userProfile) return;
 
         const handleFocus = () => {
-            console.log("🔄 [HighestEarningGame] App focused - refreshing games to get admin updates");
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
                 user: userProfile,
@@ -95,7 +87,6 @@ export const HighestEarningGame = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && userProfile) {
-                console.log("🔄 [HighestEarningGame] App visible - refreshing games to get admin updates");
                 dispatch(fetchGamesBySection({
                     uiSection: sectionName,
                     user: userProfile,
@@ -178,12 +169,8 @@ export const HighestEarningGame = () => {
         if (fullGame) {
             try {
                 localStorage.setItem('selectedGameData', JSON.stringify(fullGame));
-                console.log('💾 [HighestEarningGame] Stored full game data with besitosRawData:', {
-                    hasBesitosRawData: !!fullGame.besitosRawData,
-                    gameId: game.id || game._id
-                });
             } catch (error) {
-                console.error('❌ Failed to store game data:', error);
+                // Failed to store game data
             }
         }
 
@@ -229,6 +216,10 @@ export const HighestEarningGame = () => {
                                         className="w-full h-full object-cover rounded-[20px]"
                                         src={game.image || game.square_image || '/placeholder-game.png'}
                                         alt={game.title || 'Game Image'}
+                                        loading="eager"
+                                        decoding="async"
+                                        width={155}
+                                        height={180}
                                     />
                                 </div>
 
@@ -256,6 +247,10 @@ export const HighestEarningGame = () => {
                                                     className="w-[16px] h-[16px] object-contain flex-shrink-0"
                                                     alt="Coin icon"
                                                     src="/dollor.png"
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width={16}
+                                                    height={16}
                                                 />
                                             </div>
 
@@ -270,6 +265,10 @@ export const HighestEarningGame = () => {
                                                     className="w-4 h-4 object-contain flex-shrink-0 -mt-0.5"
                                                     alt="XP points icon"
                                                     src="/xp.svg"
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width={16}
+                                                    height={16}
                                                 />
                                             </div>
                                         </div>

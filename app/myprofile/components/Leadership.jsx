@@ -16,12 +16,6 @@ const Leadership = () => {
 
     // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
     useEffect(() => {
-        console.log('🎮 Leadership: Using user profile:', {
-            age: userProfile?.age,
-            ageRange: userProfile?.ageRange,
-            gender: userProfile?.gender
-        });
-
         // Always dispatch - stale-while-revalidate will handle cache logic automatically
         // Pass user object directly - API will extract age and gender dynamically
         // This ensures:
@@ -44,7 +38,6 @@ const Leadership = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [Leadership] Refreshing games in background to get admin updates...");
             dispatch(fetchGamesBySection({
                 uiSection: "Leadership",
                 user: userProfile,
@@ -63,7 +56,6 @@ const Leadership = () => {
         if (!userProfile) return;
 
         const handleFocus = () => {
-            console.log("🔄 [Leadership] App focused - refreshing games to get admin updates");
             dispatch(fetchGamesBySection({
                 uiSection: "Leadership",
                 user: userProfile,
@@ -78,7 +70,6 @@ const Leadership = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && userProfile) {
-                console.log("🔄 [Leadership] App visible - refreshing games to get admin updates");
                 dispatch(fetchGamesBySection({
                     uiSection: "Leadership",
                     user: userProfile,
@@ -106,21 +97,14 @@ const Leadership = () => {
 
     // Handle game click - navigate to game details
     const handleGameClick = (game) => {
-        const rawData = game.besitosRawData || {};
-        console.log('🎮 Leadership Games: Navigating to game details for:', rawData.title || game.details?.name || game.title || game.name);
-
         // Clear Redux state BEFORE navigation to prevent showing old data
         dispatch({ type: 'games/clearCurrentGameDetails' });
 
         // Store full game data including besitosRawData in localStorage
         try {
             localStorage.setItem('selectedGameData', JSON.stringify(game));
-            console.log('💾 [Leadership] Stored full game data with besitosRawData:', {
-                hasBesitosRawData: !!game.besitosRawData,
-                gameId: game.id || game._id
-            });
         } catch (error) {
-            console.error('❌ Failed to store game data:', error);
+            // Failed to store game data
         }
 
         // Use 'id' field first (as expected by API), fallback to '_id'
@@ -262,6 +246,10 @@ const Leadership = () => {
                                                 className="w-4 h-4 ml-1 flex-shrink-0"
                                                 alt="Coin"
                                                 src="https://c.animaapp.com/3btkjiTJ/img/image-3937@2x.png"
+                                                loading="eager"
+                                                decoding="async"
+                                                width="16"
+                                                height="16"
                                             />
                                         </div>
                                         <div className="flex items-center justify-center min-w-fit h-[29px] px-2 rounded-[10px] bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] relative">
@@ -272,6 +260,10 @@ const Leadership = () => {
                                                 className="w-4 h-4 ml-1 flex-shrink-0"
                                                 alt="XP"
                                                 src="https://c.animaapp.com/3btkjiTJ/img/pic.svg"
+                                                loading="eager"
+                                                decoding="async"
+                                                width="16"
+                                                height="16"
                                             />
                                         </div>
                                     </div>

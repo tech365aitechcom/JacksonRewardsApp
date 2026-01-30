@@ -3,6 +3,7 @@ import { useRealTimeCountdown } from "../hooks/useRealTimeCountdown";
 
 export const QuestCard = ({ game }) => {
     const [showTooltip, setShowTooltip] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const tooltipRef = useRef(null);
 
     // Use real-time countdown hook with game end time
@@ -21,6 +22,11 @@ export const QuestCard = ({ game }) => {
     // Toggle tooltip
     const toggleTooltip = () => {
         setShowTooltip(!showTooltip);
+    };
+
+    // Toggle expanded state
+    const toggleExpanded = () => {
+        setIsExpanded(!isExpanded);
     };
 
     // Close tooltip when clicking outside
@@ -60,17 +66,26 @@ export const QuestCard = ({ game }) => {
     return (
         <>
             <div
-                className="relative w-[334px] h-[420px] mx-auto bg-[#7920cf] rounded-[20px] overflow-hidden shadow-lg"
+                className={`relative w-[334px] mx-auto bg-[#7920cf] rounded-[20px] overflow-hidden shadow-lg transition-all duration-300 ${isExpanded ? "h-[420px]" : "h-[180px]"}`}
                 data-model-id="2630:14132"
             >
-                <div className="absolute top-[142px] left-px w-[334px] h-[290px] bg-[#982fbb] rounded-[0px_0px_20px_20px]" />
+                <div className={`absolute top-[142px] left-px w-[334px] bg-[#982fbb] rounded-[0px_0px_20px_20px] transition-all duration-300 ${isExpanded ? "h-[290px]" : "h-0"}`} />
 
-                <img
-                    className="absolute top-[-3px] right-[-1px] w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                    alt="Information circle"
-                    src="https://c.animaapp.com/FYtIEbRF/img/informationcircle.svg"
+                <button
+                    className="absolute w-8 h-8 top-[-4px] right-[-4px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tr-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
+                    aria-label="More information"
                     onClick={toggleTooltip}
-                />
+                >
+                    <img
+                        className="w-6 h-6"
+                        alt="Information circle"
+                        src="https://c.animaapp.com/FYtIEbRF/img/informationcircle.svg"
+                        loading="eager"
+                        decoding="async"
+                        width={24}
+                        height={24}
+                    />
+                </button>
 
                 {showTimer && (
                     <>
@@ -106,6 +121,10 @@ export const QuestCard = ({ game }) => {
                             className="absolute top-1 left-1 w-[66px] h-[66px] object-cover rounded-full"
                             alt="Game Image"
                             src={game?.square_image || game?.image}
+                            loading="eager"
+                            decoding="async"
+                            width={66}
+                            height={66}
                         />
                     </div>
 
@@ -134,6 +153,10 @@ export const QuestCard = ({ game }) => {
                                     src="/dollor.png"
                                     alt="Coins"
                                     className="w-4 h-4 object-contain"
+                                    loading="eager"
+                                    decoding="async"
+                                    width={16}
+                                    height={16}
                                 />
                             </div>
 
@@ -146,17 +169,41 @@ export const QuestCard = ({ game }) => {
                                     src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
                                     alt="XP"
                                     className="w-4 h-4 object-contain"
+                                    loading="eager"
+                                    decoding="async"
+                                    width={16}
+                                    height={16}
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {questItems.map((quest, index) => (
+                {/* Toggle button for expanding/collapsing tasks */}
+                <div
+                    className={`inline-flex items-center justify-center absolute ${showTimer ? "top-[150px]" : "top-[142px]"} mt-1  left-1/2 -translate-x-1/2 transition-all duration-300 z-10`}
+                    onClick={toggleExpanded}
+                >
+                    <img
+                        className={`relative w-5 h-5 transition-all duration-300 ${isExpanded ? "rotate-90" : ""} `}
+                        alt="Arrow"
+                        src="https://c.animaapp.com/iuW6cMRd/img/arrow.svg"
+                        loading="eager"
+                        decoding="async"
+                        width={20}
+                        height={20}
+                    />
+                </div>
+
+                {/* Quest items - only show when expanded */}
+                {isExpanded && questItems.map((quest, index) => (
                     <div
                         key={quest.id}
-                        className="flex items-center justify-center absolute left-1/2 -translate-x-1/2"
-                        style={{ top: `${158 + index * 87}px` }}
+                        className="flex items-center justify-center absolute left-1/2 -translate-x-1/2 animate-fade-in"
+                        style={{
+                            top: `${158 + index * 87}px`,
+                            animationDelay: `${index * 0.1}s`
+                        }}
                     >
                         <div
                             className={`relative w-[304px] h-[75px] px-2 ${quest.hasBorder ? "border-b [border-bottom-style:solid] border-[#cacaca80]" : ""}`}
@@ -169,6 +216,10 @@ export const QuestCard = ({ game }) => {
                                                 className="absolute top-0.5 left-1 w-[35px] h-[35px] aspect-[1] object-cover"
                                                 alt="Lock"
                                                 src="https://c.animaapp.com/FYtIEbRF/img/image-3943@2x.png"
+                                                loading="eager"
+                                                decoding="async"
+                                                width={35}
+                                                height={35}
                                             />
                                             <div className="absolute top-[-3px] left-[px] w-[45px] h-[44px] bg-[#d6d6d680] rounded-[21.5px]" />
                                         </div>

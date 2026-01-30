@@ -20,7 +20,7 @@ export default function GamesPage() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     // TODO: Implement search logic here
-    console.log("Searching for:", searchQuery);
+    // Search logic would be implemented here
   };
   return (
     <div className="flex justify-center ">
@@ -50,6 +50,9 @@ export default function GamesPage() {
                 src="https://c.animaapp.com/3mn7waJw/img/search.svg"
                 width={48}
                 height={48}
+                loading="eager"
+                decoding="async"
+                priority
               />
             </button>
           </div>

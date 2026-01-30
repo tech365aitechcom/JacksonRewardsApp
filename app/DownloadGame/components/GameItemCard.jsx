@@ -12,7 +12,6 @@ const GameItemCard = ({
             onClick(game, e)
         }
     }
-    console.log("game", game)
     // Empty state component
     if (isEmpty) {
         return (
@@ -80,6 +79,10 @@ const GameItemCard = ({
                         className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                         alt={`${cleanGameName} game icon`}
                         src={game.image || game.overlayImage || "/placeholder-game.png"}
+                        loading="eager"
+                        decoding="async"
+                        width="55"
+                        height="55"
                         onError={(e) => {
                             e.target.src = "/placeholder-game.png";
                         }}
@@ -117,6 +120,10 @@ const GameItemCard = ({
                                     className="w-4 h-4 ml-1 flex-shrink-0"
                                     alt={stat.iconAlt}
                                     src={stat.icon}
+                                    loading="eager"
+                                    decoding="async"
+                                    width="16"
+                                    height="16"
                                 />
                             </div>
                         ))}
@@ -144,6 +151,10 @@ const GameItemCard = ({
                         alt=""
                         src="https://c.animaapp.com/3btkjiTJ/img/download.svg"
                         aria-hidden="true"
+                        loading="eager"
+                        decoding="async"
+                        width="15"
+                        height="15"
                     />
                     <span className="[font-family:'Poppins',Helvetica] font-normal text-white text-xs sm:text-sm whitespace-nowrap">
                         Download

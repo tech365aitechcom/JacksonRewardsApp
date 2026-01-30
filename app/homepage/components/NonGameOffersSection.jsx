@@ -12,16 +12,20 @@ const NonGameOffersSection = () => {
     const [touchEnd, setTouchEnd] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const MIN_SWIPE_DISTANCE = 50;
+    const HORIZONTAL_SPREAD = 120;
 
     // Get non-game offers from Redux store
     const { nonGameOffers, nonGameOffersStatus, nonGameOffersError } = useSelector((state) => state.surveys);
 
-    // Fetch non-game offers on mount and when token changes
-    // Uses stale-while-revalidate: shows cached data immediately, fetches fresh if needed
+    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
     useEffect(() => {
         if (!token) return;
 
-        // Fetch cashback and shopping offers only (will use cache if available and fresh)
+        // Always dispatch - stale-while-revalidate will handle cache logic automatically
+        // This ensures:
+        // 1. Shows cached data immediately if available (< 90 seconds old)
+        // 2. Refreshes in background if cache is stale or 80% expired
+        // 3. Fetches fresh if no cache exists
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
     }, [token, dispatch]);
 
@@ -33,7 +37,6 @@ const NonGameOffersSection = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [NonGameOffersSection] Refreshing non-game offers in background to get admin updates...");
             dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
         }, 100); // Small delay to let cached data render first
 
@@ -45,7 +48,6 @@ const NonGameOffersSection = () => {
         if (!token) return;
 
         const handleFocus = () => {
-            console.log("🔄 [NonGameOffersSection] App focused - refreshing offers to get admin updates");
             dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
         };
 
@@ -53,7 +55,6 @@ const NonGameOffersSection = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && token) {
-                console.log("🔄 [NonGameOffersSection] App visible - refreshing offers to get admin updates");
                 dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
             }
         };
@@ -76,8 +77,6 @@ const NonGameOffersSection = () => {
     const totalsCards = nonGameOffers?.length || 0;
 
     const handleOfferClick = (offer) => {
-        console.log('Offer clicked:', offer.title || offer.merchant_name || offer.anchor);
-
         // For shopping offers, use metadata.externalUrl, otherwise use clickUrl/click_url/deepLink
         let clickUrl;
         if (offer.type === "shopping" || offer.offerType === "shopping") {
@@ -88,8 +87,6 @@ const NonGameOffersSection = () => {
 
         if (clickUrl) {
             window.open(clickUrl, '_blank', 'noopener,noreferrer');
-        } else {
-            console.error('❌ Offer has no clickUrl');
         }
     };
 
@@ -122,7 +119,16 @@ const NonGameOffersSection = () => {
         }
     };
 
-    // Circular rotation calculation
+    // Format title with line break (matching NonGamingOffers)
+    const formatTitle = (title) => {
+        if (!title) return '';
+        const words = title.split(' ');
+        if (words.length <= 1) return title;
+        const lastWord = words.pop();
+        return <>{words.join(' ')}<br />{lastWord}</>;
+    };
+
+    // Circular rotation calculation - middle card bigger for user-friendliness
     const getCardTransform = (index, totalCards) => {
         const currentIndex = activesIndex;
         let offset = index - currentIndex;
@@ -135,15 +141,17 @@ const NonGameOffersSection = () => {
         }
 
         // Calculate circular position with 3D effect
-        const angle = (offset * 50) * (Math.PI / 180);
-        const radius = 70;
+        const angle = (offset * 50) * (Math.PI / 180); // 50 degrees per card for smoother curve
+        const radius = 70; // Circular radius
         const x = Math.sin(angle) * radius;
-        const scale = 0.8 + (1 - Math.abs(offset) * 0.2);
-        const opacity = 1 - Math.abs(offset) * 0.5;
+
+        // Middle card (offset 0) is bigger, side cards are slightly smaller
+        const scale = offset === 0 ? 1.0 : 0.85;
+        const opacity = offset === 0 ? 1 : Math.max(0.6, 1 - Math.abs(offset) * 0.3);
 
         return {
             transform: `translateX(calc(-50% + ${x}px)) scale(${scale})`,
-            opacity: Math.max(opacity, 0.4),
+            opacity: opacity,
             zIndex: totalCards - Math.abs(offset),
         };
     };
@@ -174,253 +182,194 @@ const NonGameOffersSection = () => {
         }
     };
 
-    // Show loading state (only if no cached data)
-    if (nonGameOffersStatus === "loading" && (!nonGameOffers || nonGameOffers.length === 0)) {
-        return (
-            <div className="flex w-full flex-col my-1 items-start gap-3 relative">
-                <div className="flex w-full items-center justify-between">
-                    <p className="[font-family:'Poppins',Helvetica] text-[16px] font-semibold leading-[normal] tracking-[0] text-[#FFFFFF]">
-                        Earn More Rewards
-                    </p>
-                </div>
-                <div className="relative flex h-[190px] rounded-[10px] w-full items-center justify-center">
-                    <p className="text-white text-sm">Loading offers...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Show error state (only if we have an error and no offers)
-    if (nonGameOffersStatus === "failed" && (!nonGameOffers || nonGameOffers.length === 0)) {
-        return (
-            <div className="flex w-full flex-col my-1 items-start gap-3 relative">
-                <div className="flex w-full items-center justify-between">
-                    <h3 className="font-bold text-xl leading-[normal] text-start mr-26 tracking-[0] text-[#F4F3FC] pb-12   opacity-[100%]">
-
-                        Non-gaming Offer
-                    </h3>
-                </div>
-                <div className="relative flex h-[190px] rounded-[10px] w-full items-center justify-center">
-                    <p className="text-gray-400 text-sm">
-                        {nonGameOffersError || "No offers available at the moment"}
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    // Show empty state if no offers but not loading/error
-    if (!nonGameOffers || nonGameOffers.length === 0) {
-        return (
-            <div className="flex w-full flex-col my-1 items-start gap-3 relative">
-                <div className="flex w-full items-center justify-between">
-                    <h3 className="font-bold text-xl leading-[normal] text-start mr-26 tracking-[0] text-[#F4F3FC] pb-12   opacity-[100%]">
-
-                        Non-gaming Offer
-                    </h3>
-                </div>
-                <div className="relative flex h-[190px] rounded-[10px] w-full items-center justify-center">
-                    <p className="text-gray-400 text-sm">
-                        No offers available at the moment
-                    </p>
-                </div>
-            </div>
-        );
-    }
+    // REMOVED: Loading state - always show content immediately (stale-while-revalidate pattern)
+    // Background fetching happens automatically without blocking UI
 
     return (
-        <div className="flex justify-between items-center transition-transform pt-8 px-2 mb-4 duration-200 ease-in-out">
-            <section className="flex flex-col w-full max-w-[335px] justify-center items-start gap-2.5 mx-auto">
-                <h3 className="font-bold text-xl leading-[normal] mb-4  text-start mr-26 tracking-[0] text-[#F4F3FC] pb-12   opacity-[100%]">
-                    Non-gaming Offer
-                </h3>
-                <div
-                    className="flex items-center gap-[15px] w-full overflow-visible px-2 relative mt-4"
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                >
-                    <div className="flex items-center gap-[15px] w-full relative" style={{ height: '200px', perspective: '1000px' }}>
-                        {nonGameOffers.length > 0 ? nonGameOffers.map((offer, index) => {
-                            // Get offer image - for cashback use images.cardImage, for shopping use metadata.thumbnail, otherwise use banner/icon
-                            let offerImage;
-                            if (offer.type === "cashback" && offer.images) {
-                                offerImage = offer.images.cardImage || offer.images.backgroundImage || offer.images.cardImageSmall || "https://static.bitlabs.ai/categories/other.svg";
-                            } else if (offer.type === "shopping" || offer.offerType === "shopping") {
-                                offerImage = offer.metadata?.thumbnail || offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
-                            } else {
-                                offerImage = offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
-                            }
+        <div className="w-[335px] h-[275px] mx-auto mt-6 flex flex-col items-center">
+            <div className="w-full h-[24px] px-4 mb-2.5 mr-4">
+                <h2 className="font-['Poppins',Helvetica] text-[16px] font-semibold leading-normal tracking-[0] text-[#FFFFFF]">
+                    Non- Gaming Offers
+                </h2>
+            </div>
 
-                            // Get coins and XP
-                            const coins = offer.coinReward || offer.userRewardCoins || 0;
-                            const xp = offer.userRewardXP || 0;
-                            const rewardDisplay = getRewardDisplay(offer);
-                            const timeDisplay = getTimeDisplay(offer);
+            {/* Card viewport - slightly reduced height */}
+            <div
+                className="relative w-full h-[240px] overflow-hidden"
+                style={{ perspective: '1000px' }}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+            >
+                {nonGameOffers && nonGameOffers.length > 0 ? nonGameOffers.map((offer, index) => {
+                    // Get offer image - for cashback use images.cardImage, for shopping use metadata.thumbnail, otherwise use banner/icon
+                    let offerImage;
+                    if (offer.type === "cashback" && offer.images) {
+                        offerImage = offer.images.cardImage || offer.images.backgroundImage || offer.images.cardImageSmall || "https://static.bitlabs.ai/categories/other.svg";
+                    } else if (offer.type === "shopping" || offer.offerType === "shopping") {
+                        offerImage = offer.metadata?.thumbnail || offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
+                    } else {
+                        offerImage = offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
+                    }
 
-                            // Get category for cashback
-                            const category = offer.type === "cashback" ? (offer.primary_category || offer.category?.name || "") : "";
+                    // Get coins and XP
+                    const coins = offer.coinReward || offer.userRewardCoins || 0;
+                    const xp = offer.userRewardXP || 0;
+                    const rewardDisplay = getRewardDisplay(offer);
+                    const timeDisplay = getTimeDisplay(offer);
 
-                            // Calculate positioning for circular animation - same size as survey cards
-                            const cardWidth = 'w-28';
-                            const cardHeight = 'min-h-[190px]'; // Increased height for better spacing
-                            const imageHeight = 'h-[110px]';
-                            const bannerHeight = 'h-[62px]'; // Increased banner height for better layout
+                    // Get offer name/title
+                    const offerName = offer.title || offer.merchant_name || offer.anchor || "Offer";
 
-                            // Get circular transform
-                            const circularTransform = getCardTransform(index, nonGameOffers.length);
-                            const isActive = index === activesIndex;
+                    // Get circular transform - middle card bigger
+                    const circularTransform = getCardTransform(index, nonGameOffers.length);
 
-                            const cardStyle = {
-                                position: 'absolute',
-                                left: '50%',
-                                ...circularTransform,
-                                transition: isAnimating ? 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'all 0.3s ease-out',
-                            };
+                    const cardStyle = {
+                        ...circularTransform,
+                        transition: isAnimating ? 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'all 0.3s ease-out',
+                        position: 'absolute',
+                        top: 0,
+                        left: '50%',
+                    };
 
-                            return (
-                                <article
-                                    key={offer.id || offer.externalId || index}
-                                    className={`relative ${cardWidth} ${cardHeight} flex-shrink-0 cursor-pointer ${isActive ? 'hover:scale-110' : 'hover:scale-105'} transition-all duration-200`}
-                                    style={cardStyle}
-                                    onClick={() => {
-                                        if (index !== activesIndex) {
-                                            setIsAnimating(true);
-                                            setActivesIndex(index);
-                                            setTimeout(() => setIsAnimating(false), 400);
-                                        } else {
-                                            handleOfferClick(offer);
-                                        }
-                                    }}
-                                >
-                                    {/* Unified Card Container */}
-                                    <div className={`relative ${cardWidth} rounded-[15px] overflow-hidden border-2 border-white/20 bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg`}>
-                                        {/* Offer Image Section - Same as survey */}
-                                        <div className={`relative w-full ${imageHeight} bg-gradient-to-br from-gray-800 to-gray-900 ${(offer.type === "cashback" || offer.type === "shopping" || offer.offerType === "shopping") ? 'overflow-hidden' : 'flex items-center justify-center'}`}>
-                                            {offer.type === "cashback" ? (
-                                                <img
-                                                    className="w-full h-full object-cover"
-                                                    src={offerImage}
-                                                    alt={offer.merchant_name || "Cashback Offer"}
-                                                    onError={(e) => {
-                                                        e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                    }}
-                                                />
-                                            ) : (offer.type === "shopping" || offer.offerType === "shopping") ? (
-                                                <img
-                                                    className="w-full h-full object-cover"
-                                                    src={offerImage}
-                                                    alt={offer.anchor || offer.title || "Shopping Offer"}
-                                                    onError={(e) => {
-                                                        e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                    }}
-                                                />
-                                            ) : (
-                                                <img
-                                                    className="w-[64px] h-[64px] object-contain"
-                                                    src={offerImage}
-                                                    alt={offer.title || "Offer"}
-                                                    onError={(e) => {
-                                                        e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                    }}
-                                                />
-                                            )}
-                                            {/* Overlay to ensure visibility */}
-                                            <div className="absolute inset-0 bg-black/10" />
-                                        </div>
+                    return (
+                        <article
+                            key={offer.id || offer.externalId || index}
+                            className="absolute top-0 left-1/2 cursor-pointer"
+                            style={cardStyle}
+                            onClick={() => {
+                                if (index !== activesIndex) {
+                                    setIsAnimating(true);
+                                    setActivesIndex(index);
+                                    setTimeout(() => setIsAnimating(false), 400);
+                                } else {
+                                    handleOfferClick(offer);
+                                }
+                            }}
+                        >
+                            {/* Card content - decreased height to fit image and footer: w-[168px] h-[238px] */}
+                            <div className="relative h-[234px] w-[168px]">
+                                {/* Background container */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[15px] overflow-hidden">
+                                    {/* Offer Image Section - full width to contain image */}
+                                    <div className="relative w-full h-[174px] overflow-hidden">
+                                        {offer.type === "cashback" ? (
+                                            <img
+                                                className="w-full h-full object-contain rounded-t-[10px]"
+                                                src={offerImage}
+                                                alt={offer.merchant_name || "Cashback Offer"}
+                                                style={{ imageRendering: 'crisp-edges' }}
+                                                loading="eager"
+                                                decoding="async"
+                                                width="168"
+                                                height="174"
+                                                onError={(e) => {
+                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                                }}
+                                            />
+                                        ) : (offer.type === "shopping" || offer.offerType === "shopping") ? (
+                                            <img
+                                                className="w-full h-full object-contain rounded-t-[10px]"
+                                                src={offerImage}
+                                                alt={offer.anchor || offer.title || "Shopping Offer"}
+                                                style={{ imageRendering: 'crisp-edges' }}
+                                                loading="eager"
+                                                decoding="async"
+                                                width="168"
+                                                height="174"
+                                                onError={(e) => {
+                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                                }}
+                                            />
+                                        ) : (
+                                            <img
+                                                className="w-full h-full object-contain rounded-t-[10px]"
+                                                src={offerImage}
+                                                alt={offer.title || "Offer"}
+                                                style={{ imageRendering: 'crisp-edges' }}
+                                                loading="eager"
+                                                decoding="async"
+                                                width="168"
+                                                height="174"
+                                                onError={(e) => {
+                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                                }}
+                                            />
+                                        )}
+                                    </div>
 
-                                        {/* Gradient Banner Section - Professional app-like layout */}
-                                        <div
-                                            className={`relative w-full ${bannerHeight} overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] flex flex-col p-2`}
-                                            role="banner"
-                                            aria-label="Offer rewards banner"
-                                        >
-                                            {/* Title Section - Top aligned */}
-                                            {(offer.title || offer.merchant_name || offer.anchor) && (
-                                                <div className="flex items-start justify-center w-full min-h-[16px] max-h-[28px] mb-1">
-                                                    <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-[8px] tracking-[0] leading-[9px] whitespace-normal break-words text-center line-clamp-2">
-                                                        {String(offer.title || offer.merchant_name || offer.anchor)}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            {/* Rewards Section - Center aligned */}
-                                            <div className="flex items-center  justify-center w-full mt-[2px] gap-2 ">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="[font-family:'Poppins',Helvetica] font-bold text-white text-[11px] tracking-[0] leading-[normal]">
-                                                        {String(coins)}
-                                                    </span>
-                                                    {coins > 0 && (
-                                                        <img
-                                                            className="w-[12px] h-[12px] mb-[2px] aspect-[0.97]"
-                                                            alt="Dollar coin icon"
-                                                            src="/dollor.png"
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                {/* XP */}
-                                                {xp > 0 && (
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-bold text-white text-[11px] tracking-[0] leading-[normal]">
-                                                            {String(xp)}
-                                                        </span>
-                                                        <img
-                                                            className="w-[12px] mb-[3px] h-[12px]"
-                                                            alt="XP points icon"
-                                                            src="/xp.svg"
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-
-                                            </div>
-
-                                            {/* Time Section - Bottom aligned */}
-                                            {offer.type === "cashback" ? (
-                                                offer.reward_delay_days !== undefined && offer.reward_delay_days !== null && (
-                                                    <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
-                                                            {String(offer.reward_delay_days)}d
-                                                        </span>
-                                                    </div>
-                                                )
-                                            ) : (offer.type === "shopping" || offer.offerType === "shopping") ? (
-                                                offer.estimatedTime !== undefined && offer.estimatedTime !== null && (
-                                                    <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
-                                                            {String(offer.estimatedTime)} min
-                                                        </span>
-                                                    </div>
-                                                )
-                                            ) : (
-                                                timeDisplay && (
-                                                    <div className="flex items-center justify-center w-full">
-                                                        <span className="[font-family:'Poppins',Helvetica] font-medium text-white/90 text-[9px] tracking-[0] leading-[normal]">
-                                                            {String(timeDisplay)}
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )}
+                                    {/* Bottom gradient section - increased height by 2px: h-[52px] - faded to differentiate from Earn button */}
+                                    <div className="absolute bottom-0 h-[63px] w-full bg-gradient-to-b from-[#9EADF7]/50 to-[#716AE7]/50 rounded-b-[6px] flex items-center justify-center backdrop-blur-sm">
+                                        <div className="text-center font-['Poppins',Helvetica] text-base font-semibold leading-5 tracking-[0] text-white px-2">
+                                            {formatTitle(offerName)}
                                         </div>
                                     </div>
-                                </article>
-                            );
-                        }) : (
-                            <div className="w-full flex flex-col items-center justify-center py-6 px-4">
-                                <h4 className="[font-family:'Poppins',Helvetica] font-semibold text-[#F4F3FC] text-[14px] text-center mb-2">
-                                    No Offers Available
-                                </h4>
-                                <p className="[font-family:'Poppins',Helvetica] font-normal text-white text-[12px] text-center opacity-90">
-                                    Check back later for new opportunities!
-                                </p>
+
+                                    {/* Earn button - moved down slightly: top-[110px] min-h-[29px] w-[140px] */}
+                                    <div
+                                        className="absolute top-[128px] left-1/2 flex flex-wrap items-center justify-center gap-0.5 px-1.5 py-1 min-h-[29px] w-[140px] -translate-x-1/2 rounded-[10px] bg-gradient-to-b from-[#9EADF7] to-[#716AE7] cursor-pointer hover:opacity-90 transition-opacity leading-none"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOfferClick(offer);
+                                        }}
+                                    >
+                                        <span className="font-['Poppins',Helvetica] text-[12px] font-medium leading-none tracking-[0] text-white">
+                                            Earn upto
+                                        </span>
+                                        {coins > 0 && (
+                                            <>
+                                                <span className="font-['Poppins',Helvetica] text-[12px] font-semibold leading-none text-white">
+                                                    {String(coins)}
+                                                </span>
+                                                <img
+                                                    className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                                                    alt="Coin icon"
+                                                    src="/dollor.png"
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width="14"
+                                                    height="14"
+                                                />
+                                            </>
+                                        )}
+                                        {xp > 0 && (
+                                            <>
+                                                {coins > 0 && (
+                                                    <span className="text-white text-[12px] leading-none">&</span>
+                                                )}
+                                                <span className="font-['Poppins',Helvetica] text-[12px] font-semibold leading-none text-white">
+                                                    {String(xp)}
+                                                </span>
+                                                <img
+                                                    className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                                                    alt="XP icon"
+                                                    src="/xp.svg"
+                                                    loading="eager"
+                                                    decoding="async"
+                                                    width="14"
+                                                    height="14"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        )}
+                        </article>
+                    );
+                }) : (
+                    <div className="w-full flex flex-col items-center justify-center py-6 px-4">
+                        <h4 className="[font-family:'Poppins',Helvetica] font-semibold text-[#F4F3FC] text-[14px] text-center mb-2">
+                            No Offers Available
+                        </h4>
+                        <p className="[font-family:'Poppins',Helvetica] font-normal text-white text-[12px] text-center opacity-90">
+                            Check back later for new opportunities!
+                        </p>
                     </div>
-                </div>
-            </section>
+                )}
+            </div>
         </div>
     );
 };

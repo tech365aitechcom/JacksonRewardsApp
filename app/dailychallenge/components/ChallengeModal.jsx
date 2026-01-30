@@ -34,23 +34,7 @@ export const ChallengeModal = ({
     const [showCompletionSuccess, setShowCompletionSuccess] = useState(false);
     const [spinSuccess, setSpinSuccess] = useState(false);
 
-    // Log modal state changes
-    useEffect(() => {
-        console.log("🔔 [CHALLENGE MODAL] Modal state changed:", {
-            isOpen,
-            hasChallenge: today?.hasChallenge,
-            challengeTitle: today?.challenge?.title,
-            challengeId: today?.challenge?.id,
-            gameId: today?.challenge?.gameId,
-            progressStatus: today?.progress?.status,
-            selectedGame: today?.selectedGame,
-            rewards: today?.rewards || (today?.challenge ? { coins: today.challenge.coinReward, xp: today.challenge.xpReward } : null),
-            countdown: today?.countdown,
-            actions: today?.actions,
-            fullToday: today,
-            timestamp: new Date().toISOString(),
-        });
-    }, [isOpen, today]);
+    // Modal state changes tracked internally
 
     // Calculate countdown timer for challenge expiration
     useEffect(() => {
@@ -79,7 +63,6 @@ export const ChallengeModal = ({
                 return;
             }
             else {
-                console.warn("🔔 [CHALLENGE MODAL] No valid countdown data available");
                 setCountdown("");
                 return;
             }
@@ -254,49 +237,21 @@ export const ChallengeModal = ({
     }
 
     const handleSelectGame = async (gameId) => {
-        console.log("🎮 [CHALLENGE MODAL] handleSelectGame called:", {
-            gameId,
-            hasToken: !!localStorage.getItem('authToken'),
-            timestamp: new Date().toISOString(),
-        });
         try {
             setIsSelecting(true);
-            console.log("🎮 [CHALLENGE MODAL] Dispatching selectGame action");
             const result = await dispatch(selectGame({ gameId, token: localStorage.getItem('authToken') }));
-            console.log("🎮 [CHALLENGE MODAL] selectGame result:", {
-                type: result.type,
-                payload: result.payload,
-            });
             setSelectedGameId(gameId);
-            console.log("🎮 [CHALLENGE MODAL] Game selected successfully:", gameId);
         } catch (error) {
-            console.error("🎮 [CHALLENGE MODAL] Failed to select game:", {
-                error: error.message,
-                stack: error.stack,
-                gameId,
-            });
+            // Failed to select game
         } finally {
             setIsSelecting(false);
         }
     };
 
     const handleStartChallenge = async () => {
-        console.log("🚀 [CHALLENGE MODAL] handleStartChallenge called:", {
-            hasToken: !!localStorage.getItem('authToken'),
-            today: today,
-            timestamp: new Date().toISOString(),
-        });
         try {
             setIsStarting(true);
-            console.log("🚀 [CHALLENGE MODAL] Dispatching startTodayChallenge action");
             const result = await dispatch(startTodayChallenge({ token: localStorage.getItem('authToken') }));
-            console.log("🚀 [CHALLENGE MODAL] startTodayChallenge result:", {
-                type: result.type,
-                payload: result.payload,
-                game: result.payload?.game,
-                deepLink: result.payload?.game?.deepLink,
-                progress: result.payload?.progress,
-            });
 
             // IMPORTANT: Track when challenge started for 10-minute validation
             // If API doesn't return startedAt, we set it locally
@@ -305,12 +260,6 @@ export const ChallengeModal = ({
                 setChallengeStartTime(new Date());
                 // Refresh today's data to get updated progress with startedAt and actions
                 await dispatch(fetchToday({ token: localStorage.getItem('authToken') }));
-                console.log("🚀 [CHALLENGE MODAL] Refreshed today's data to get startedAt timestamp and updated actions");
-
-                // Force a small delay to ensure state updates before UI re-renders
-                setTimeout(() => {
-                    console.log("🚀 [CHALLENGE MODAL] State should be updated now, canComplete should be available");
-                }, 100);
             }
 
             // Check for deep link in game object
@@ -328,101 +277,73 @@ export const ChallengeModal = ({
                         const separator = deepLink.includes('?') ? '&' : '?';
                         deepLink = `${deepLink}${separator}partner_user_id=${userId}`;
                     }
-                    console.log("🚀 [CHALLENGE MODAL] Added user ID to deep link:", {
-                        userId,
-                        finalUrl: deepLink
-                    });
                 }
-                console.log("🚀 [CHALLENGE MODAL] Opening game deep link:", deepLink);
                 // Open the game deep link
                 window.open(deepLink, '_blank');
-            } else {
-                console.warn("🚀 [CHALLENGE MODAL] No deep link in response:", result.payload);
             }
             onStartChallenge();
         } catch (error) {
-            console.error("🚀 [CHALLENGE MODAL] Failed to start challenge:", {
-                error: error.message,
-                stack: error.stack,
-            });
+            // Failed to start challenge
         } finally {
             setIsStarting(false);
         }
     };
 
     const handleCompleteChallenge = async () => {
-        console.log("✅ [CHALLENGE MODAL] handleCompleteChallenge called:", {
-            conversionId: today?.conversionId,
-            hasToken: !!token,
-            today: today,
-            challengeType: today?.challenge?.type,
-            timestamp: new Date().toISOString(),
-        });
         try {
             setIsCompleting(true);
+            setError(null);
 
             // For spin challenges, check if spin was successful before completing
             if (today?.challenge?.type === 'spin') {
                 if (!spinSuccess) {
-                    console.warn("⚠️ [CHALLENGE MODAL] Spin was not successful, cannot complete challenge");
                     alert("Please spin the wheel successfully before marking as complete.");
                     setIsCompleting(false);
                     return;
                 }
-                console.log("🎰 [CHALLENGE MODAL] Spin was successful, proceeding with completion");
             }
 
-            console.log("✅ [CHALLENGE MODAL] Dispatching completeTodayChallenge action");
+            // Step 1: Wait for completion API call to finish completely
             const result = await dispatch(completeTodayChallenge({
                 conversionId: today?.conversionId,
                 token: token
             }));
-            console.log("✅ [CHALLENGE MODAL] completeTodayChallenge result:", {
-                type: result.type,
-                payload: result.payload,
-                rewards: result.payload?.rewards,
-            });
 
-            // Check if completion was successful
-            if (result.type.includes('fulfilled')) {
-                console.log("✅ [CHALLENGE MODAL] Challenge completed successfully, refreshing calendar and today's data");
-
-                // Refresh calendar to show updated completion status
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = now.getMonth();
-                await dispatch(fetchCalendar({ year, month, token }));
-
-                // Refresh today's challenge to get updated status
-                await dispatch(fetchToday({ token }));
-
-                console.log("✅ [CHALLENGE MODAL] Calendar and today's data refreshed");
-
-                // Show success message in modal instead of closing immediately
-                setShowCompletionSuccess(true);
-            } else {
-                // If completion failed, close modal
-                onClose();
+            // Check if completion API call was successful
+            if (!result.type.includes('fulfilled')) {
+                // If completion failed, show error and stop
+                const errorMessage = result.payload || result.error || "Failed to complete challenge. Please try again.";
+                alert(errorMessage);
+                setIsCompleting(false);
+                return;
             }
+
+            // Step 2: Wait for all data refresh calls to complete before showing success
+            // This ensures the UI has the latest data before redirecting or showing success
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            // Wait for both refresh calls to complete - DO NOT proceed until they finish
+            await Promise.all([
+                dispatch(fetchCalendar({ year, month, token, force: true })),
+                dispatch(fetchToday({ token, force: true }))
+            ]);
+
+            // Only show success message after ALL API calls are complete and data is refreshed
+            // This ensures data is fully updated before user sees success message
+            setShowCompletionSuccess(true);
+            setIsCompleting(false); // Re-enable interactions after everything is complete
         } catch (error) {
-            console.error("✅ [CHALLENGE MODAL] Failed to complete challenge:", {
-                error: error.message,
-                stack: error.stack,
-                conversionId: today?.conversionId,
-            });
-        } finally {
+            // Handle any unexpected errors
+            const errorMessage = error?.message || error?.payload || error?.error || "An unexpected error occurred. Please try again.";
+            alert(errorMessage);
             setIsCompleting(false);
         }
     };
 
     // Handle claim rewards - with time-based validation
     const handleClaimRewards = async () => {
-        console.log("🎁 [CHALLENGE MODAL] handleClaimRewards called:", {
-            hasToken: !!token,
-            today: today,
-            timeUntilClaimable,
-            timestamp: new Date().toISOString(),
-        });
 
         // VALIDATION: Check if challenge is completed
         if (!today?.progress?.isCompleted) {
@@ -454,7 +375,6 @@ export const ChallengeModal = ({
 
         try {
             setIsClaiming(true);
-            console.log("🎁 [CHALLENGE MODAL] Claiming rewards via completeChallenge");
 
             // Use completeChallenge to claim rewards (it handles both completion and claiming)
             const result = await dispatch(completeTodayChallenge({
@@ -462,32 +382,19 @@ export const ChallengeModal = ({
                 token: token
             }));
 
-            console.log("🎁 [CHALLENGE MODAL] Claim rewards result:", {
-                type: result.type,
-                payload: result.payload,
-                rewards: result.payload?.rewards,
-            });
-
             // Check if claim was successful
             if (result.type.includes('fulfilled')) {
-                console.log("🎁 [CHALLENGE MODAL] Rewards claimed successfully, refreshing data");
-
                 // Refresh calendar and today's data
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = now.getMonth();
                 await dispatch(fetchCalendar({ year, month, token }));
                 await dispatch(fetchToday({ token }));
-
-                console.log("🎁 [CHALLENGE MODAL] Data refreshed after claiming rewards");
             }
 
             onClose();
         } catch (error) {
-            console.error("🎁 [CHALLENGE MODAL] Failed to claim rewards:", {
-                error: error.message,
-                stack: error.stack,
-            });
+            // Failed to claim rewards
             alert("Failed to claim rewards. Please try again.");
         } finally {
             setIsClaiming(false);
@@ -563,6 +470,10 @@ export const ChallengeModal = ({
                             src={today.challenge.mediaUrl || today.challenge.game?.iconUrl}
                             alt={today.challenge.title || "Challenge"}
                             className="w-full h-48 object-cover rounded-lg border border-gray-700"
+                            loading="eager"
+                            decoding="async"
+                            width="384"
+                            height="192"
                             onError={(e) => {
                                 e.target.style.display = 'none';
                             }}
@@ -687,7 +598,6 @@ export const ChallengeModal = ({
                             <SimpleSpinWheel
                                 token={token}
                                 onSpinComplete={async (spinWasSuccessful) => {
-                                    console.log('🎰 [CHALLENGE MODAL] Spin completed, success:', spinWasSuccessful);
                                     setIsSpinning(false);
 
                                     if (spinWasSuccessful) {
@@ -699,11 +609,49 @@ export const ChallengeModal = ({
 
                                             if (result.type.includes('fulfilled')) {
                                                 setChallengeStartTime(new Date());
-                                                await dispatch(fetchToday({ token: localStorage.getItem('authToken') }));
-                                                console.log("🎰 [CHALLENGE MODAL] Challenge started without opening game for spin challenge");
+                                                // Force refresh to get updated status after spin
+                                                await dispatch(fetchToday({ token: localStorage.getItem('authToken'), force: true }));
+
+                                                // For spin challenges, automatically mark as complete after successful spin
+                                                // This ensures the UI updates immediately to show completion status
+                                                try {
+                                                    const completeResult = await dispatch(completeTodayChallenge({
+                                                        conversionId: today?.conversionId,
+                                                        token: localStorage.getItem('authToken')
+                                                    }));
+
+                                                    // Wait for completion API to finish completely before proceeding
+                                                    if (completeResult.type.includes('fulfilled')) {
+                                                        // Wait for ALL refresh calls to complete before updating UI
+                                                        // This ensures data is fully updated before user sees completion
+                                                        const now = new Date();
+                                                        const year = now.getFullYear();
+                                                        const month = now.getMonth();
+
+                                                        await Promise.all([
+                                                            dispatch(fetchToday({ token: localStorage.getItem('authToken'), force: true })),
+                                                            dispatch(fetchCalendar({
+                                                                year,
+                                                                month,
+                                                                token: localStorage.getItem('authToken'),
+                                                                force: true
+                                                            }))
+                                                        ]);
+
+                                                        // Only show success after ALL API calls complete
+                                                        setShowCompletionSuccess(true);
+                                                    } else {
+                                                        // If completion failed, show error
+                                                        const errorMessage = completeResult.payload || completeResult.error || "Failed to complete challenge. Please try again.";
+                                                        alert(errorMessage);
+                                                    }
+                                                } catch (completeError) {
+                                                    // Handle auto-completion error
+                                                    alert("Failed to complete challenge. Please try again.");
+                                                }
                                             }
                                         } catch (error) {
-                                            console.error("🎰 [CHALLENGE MODAL] Failed to start challenge:", error);
+                                            // Failed to start challenge
                                         } finally {
                                             setIsStarting(false);
                                         }
@@ -713,15 +661,14 @@ export const ChallengeModal = ({
                                     }
                                 }}
                                 onSpinStart={() => {
-                                    console.log('🎰 [CHALLENGE MODAL] Spin started...');
                                     setIsSpinning(true);
                                     setSpinSuccess(false);
                                 }}
                                 onSpinSuccess={(spinResult) => {
-                                    console.log('🎰 [CHALLENGE MODAL] Spin API successful:', spinResult);
+                                    // Spin API successful
                                 }}
                                 onSpinError={(error) => {
-                                    console.error('🎰 [CHALLENGE MODAL] Spin API error:', error);
+                                    // Spin API error
                                 }}
                                 isSpinning={isSpinning}
                                 disabled={isStarting || isSpinning || !today?.actions?.canSpin}

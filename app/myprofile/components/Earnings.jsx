@@ -38,13 +38,24 @@ export default function Earnings({ xpCurrent = 0, xpLevel, coinBalance = 0 }) {
                                     alt="Coin"
                                     src="/dollor.png"
                                     className="flex-shrink-0"
+                                    loading="eager"
+                                    decoding="async"
+                                    priority
                                 />
                             </div>
                         </div>
 
                         <div className="absolute top-[39px] mt-1 left-[103px] flex items-center ml-3 gap-2">
                             <div className="font-semibold text-white text-2xl">{xpCurrent}</div>
-                            <Image width={26} height={21} alt="XP" src="/xp.svg" />
+                            <Image 
+                                width={26} 
+                                height={21} 
+                                alt="XP" 
+                                src="/xp.svg"
+                                loading="eager"
+                                decoding="async"
+                                priority
+                            />
                         </div>
 
                         <div className="absolute w-[205px] h-[37px] top-[78px] left-4">
@@ -63,6 +74,9 @@ export default function Earnings({ xpCurrent = 0, xpLevel, coinBalance = 0 }) {
                                         className="absolute top-1 left-[3px] z-10"
                                         alt="Level badge"
                                         src="/dot.svg"
+                                        loading="eager"
+                                        decoding="async"
+                                        priority
                                     />
                                     <div className="absolute top-[8px] left-[14px] font-semibold text-[#815c23] text-[14.9px] z-10">
                                         {actualLevel}
@@ -100,6 +114,9 @@ export default function Earnings({ xpCurrent = 0, xpLevel, coinBalance = 0 }) {
                                 className="absolute top-[13px] left-[56px]"
                                 alt="Vector"
                                 src="https://c.animaapp.com/V1uc3arn/img/vector.svg"
+                                loading="eager"
+                                decoding="async"
+                                priority
                             />
                         </div>
                     </div>

@@ -41,15 +41,6 @@ export const Coins = ({ game, viewCount, onBack, onChat }) => {
 
     const pointBreakdownData = generatePointBreakdown();
 
-    // Log game data for debugging
-    console.log('🎮 Coins Component: Game data received:', {
-        gameTitle: game?.title,
-        gameAmount: game?.amount,
-        gameCpi: game?.cpi,
-        totalGoals: game?.goals?.length || 0,
-        pointBreakdown: pointBreakdownData
-    });
-
     return (
         <div className="flex flex-col  pt-5 w-[375px] items-center justify-center gap-1 px-6 py-0 relative bg-[#1a1a1a]">
             <div className="relative w-[342px] h-[365px] bg-[#272727] rounded-2xl overflow-hidden border border-solid border-[#80e76a]">

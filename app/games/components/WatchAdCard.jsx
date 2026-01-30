@@ -109,7 +109,6 @@ const WatchAdCard = ({
 
             // TODO: Replace with actual Ad SDK integration
             // For now, simulate ad watching
-            console.log('🎬 Launching rewarded ad...');
 
             // Simulate ad watching delay (15-30 seconds)
             await simulateAdWatch();
@@ -157,13 +156,12 @@ const WatchAdCard = ({
                     setShowSuccessMessage(false);
                 }, 3000);
 
-                console.log(`✅ Reward granted: ${coinAmount} coins + ${xpAmount} XP`);
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to process reward');
             }
         } catch (error) {
-            console.error('❌ Ad watch failed:', error);
+            // Ad watch failed
             setError(error.message || 'Failed to process ad reward. Please try again.');
 
             // Clear error after 5 seconds
@@ -181,17 +179,15 @@ const WatchAdCard = ({
             // Simulate 15-second ad
             const adDuration = 15000;
 
-            console.log('📺 Ad playing...');
 
             setTimeout(() => {
                 // Simulate 95% success rate
                 const adCompleted = Math.random() > 0.05;
 
                 if (adCompleted) {
-                    console.log('✅ Ad completed successfully');
                     resolve();
                 } else {
-                    console.log('❌ Ad was skipped or failed');
+                    // Ad was skipped or failed
                     reject(new Error('Ad was not completed'));
                 }
             }, adDuration);
@@ -238,6 +234,9 @@ const WatchAdCard = ({
                                         src="/dollor.png"
                                         width={34}
                                         height={30}
+                                        loading="eager"
+                                        decoding="async"
+                                        priority
                                     />
                                 </div>
                             ) : (
@@ -257,6 +256,9 @@ const WatchAdCard = ({
                         src="https://c.animaapp.com/3mn7waJw/img/image-3941@2x.png"
                         width={85}
                         height={85}
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
 
                     {/* Loading Overlay */}

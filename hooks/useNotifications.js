@@ -20,13 +20,11 @@ export const useNotifications = (token) => {
 
   const fetchNotifications = async () => {
     if (!token) {
-      console.log("🔔 [Notifications] No token available");
       setNotifications([]);
       return;
     }
 
     if (!notificationsEnabled) {
-      console.log("🔔 [Notifications] Notifications disabled in user profile");
       setNotifications([]);
       return;
     }
@@ -35,20 +33,10 @@ export const useNotifications = (token) => {
       setLoading(true);
       setError(null);
 
-      console.log("🔔 [Notifications] Fetching notifications...", {
-        hasToken: !!token,
-        notificationsEnabled,
-        endpoint: "/api/profile/notifications",
-      });
+      
 
       const response = await getUserNotifications(token);
 
-      console.log("🔔 [Notifications] API Response:", {
-        success: response?.success,
-        hasData: !!response?.data,
-        dataLength: Array.isArray(response?.data) ? response.data.length : 0,
-        response: response,
-      });
 
       if (response && response.success && response.data) {
         // Filter out only dismissed notifications (not read ones)
@@ -57,26 +45,17 @@ export const useNotifications = (token) => {
           ? response.data.filter((notif) => !notif.dismissed)
           : [];
 
-        console.log("🔔 [Notifications] Unread notifications:", {
-          count: unreadNotifications.length,
-          notifications: unreadNotifications,
-        });
+        
 
         setNotifications(unreadNotifications);
       } else if (response && !response.success) {
-        console.warn(
-          "🔔 [Notifications] API returned error:",
-          response.error || response.message
-        );
+       
         setError(
           response.error || response.message || "Failed to fetch notifications"
         );
         setNotifications([]);
       } else {
-        console.warn(
-          "🔔 [Notifications] Unexpected response format:",
-          response
-        );
+        
         setNotifications([]);
       }
     } catch (err) {
@@ -120,7 +99,6 @@ export const useNotifications = (token) => {
     if (!profile) {
       const timer = setTimeout(() => {
         if (token) {
-          console.log("🔔 [Notifications] Profile not loaded, fetching anyway");
           fetchNotifications();
         }
       }, 2000);

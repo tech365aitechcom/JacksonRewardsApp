@@ -59,17 +59,49 @@ const NonGamingOffersCarousel = ({ offers = [], className = "" }) => {
                         >
                             {/* Card content - using your provided styles */}
                             <div className="relative h-[220px] w-[165px]">
-                                <img className="absolute inset-0 h-full w-full" alt="" src={offer.bgImage} />
-                                <img className="absolute bottom-0 h-[57px] w-full object-cover" alt="" src={offer.bottomBg} />
+                                <img
+                                    className="absolute inset-0 h-full w-full"
+                                    alt=""
+                                    src={offer.bgImage}
+                                    loading="eager"
+                                    decoding="async"
+                                    width="165"
+                                    height="220"
+                                />
+                                <img
+                                    className="absolute bottom-0 h-[57px] w-full object-cover"
+                                    alt=""
+                                    src={offer.bottomBg}
+                                    loading="eager"
+                                    decoding="async"
+                                    width="165"
+                                    height="57"
+                                />
                                 <div className="absolute bottom-2 left-0 right-0 text-center font-['Poppins',Helvetica] text-base font-semibold leading-5 tracking-[0] text-white">
                                     {formatTitle(offer.name)}
                                 </div>
-                                <img className="absolute top-20px left-1/2 h-[153px] w-[164px] -translate-x-1/2 object-full rounded-[10px]" alt={`${offer.name} app preview`} src={offer.image} />
+                                <img
+                                    className="absolute top-20px left-1/2 h-[153px] w-[164px] -translate-x-1/2 object-full rounded-[10px]"
+                                    alt={`${offer.name} app preview`}
+                                    src={offer.image}
+                                    loading="eager"
+                                    decoding="async"
+                                    width="164"
+                                    height="153"
+                                />
                                 <div className="absolute top-[127px] left-1/2 flex h-[29px] w-[120px] -translate-x-1/2 items-center justify-center rounded-[10px] bg-gradient-to-b from-[#9EADF7] to-[#716AE7]">
                                     <span className="font-['Poppins',Helvetica] text-[13px] font-medium leading-normal tracking-[0] text-white">
                                         {offer.earnAmount}
                                     </span>
-                                    <img className="ml-1.5 h-[15px] w-[15px]" alt="$" src="https://c.animaapp.com/xCaMzUYh/img/image-3937-2@2x.png" />
+                                    <img
+                                        className="ml-1.5 h-[15px] w-[15px]"
+                                        alt="$"
+                                        src="https://c.animaapp.com/xCaMzUYh/img/image-3937-2@2x.png"
+                                        loading="eager"
+                                        decoding="async"
+                                        width="15"
+                                        height="15"
+                                    />
                                 </div>
                             </div>
                         </div>

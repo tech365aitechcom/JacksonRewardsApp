@@ -62,6 +62,9 @@ export const AccountOverviewSection = () => {
             role="presentation"
             width={375}
             height={103}
+            loading="eager"
+            decoding="async"
+            priority
           />
 
           <div className="flex flex-col w-[60px] items-center gap-2 absolute top-[39px] left-4">
@@ -72,6 +75,9 @@ export const AccountOverviewSection = () => {
               role="presentation"
               width={24}
               height={24}
+              loading="eager"
+              decoding="async"
+              priority
             />
 
             <span className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] tracking-[-0.17px] leading-[normal]">
@@ -89,6 +95,9 @@ export const AccountOverviewSection = () => {
               role="presentation"
               width={35}
               height={16.28}
+              loading="eager"
+              decoding="async"
+              priority
             />
 
             <span className="relative self-stretch [font-family:'Poppins',Helvetica] font-normal text-white text-[10px] text-center tracking-[-0.17px] leading-[normal]">
@@ -108,6 +117,9 @@ export const AccountOverviewSection = () => {
               role="presentation"
               width={62}
               height={62}
+              loading="eager"
+              decoding="async"
+              priority
             />
           </Link>
 
@@ -120,6 +132,9 @@ export const AccountOverviewSection = () => {
                 role="presentation"
                 width={20}
                 height={18}
+                loading="eager"
+                decoding="async"
+                priority
               />
             </div>
 
@@ -136,6 +151,9 @@ export const AccountOverviewSection = () => {
               role="presentation"
               width={24}
               height={24}
+              loading="eager"
+              decoding="async"
+              priority
             />
 
             <span className="relative w-fit ml-[-0.50px] mr-[-0.50px] [font-family:'Poppins',Helvetica] font-normal text-[#ffffffb2] text-[10px] text-center tracking-[-0.17px] leading-[13px] whitespace-nowrap">

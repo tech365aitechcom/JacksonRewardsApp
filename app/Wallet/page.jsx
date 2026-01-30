@@ -37,6 +37,34 @@ export default function WalletPage() {
   const coinBalance = walletScreen?.wallet?.balance || 0;
   const balance = coinBalance || 0;
 
+  // Preload critical wallet images for faster rendering on Android
+  useEffect(() => {
+    const criticalImages = [
+      '/dollor.png',
+      '/xp.svg',
+      '/dot.svg',
+      '/vipbg.svg',
+      '/vipdecoration.png',
+      '/bgearning.png'
+    ];
+
+    criticalImages.forEach(src => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = src.endsWith('.svg') ? 'image/svg+xml' : 'image';
+      link.href = src;
+      document.head.appendChild(link);
+    });
+
+    // Cleanup function to remove preload links
+    return () => {
+      criticalImages.forEach(src => {
+        const links = document.head.querySelectorAll(`link[href="${src}"]`);
+        links.forEach(link => link.remove());
+      });
+    };
+  }, []);
+
   // Refresh wallet and balance data when page is visited (to get admin updates)
   // Do this in background without blocking UI - show cached data immediately
   useEffect(() => {
@@ -45,7 +73,6 @@ export default function WalletPage() {
     // Use setTimeout to refresh in background after showing cached data
     // This ensures smooth UX - cached data shows immediately, fresh data loads in background
     const refreshTimer = setTimeout(() => {
-      console.log("🔄 [WalletPage] Refreshing wallet and balance data in background to get admin updates...");
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
     }, 100); // Small delay to let cached data render first
@@ -58,7 +85,6 @@ export default function WalletPage() {
     if (!token) return;
 
     const handleFocus = () => {
-      console.log("🔄 [WalletPage] App focused - refreshing wallet and balance to get admin updates");
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
     };

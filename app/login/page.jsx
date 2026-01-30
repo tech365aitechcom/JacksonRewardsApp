@@ -234,11 +234,26 @@ export default function LoginPage() {
     setError({});
     setIsSubmitting(true);
 
+    // Check if this login is for Face ID registration (BEST PRACTICE: Handle redirect after login)
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const autoRegister = searchParams?.get('autoRegister') === 'true';
+
     try {
       const result = await signIn(emailOrMobile, password, turnstileToken);
 
       if (result?.ok) {
-        router.push("/homepage");
+        // OPTIMIZED: Small delay to ensure critical data (walletScreen, XP tier cache) is ready
+        // This allows handleAuthSuccess to complete its preloads before navigation
+        // Reduced from 2ms to 50ms to give Android WebView time to process Redux dispatches
+        setTimeout(() => {
+          // If autoRegister flag is set, redirect to face verification page
+          // Otherwise, go to homepage as usual
+          if (autoRegister) {
+            router.push("/face-verification?autoRegister=true");
+          } else {
+            router.push("/homepage");
+          }
+        }, 50);
       }
       else {
         const backendError = result?.error;
@@ -372,11 +387,27 @@ export default function LoginPage() {
 
   const handleBiometricSuccess = () => {
     setBiometricMessage(null);
-    router.push("/homepage");
+    // Small delay to ensure walletScreen data is loaded before navigation
+    setTimeout(() => {
+      router.push("/homepage");
+    }, 2);
   };
 
-  const handleBiometricError = (message) => {
-    setBiometricMessage(message || "Biometric login unavailable. Please try again.");
+  const handleBiometricError = (message, options) => {
+    let errorMessage = message || "Biometric login unavailable. Please try again.";
+
+    // If options include redirect link, add it to the message
+    if (options?.showRedirectLink && options?.redirectPath) {
+      // Store redirect info separately for rendering
+      setBiometricMessage({
+        message: errorMessage,
+        showRedirect: true,
+        redirectPath: options.redirectPath,
+        redirectMessage: options.redirectMessage || "Register Face ID"
+      });
+    } else {
+      setBiometricMessage(errorMessage);
+    }
   };
 
   return (
@@ -776,9 +807,29 @@ export default function LoginPage() {
                       </button>
                     </div>
                     {biometricMessage && (
-                      <p className="text-red-400 text-xs text-center w-full max-w-[305px] break-words">
-                        {biometricMessage}
-                      </p>
+                      <div className="w-full max-w-[305px] flex flex-col items-center gap-2">
+                        <p className="text-red-400 text-xs text-center break-words">
+                          {typeof biometricMessage === 'string'
+                            ? biometricMessage
+                            : biometricMessage.message}
+                        </p>
+                        {typeof biometricMessage === 'object' && biometricMessage.showRedirect && (
+                          <button
+                            onClick={() => {
+                              // If redirect is to login (for registration), add auto-register flag
+                              const path = biometricMessage.redirectPath || "/face-verification";
+                              if (path === "/login") {
+                                router.push("/login?autoRegister=true");
+                              } else {
+                                router.push(path);
+                              }
+                            }}
+                            className="text-blue-400 text-xs underline hover:text-blue-300 transition-colors"
+                          >
+                            {biometricMessage.redirectMessage || "Register Face ID here"}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

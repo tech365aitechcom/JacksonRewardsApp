@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
     checkBiometricAvailability,
     authenticateWithBiometric,
@@ -8,7 +9,9 @@ import {
     getBiometricType,
 } from "@/lib/biometricAuth";
 import { Capacitor } from "@capacitor/core";
+import { Preferences } from "@capacitor/preferences";
 import { useAuth } from "@/contexts/AuthContext";
+import { checkBiometricStatus, checkBiometricStatusByDevice, biometricLogin } from "@/lib/api";
 
 /**
  * Biometric Login Button Component
@@ -20,6 +23,7 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     const [hasCredentials, setHasCredentials] = useState(false);
     const { refreshSession } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
         checkAvailabilityAndCredentials();
@@ -61,7 +65,7 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
         try {
             console.log("🔐 [LOGIN-BTN] Starting biometric login flow...");
 
-            // Check if credentials are stored
+            // Check if credentials are stored locally
             if (!hasCredentials) {
                 console.warn("⚠️ [LOGIN-BTN] No credentials stored");
                 onError?.("Biometric login is not set up. Please sign in manually once to enable biometric login.");
@@ -69,8 +73,156 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
                 return;
             }
 
-            // Complete biometric authentication flow
-            // This will: Check availability -> Verify identity -> Retrieve credentials
+            // Get user identifier from Capacitor Preferences (survives logout)
+            // This is stored during face verification registration
+            let userIdentifier = null;
+
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    const prefResult = await Preferences.get({ key: "biometric_username" });
+                    if (prefResult && prefResult.value) {
+                        userIdentifier = prefResult.value;
+                        console.log("✅ [LOGIN-BTN] Got user identifier from Preferences:", userIdentifier);
+                    }
+                } catch (e) {
+                    console.warn("⚠️ [LOGIN-BTN] Failed to get username from Preferences:", e);
+                }
+            }
+
+            // Fallback to localStorage if Preferences not available
+            if (!userIdentifier) {
+                try {
+                    const storedUser = localStorage.getItem("user") || localStorage.getItem("biometricUser");
+                    if (storedUser) {
+                        const user = JSON.parse(storedUser);
+                        userIdentifier = user.mobile || user.email;
+                        console.log("✅ [LOGIN-BTN] Got user identifier from localStorage:", userIdentifier);
+                    }
+                } catch (e) {
+                    console.error("❌ [LOGIN-BTN] Failed to get user from localStorage:", e);
+                }
+            }
+
+            // Get device ID as backup for status check
+            const { Device } = await import("@capacitor/device");
+            const deviceInfo = await Device.getId();
+            const deviceId = deviceInfo.identifier || "unknown";
+            console.log("📱 [LOGIN-BTN] Device ID:", deviceId);
+
+            // Step 1: Check if user has registered Face ID with backend
+            // Try by user identifier first, fallback to device ID if identifier not available
+            // OPTIMIZATION: Defer status check to next tick to prevent frame drops
+            const DEBUG_BIOMETRIC = typeof window !== 'undefined' && (
+                process.env.NODE_ENV === 'development' ||
+                localStorage.getItem('debug_biometric') === 'true'
+            );
+
+            const bioLog = (...args) => {
+                if (DEBUG_BIOMETRIC) console.log(...args);
+            };
+
+            bioLog("🔍 [LOGIN-BTN] Checking biometric registration status...");
+
+            let statusResult;
+
+            // OPTIMIZATION: Defer status check to next tick to prevent frame drops
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            try {
+                const statusCheckStartTime = Date.now();
+
+                if (userIdentifier) {
+                    statusResult = await checkBiometricStatus(userIdentifier);
+                    const duration = Date.now() - statusCheckStartTime;
+                    bioLog(`🔍 [LOGIN-BTN] Status check completed in ${duration}ms`);
+                    if (DEBUG_BIOMETRIC) {
+                        bioLog("🔍 [LOGIN-BTN] Status check result:", JSON.stringify(statusResult, null, 2));
+                    }
+                } else {
+                    // Fallback: Check by device ID (backend must support this)
+                    statusResult = await checkBiometricStatusByDevice(deviceId);
+                    const duration = Date.now() - statusCheckStartTime;
+                    bioLog(`🔍 [LOGIN-BTN] Status check completed in ${duration}ms`);
+                    if (DEBUG_BIOMETRIC) {
+                        bioLog("🔍 [LOGIN-BTN] Status check result:", JSON.stringify(statusResult, null, 2));
+                    }
+                }
+            } catch (error) {
+                console.error("❌ [LOGIN-BTN] Exception during status check:", error.message);
+
+                // Convert exception to error object
+                statusResult = {
+                    error: error.message || "Failed to check biometric status",
+                    success: false,
+                    status: 0
+                };
+            }
+
+            // Handle API errors (404, HTML responses, etc.)
+            // apiRequest returns error objects, not throws exceptions
+            if (statusResult.error) {
+                if (DEBUG_BIOMETRIC) {
+                    console.error("❌ [LOGIN-BTN] Status check API error:", statusResult.error);
+                }
+
+                // If user not found (404), it means biometric is not registered
+                if (statusResult.error.includes("User not found") || statusResult.status === 404) {
+                    const errorMessage = "Face ID is not registered. Please log in first to register Face ID for faster login next time.";
+                    onError?.(errorMessage, {
+                        showRedirectLink: true,
+                        redirectPath: "/login",
+                        redirectMessage: "Log In to Register Face ID"
+                    });
+                    setIsAuthenticating(false);
+                    return;
+                }
+
+                // If endpoint doesn't exist (HTML response), treat as not registered
+                if (statusResult.error.includes("not found") ||
+                    statusResult.error.includes("HTML")) {
+                    const errorMessage = "Face ID is not registered. Please log in first to register Face ID for faster login next time.";
+                    onError?.(errorMessage, {
+                        showRedirectLink: true,
+                        redirectPath: "/login",
+                        redirectMessage: "Log In to Register Face ID"
+                    });
+                    setIsAuthenticating(false);
+                    return;
+                }
+            }
+
+            // Check if biometric is registered (handle different response structures)
+            // Backend returns: { success: true, isRegistered: true/false, ... }
+            const isRegistered =
+                (statusResult.success === true && statusResult.isRegistered === true) ||
+                (statusResult.data && statusResult.data.isRegistered === true) ||
+                (statusResult.isRegistered === true);
+
+            if (DEBUG_BIOMETRIC) {
+                bioLog("🔍 [LOGIN-BTN] Status check result:", {
+                    success: statusResult.success,
+                    isRegistered: statusResult.isRegistered,
+                    finalIsRegistered: isRegistered
+                });
+            }
+
+            if (!isRegistered) {
+                // INDUSTRIAL BEST PRACTICE: Clear error message with action
+                // User must log in first to register Face ID (token required for security)
+                const errorMessage = "Face ID is not registered. Please log in first to register Face ID for faster login next time.";
+                onError?.(errorMessage, {
+                    showRedirectLink: true,
+                    redirectPath: "/login",
+                    redirectMessage: "Log In to Register Face ID"
+                });
+                setIsAuthenticating(false);
+                return;
+            }
+
+            console.log("✅ [LOGIN-BTN] Face ID is registered, proceeding with biometric authentication...");
+
+            // Step 2: Perform biometric authentication on device to get user credentials
+            // This also retrieves the username (mobile/email) from secure storage
             const authResult = await authenticateWithBiometric({
                 reason: "Login to your Jackson account securely",
                 title: "Biometric Login",
@@ -81,71 +233,128 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
             console.log("🔐 [LOGIN-BTN] Authentication result:", {
                 success: authResult.success,
                 hasUsername: !!authResult.username,
-                hasPassword: !!authResult.password,
                 biometryType: authResult.biometryTypeName,
             });
 
             if (!authResult.success) {
-                console.error("❌ [LOGIN-BTN] Authentication failed:", authResult.error);
+                console.error("❌ [LOGIN-BTN] Biometric authentication failed:", authResult.error);
                 onError?.(authResult.error || "Biometric authentication failed");
                 setIsAuthenticating(false);
                 return;
             }
 
-            // Verify we have credentials
-            if (!authResult.username || !authResult.password) {
-                console.error("❌ [LOGIN-BTN] No credentials retrieved");
-                onError?.("Failed to retrieve your credentials. Please sign in manually.");
-                setIsAuthenticating(false);
-                return;
+            // Get user identifier from authenticated credentials (update if not already set)
+            if (!userIdentifier) {
+                userIdentifier = authResult.username;
             }
-
-            console.log("✅ [LOGIN-BTN] Biometric authentication successful, restoring session...");
-
-            // The password field contains a JSON string with token and user data
-            let authToken = null;
-            let userData = null;
-
-            try {
-                // Parse the stored credential payload
-                const credentialPayload = JSON.parse(authResult.password);
-                authToken = credentialPayload.token;
-                userData = credentialPayload.user;
-                console.log("✅ [LOGIN-BTN] Parsed credentials successfully");
-            } catch (parseError) {
-                console.error("❌ [LOGIN-BTN] Failed to parse credentials:", parseError);
-                // Fallback: try to use as plain token and get user from localStorage
-                authToken = authResult.password;
+            if (!userIdentifier && authResult.password) {
                 try {
-                    const storedUser = localStorage.getItem("user");
-                    if (storedUser) {
-                        userData = JSON.parse(storedUser);
-                        console.log("✅ [LOGIN-BTN] Using fallback user data from localStorage");
-                    }
+                    const credentialPayload = JSON.parse(authResult.password);
+                    userIdentifier = credentialPayload.user?.mobile || credentialPayload.user?.email || authResult.username;
                 } catch (e) {
-                    console.error("❌ [LOGIN-BTN] Failed to get user from localStorage:", e);
+                    // If password is not JSON, use username from authResult
+                    if (!userIdentifier) {
+                        userIdentifier = authResult.username;
+                    }
                 }
             }
 
-            // Verify we have both token and user data
-            if (!authToken || !userData) {
-                console.error("❌ [LOGIN-BTN] Missing token or user data");
-                onError?.("Failed to retrieve your account data. Please sign in manually.");
+            if (!userIdentifier) {
+                console.error("❌ [LOGIN-BTN] Cannot determine user identifier from credentials");
+                onError?.("Unable to identify your account. Please sign in manually.");
                 setIsAuthenticating(false);
                 return;
             }
 
-            // Refresh the session with retrieved credentials
+            console.log("🌐 [LOGIN-BTN] Calling biometric login endpoint...");
+
+            // Step 3: Call backend biometric login endpoint to get fresh token
+            const loginData = {
+                deviceId: deviceId,
+                biometricType: authResult.biometryTypeName || "face_id",
+            };
+
+            // Include mobile or email based on identifier type
+            if (userIdentifier.includes("@")) {
+                loginData.email = userIdentifier;
+            } else {
+                loginData.mobile = userIdentifier;
+            }
+
+            console.log("🌐 [LOGIN-BTN] Calling biometric login with data:", {
+                ...loginData,
+                deviceId: deviceId.substring(0, 10) + "...", // Log partial deviceId for privacy
+            });
+
+            const loginResult = await biometricLogin(loginData);
+            console.log("🌐 [LOGIN-BTN] Biometric login result:", {
+                success: !loginResult.error,
+                hasToken: !!(loginResult.token || loginResult.data?.token),
+                hasUser: !!(loginResult.user || loginResult.data?.user),
+                error: loginResult.error,
+            });
+
+            // Handle API errors (404, HTML responses, etc.) - apiRequest returns error objects
+            if (loginResult.error) {
+                console.error("❌ [LOGIN-BTN] Biometric login API error:", loginResult.error);
+
+                if (loginResult.error.includes("not found") ||
+                    loginResult.error.includes("HTML") ||
+                    loginResult.status === 404) {
+                    onError?.("Biometric login endpoint is not available. Please ensure backend routes are implemented. Sign in manually for now.");
+                    setIsAuthenticating(false);
+                    return;
+                }
+
+                // Handle specific backend error messages
+                if (loginResult.error.includes("not registered") ||
+                    loginResult.error.includes("not set up") ||
+                    loginResult.error.includes("Biometric not")) {
+                    onError?.("Face ID is not registered. Please log in first to register Face ID for faster login next time.", {
+                        showRedirectLink: true,
+                        redirectPath: "/login",
+                        redirectMessage: "Log In to Register Face ID"
+                    });
+                    setIsAuthenticating(false);
+                    return;
+                }
+
+                if (loginResult.error.includes("locked") || loginResult.error.includes("Account locked")) {
+                    onError?.("Account is temporarily locked. Please try again later or sign in manually.");
+                    setIsAuthenticating(false);
+                    return;
+                }
+
+                if (loginResult.error.includes("not active") || loginResult.error.includes("suspended")) {
+                    onError?.("Account is not active. Please contact support.");
+                    setIsAuthenticating(false);
+                    return;
+                }
+            }
+
+            // Handle different response structures
+            const token = loginResult.token || loginResult.data?.token;
+            const user = loginResult.user || loginResult.data?.user;
+
+            if (loginResult.error || !token || !user) {
+                console.error("❌ [LOGIN-BTN] Backend biometric login failed:", loginResult.error);
+                const errorMessage = loginResult.error || "Biometric login failed. Please try again or sign in manually.";
+                onError?.(errorMessage);
+                setIsAuthenticating(false);
+                return;
+            }
+
+            // Step 5: Refresh session with fresh token from backend
             const refreshResult = await refreshSession({
-                token: authToken,
-                user: userData,
+                token: token,
+                user: user,
             });
 
             if (refreshResult?.ok) {
-                console.log("✅ [LOGIN-BTN] Session restored successfully!");
+                console.log("✅ [LOGIN-BTN] Session restored successfully with fresh token!");
                 onSuccess?.({
-                    token: authToken,
-                    user: userData
+                    token: token,
+                    user: user
                 });
             } else {
                 console.error("❌ [LOGIN-BTN] Session refresh failed");

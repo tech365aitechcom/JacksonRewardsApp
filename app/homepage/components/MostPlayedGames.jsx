@@ -60,14 +60,6 @@ const MostPlayedGames = () => {
 
     // Memoize game click handler to prevent recreation on every render
     const handleGameClick = useCallback((game) => {
-        console.log('🎮 MostPlayedGames: Navigating to game details for:', {
-            title: game.fullGameData?.besitosRawData?.title || game.details?.name || game.title || game.name,
-            _id: game._id,
-            id: game.id,
-            usingId: game.id || game._id,
-            hasBesitosRawData: !!game.fullGameData?.besitosRawData
-        });
-
         // Clear Redux state BEFORE navigation to prevent showing old data
         dispatch({ type: 'games/clearCurrentGameDetails' });
 
@@ -75,9 +67,8 @@ const MostPlayedGames = () => {
         if (game.fullGameData) {
             try {
                 localStorage.setItem('selectedGameData', JSON.stringify(game.fullGameData));
-                console.log('💾 Stored full game data with besitosRawData in localStorage');
             } catch (error) {
-                console.error('❌ Failed to store game data:', error);
+                // Failed to store game data - silently handle
             }
         }
 
@@ -88,12 +79,6 @@ const MostPlayedGames = () => {
 
     // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
     useEffect(() => {
-        console.log('🎮 MostPlayedGames: Using user profile:', {
-            age: userProfile?.age,
-            ageRange: userProfile?.ageRange,
-            gender: userProfile?.gender
-        });
-
         // Always dispatch - stale-while-revalidate will handle cache logic automatically
         // Pass user object directly - API will extract age and gender dynamically
         // This ensures:
@@ -116,7 +101,6 @@ const MostPlayedGames = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [MostPlayedGames] Refreshing games in background to get admin updates...");
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
                 user: userProfile,
@@ -135,7 +119,6 @@ const MostPlayedGames = () => {
         if (!userProfile) return;
 
         const handleFocus = () => {
-            console.log("🔄 [MostPlayedGames] App focused - refreshing games to get admin updates");
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
                 user: userProfile,
@@ -150,7 +133,6 @@ const MostPlayedGames = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && userProfile) {
-                console.log("🔄 [MostPlayedGames] App visible - refreshing games to get admin updates");
                 dispatch(fetchGamesBySection({
                     uiSection: sectionName,
                     user: userProfile,
@@ -175,7 +157,7 @@ const MostPlayedGames = () => {
         try {
             localStorage.setItem('featuredGamesData', JSON.stringify(games));
         } catch (error) {
-            console.warn('Failed to store games data:', error);
+            // Failed to store games data - silently handle
         }
     }, []);
 
@@ -214,8 +196,10 @@ const MostPlayedGames = () => {
                                             className="w-full h-full object-cover rounded-full"
                                             alt={game.displayTitle || game.details?.name}
                                             src={game.optimizedImage || "/placeholder-game.png"}
-                                            loading="lazy"
+                                            loading="eager"
                                             decoding="async"
+                                            width="72"
+                                            height="72"
                                             onError={(e) => {
                                                 e.target.src = "/placeholder-game.png";
                                             }}

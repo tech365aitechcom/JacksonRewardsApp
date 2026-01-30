@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSelector, useDispatch } from "react-redux";
-import { updateUserProfile, fetchUserProfile, fetchVipStatus } from "@/lib/redux/slice/profileSlice";
+import { updateUserProfile, fetchUserProfile, fetchVipStatus, fetchProfileStats } from "@/lib/redux/slice/profileSlice";
+import { fetchWalletScreen } from "@/lib/redux/slice/walletTransactionsSlice";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import Vip from "./components/Vip";
 import Settings from "./components/Settings";
@@ -70,7 +71,6 @@ export default function MyProfile() {
     // Use setTimeout to refresh in background after showing cached data
     // This ensures smooth UX - cached data shows immediately, fresh data loads in background
     const refreshTimer = setTimeout(() => {
-      console.log("🔄 [MyProfile] Refreshing profile, wallet, and VIP data in background to get admin updates...");
       dispatch(fetchUserProfile({ token, force: true }));
       dispatch(fetchVipStatus(token));
       // Also refresh wallet/balance/XP to get admin coin/XP updates
@@ -86,7 +86,6 @@ export default function MyProfile() {
     if (!token) return;
 
     const handleFocus = () => {
-      console.log("🔄 [MyProfile] App focused - refreshing profile, wallet, and VIP to get admin updates");
       dispatch(fetchUserProfile({ token, force: true }));
       dispatch(fetchVipStatus(token));
       // Also refresh wallet/balance/XP to get admin coin/XP updates
@@ -166,6 +165,9 @@ export default function MyProfile() {
                 className="w-6 h-6"
                 alt="Back"
                 src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new@2x.png"
+                loading="eager"
+                decoding="async"
+                priority
               />
             </button>
 

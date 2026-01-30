@@ -28,14 +28,9 @@ const Homepage = () => {
   // Fetch and manage notifications
   const { currentNotification, dismiss, loading: notificationsLoading, error: notificationsError } = useNotifications(token);
 
-  // Debug logging
+  // Notification error handling (silent)
   React.useEffect(() => {
-    if (notificationsError) {
-      console.error("🔔 [Homepage] Notification error:", notificationsError);
-    }
-    if (currentNotification) {
-      console.log("🔔 [Homepage] Showing notification:", currentNotification);
-    }
+    // Silently handle notification errors
   }, [currentNotification, notificationsError, notificationsLoading]);
 
   return (
@@ -57,17 +52,18 @@ const Homepage = () => {
       </div>
       <div className="flex flex-col w-full max-w-[375px] mx-auto items-center gap-6 pt-36 px-4">
         <HeaderSection />
-        {hasStats && <RewardProgress stats={stats} />}
-        {hasStats && <XPTierTracker stats={stats} token={token} />}
+        <RewardProgress stats={stats} />
+        <XPTierTracker stats={stats} token={token} />
         <MostPlayedGames />
         <WelcomeOfferSection />
         <GameCard />
-        <div className="mt-14">
-          <SurveysSection />
+        <div className="mt-8">
+          <NonGameOffersSection />
         </div>
-        <NonGameOffersSection />
+
         <VipBanner />
         <RaceSection />
+        <SurveysSection />
         <StreakSection />
       </div>
       <HomeIndicator activeTab="home" />

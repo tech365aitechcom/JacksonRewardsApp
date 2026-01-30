@@ -2,13 +2,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { fetchUserData } from "@/lib/redux/slice/gameSlice";
+import { fetchUserData, loadUserDataFromCache } from "@/lib/redux/slice/gameSlice";
 import { safeLocalStorage } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import GameItemCard from "./GameItemCard";
 import NonGamingOffersCarousel from "./NonGamingOffersCarousel";
 import AccountOverviewCard from "./AccountOverviewCard";
 import WatchAdCard from "./WatchAdCard";
+import NonGameOffersSection from "../../homepage/components/NonGameOffersSection";
+
 
 // Static data for non-gaming offers carousel
 const nonGamingOffers = [
@@ -88,17 +90,20 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     setHasNavigated(true); // Mark that user has navigated to this page
   }, []);
 
-  // Force data fetch on component mount - ALWAYS fetch when navigating to games page
-  useEffect(() => {
-    if (isClient && hasNavigated) {
-      const userId = getUserId();
-      if (userId) {
-        console.log('🎮 [GameListSection] User navigated to games page, fetching fresh data immediately');
-        // Always fetch fresh data when user navigates to games page
-        dispatch(fetchUserData({ userId, token }));
+  // Helper to get userId
+  const getUserId = () => {
+    try {
+      const userData = safeLocalStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const userId = user._id || user.id;
+        return userId;
       }
+    } catch (error) {
+      // Error getting user ID from localStorage
     }
-  }, [isClient, hasNavigated, dispatch]);
+    return null;
+  };
 
   // Refresh user data in background when app comes to foreground (admin might have updated)
   useEffect(() => {
@@ -107,7 +112,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     const handleFocus = () => {
       const userId = getUserId();
       if (userId) {
-        console.log('🔄 [GameListSection] App focused - refreshing user data to get admin updates');
         dispatch(fetchUserData({ userId, token, force: true, background: true }));
       }
     };
@@ -118,7 +122,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       if (!document.hidden && isClient) {
         const userId = getUserId();
         if (userId) {
-          console.log('🔄 [GameListSection] App visible - refreshing user data to get admin updates');
           dispatch(fetchUserData({ userId, token, force: true, background: true }));
         }
       }
@@ -132,80 +135,56 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     };
   }, [isClient, dispatch, token]);
 
-  // Helper to get userId
-  const getUserId = () => {
-    try {
-      const userData = safeLocalStorage.getItem('user');
-      console.log('🔍 [GameListSection] getUserId - localStorage user data:', userData);
-
-      if (userData) {
-        const user = JSON.parse(userData);
-        const userId = user._id || user.id;
-        console.log('✅ [GameListSection] Found userId:', userId, 'from user object:', user);
-        return userId;
-      } else {
-        console.warn('⚠️ [GameListSection] No user data found in localStorage');
-      }
-    } catch (error) {
-      console.error('❌ [GameListSection] Error getting user ID from localStorage:', error);
-    }
-    return null;
-  };
-
   // Track loading at download event
   const refreshingRef = useRef(false);
 
-  // When component is mounted or userDataStatus changes (client-side only)
-  // Uses stale-while-revalidate: shows cached data immediately, fetches fresh if needed
-  useEffect(() => {
-    // Only run on client side
-    if (!isClient) {
-      console.log('🔍 [GameListSection] useEffect - Not on client side yet, skipping data fetch');
-      return;
-    }
-
-    const userId = getUserId();
-    console.log('🎮 [GameListSection] useEffect triggered:', {
-      userId,
-      userDataStatus,
-      hasUserId: !!userId,
-      status: userDataStatus,
-      gamesCount: inProgressGames?.length || 0
-    });
-
-    // ALWAYS fetch data when navigating to games page - stale-while-revalidate will handle cache
-    if (userId) {
-      console.log('🚀 [GameListSection] Fetching data (stale-while-revalidate)');
-      dispatch(fetchUserData({ userId, token }));
-    } else {
-      console.warn('⚠️ [GameListSection] No userId found in localStorage');
-    }
-  }, [dispatch, isClient, token]);
-
-  // Refresh user data in background after showing cached data (to get admin updates)
-  // Do this in background without blocking UI - show cached data immediately
+  // Load cached data from localStorage immediately for instant display
   useEffect(() => {
     if (!isClient) return;
 
     const userId = getUserId();
     if (!userId) return;
 
-    // Use setTimeout to refresh in background after showing cached data
-    // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-    const refreshTimer = setTimeout(() => {
-      console.log("🔄 [GameListSection] Refreshing user data in background to get admin updates...");
-      dispatch(fetchUserData({ userId, token, force: true, background: true }));
-    }, 100); // Small delay to let cached data render first
+    // Load from localStorage cache immediately (before API call)
+    try {
+      const CACHE_KEY = `userData_${userId}`;
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        const cacheAge = Date.now() - (parsed.timestamp || 0);
+        const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-    return () => clearTimeout(refreshTimer);
+        // Load cache if it exists (even if stale - will refresh in background)
+        if (parsed.data && cacheAge < CACHE_TTL * 2) { // Allow stale cache up to 10 minutes
+          dispatch(loadUserDataFromCache({
+            userData: parsed.data,
+            timestamp: parsed.timestamp,
+          }));
+        }
+      }
+    } catch (err) {
+      // Failed to load cache - continue to API fetch
+    }
+  }, [dispatch, isClient]);
+
+  // Single data fetch on component mount - stale-while-revalidate handles caching
+  // This fetches data once, showing cached data immediately if available
+  // Redux slice automatically handles background refresh for stale cache
+  useEffect(() => {
+    if (!isClient) return;
+
+    const userId = getUserId();
+    if (userId) {
+      // Fetch data - stale-while-revalidate will return cached data immediately if available
+      // and refresh in background automatically
+      dispatch(fetchUserData({ userId, token }));
+    }
   }, [dispatch, isClient, token]);
 
   // Main fix: Listen to game download event - refetch without full refresh
   useGameDownloadedRefetch((event) => {
-    console.log('🎮 [GameListSection] Game download event received:', event);
     const userId = getUserId();
     if (userId && userDataStatus !== 'loading') {
-      console.log('🔄 [GameListSection] Refreshing game data due to download event...');
       refreshingRef.current = true;
 
       // Add retry logic for VPN connections
@@ -214,10 +193,9 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
           await dispatch(fetchUserData({ userId, devicePlatform: "android" }));
         } catch (error) {
           if (retryCount < 3 && error.message.includes('timeout')) {
-            console.log(`🔄 Retry ${retryCount + 1}/3 for VPN timeout...`);
             setTimeout(() => fetchWithRetry(retryCount + 1), 2000);
           } else {
-            console.error('❌ Failed to refresh after retries:', error);
+            // Failed to refresh after retries
           }
         }
       };
@@ -233,34 +211,22 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     }
   }, [userDataStatus]);
 
-  // Debug logging for games data
-  console.log('🎮 [GameListSection] Current state:', {
-    inProgressGames: inProgressGames?.length || 0,
-    userDataStatus,
-    error,
-    refreshingRef: refreshingRef.current
-  });
 
   // Add retry mechanism for failed requests
   useEffect(() => {
     if (userDataStatus === "failed" && !refreshingRef.current) {
-      console.log('🔄 [GameListSection] Data fetch failed, attempting retry...');
       const userId = getUserId();
       if (userId) {
         setTimeout(() => {
-          console.log('🔄 [GameListSection] Retrying fetchUserData...');
           dispatch(fetchUserData({ userId, token }));
         }, 2000); // Retry after 2 seconds
       }
     }
   }, [userDataStatus, dispatch]);
 
-  // Debug: Log the inProgressGames data
-  console.log('🎮 [GameListSection] inProgressGames from Redux:', inProgressGames);
-  console.log('🎮 [GameListSection] inProgressGames length:', inProgressGames?.length);
 
-  // Re-map
-  const downloadedGames = inProgressGames.map((game) => {
+  // Re-map with safety check
+  const downloadedGames = (inProgressGames && Array.isArray(inProgressGames) ? inProgressGames : []).map((game) => {
     const completedGoalsCount = game.goals?.filter(g => g.completed === true).length || 0;
     const totalGoals = game.goals?.length || 0;
     const earnedAmount = game.goals
@@ -331,11 +297,10 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
               <button
                 onClick={() => {
                   const userId = getUserId();
-                  console.log('🔄 [GameListSection] Manual retry triggered for userId:', userId);
                   if (userId) {
                     dispatch(fetchUserData({ userId, token }));
                   } else {
-                    console.error('❌ [GameListSection] Cannot retry - no userId found');
+                    // Cannot retry - no userId found
                   }
                 }}
                 className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
@@ -372,6 +337,11 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
 
       {/* ==================== WATCH AD SECTION ==================== */}
       <WatchAdCard xpAmount={5} />
+
+      <div className="-mt-6">
+        <NonGameOffersSection />
+      </div>
+
 
       {/* ==================== NON-GAMING OFFERS CAROUSEL SECTION ==================== */}
       {/* <NonGamingOffersCarousel offers={nonGamingOffers} /> */}

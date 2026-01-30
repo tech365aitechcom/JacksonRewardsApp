@@ -15,6 +15,8 @@ export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
                     className="w-full h-[140px]"
                     alt="VIP background"
                     src="/vipbg.svg"
+                    loading="eager"
+                    priority
                 />
                 <Image
                     width={215}
@@ -22,6 +24,8 @@ export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
                     className="absolute w-[215px] h-[119px] top-2 left-0"
                     alt="VIP decoration"
                     src="/vipdecoration.png"
+                    loading="eager"
+                    priority
                 />
                 <div className="flex flex-col w-[220px] absolute top-[21px] left-[20px]">
                     <div className="flex flex-col pb-2">
@@ -46,6 +50,8 @@ export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
                     className="w-full h-[140px]"
                     alt="VIP background"
                     src="/vipbg.svg"
+                    loading="eager"
+                    priority
                 />
                 <Image
                     width={215}
@@ -53,6 +59,8 @@ export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
                     className="absolute w-[215px] h-[119px] top-2 left-0"
                     alt="VIP decoration"
                     src="/vipdecoration.png"
+                    loading="eager"
+                    priority
                 />
                 <div className="flex flex-col w-[220px] absolute top-[21px] left-[20px]">
                     <div className="flex flex-col pb-2">

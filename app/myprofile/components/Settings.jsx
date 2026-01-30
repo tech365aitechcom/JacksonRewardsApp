@@ -33,6 +33,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Notifications"
                             src="https://c.animaapp.com/V1uc3arn/img/line-media-notification-3-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Notifications</span>
                     </div>
@@ -57,6 +60,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Language"
                             src="https://c.animaapp.com/V1uc3arn/img/line-editor-translate-2.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Language</span>
                     </div>
@@ -73,6 +79,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Security"
                             src="https://c.animaapp.com/V1uc3arn/img/line-business-projector-2-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Security</span>
                     </div>
@@ -94,6 +103,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Theme"
                             src="https://c.animaapp.com/V1uc3arn/img/line-health-mental-health-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Theme</span>
                     </div>
@@ -110,6 +122,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Tickets / Complaints"
                             src="https://c.animaapp.com/V1uc3arn/img/line-user-contacts-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">
                             Tickets / Complaints
@@ -126,6 +141,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Arrow"
                             src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </button>
                 </div>
@@ -138,6 +156,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Contact us"
                             src="https://c.animaapp.com/V1uc3arn/img/line-communication-chat-quote-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Contact us</span>
                     </div>
@@ -152,6 +173,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Arrow"
                             src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </button>
                 </div>
@@ -164,6 +188,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Privacy policy"
                             src="https://c.animaapp.com/V1uc3arn/img/line-system-lock-2-line.svg"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                         <span className="text-white text-base">Privacy policy</span>
                     </div>
@@ -178,6 +205,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Arrow"
                             src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </button>
                 </div>
@@ -211,6 +241,9 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             alt="Perform action"
                             src="https://c.animaapp.com/V1uc3arn/img/arrow-back-ios-new-3@2x.png"
                             className="w-6 h-6"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </button>
                 </div>

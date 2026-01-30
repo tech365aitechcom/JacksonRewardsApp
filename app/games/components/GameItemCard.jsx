@@ -62,6 +62,9 @@ const GameItemCard = ({
                             src={game.image}
                             width={55}
                             height={55}
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </div>
                 ) : (
@@ -99,6 +102,9 @@ const GameItemCard = ({
                         src={game.coinIcon}
                         width={16}
                         height={16}
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
                 </div>
 
@@ -113,6 +119,9 @@ const GameItemCard = ({
                         src={game.picIcon}
                         width={14}
                         height={11}
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
                 </div>
             </div>

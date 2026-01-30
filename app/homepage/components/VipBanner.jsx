@@ -33,7 +33,7 @@ const VipBanner = () => {
 
     return (
         !vipData.isVipActive ? (
-            <section className="relative w-full max-w-[335px] h-[127px]  mt-8 mx-auto mb-4">
+            <section className="relative w-full max-w-[335px] h-[127px]   mx-auto mb-4">
                 <Image
                     width={334}
                     height={127}
@@ -64,7 +64,7 @@ const VipBanner = () => {
                 </div>
             </section>
         ) : (
-            <section className="relative w-full max-w-[335px] h-[127px] mx-auto mt-8 mb-4">
+            <section className="relative w-full max-w-[335px] h-[127px] mx-auto  mb-4">
                 <Image
                     width={334}
                     height={127}

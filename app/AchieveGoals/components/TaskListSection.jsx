@@ -82,23 +82,6 @@ export const TaskListSection = () => {
             !userProfile.error && // Not an error object
             (userProfile.age !== undefined || userProfile.ageRange !== undefined || userProfile.gender !== undefined || userProfile._id !== undefined); // Has user properties
 
-        console.log('🔍 [COMPONENT] TaskListSection - User Profile Debug:', {
-            hasUserProfile: !!userProfile,
-            isValidUser,
-            userProfileType: typeof userProfile,
-            userProfileIsNull: userProfile === null,
-            userProfileIsUndefined: userProfile === undefined,
-            isErrorObject: userProfile && userProfile.success === false,
-            errorMessage: userProfile?.error,
-            userProfileKeys: userProfile ? Object.keys(userProfile) : [],
-            userProfileAge: userProfile?.age,
-            userProfileAgeType: typeof userProfile?.age,
-            userProfileAgeRange: userProfile?.ageRange,
-            userProfileGender: userProfile?.gender,
-            userProfileGenderType: typeof userProfile?.gender,
-            fullUserProfile: userProfile,
-            userProfileStringified: userProfile ? JSON.stringify(userProfile).substring(0, 300) : 'null/undefined'
-        });
 
         // Only pass user object if it's valid, otherwise pass null to use defaults
         const userToPass = isValidUser ? userProfile : null;
@@ -109,14 +92,6 @@ export const TaskListSection = () => {
         // 1. Shows cached data immediately if available (< 5 min old)
         // 2. Refreshes in background if cache is stale or 80% expired
         // 3. Fetches fresh if no cache exists
-        console.log('🔍 [COMPONENT] TaskListSection - Dispatching fetchGamesBySection with:', {
-            uiSection: sectionKey,
-            user: userToPass,
-            hasUser: !!userToPass,
-            isValidUser,
-            page: 1,
-            limit: 10
-        });
 
         dispatch(fetchGamesBySection({
             uiSection: sectionKey,
@@ -134,7 +109,6 @@ export const TaskListSection = () => {
         // Use setTimeout to refresh in background after showing cached data
         // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
-            console.log("🔄 [TaskListSection] Refreshing games in background to get admin updates...");
             dispatch(fetchGamesBySection({
                 uiSection: sectionKey,
                 user: userProfile,
@@ -153,7 +127,6 @@ export const TaskListSection = () => {
         if (!userProfile) return;
 
         const handleFocus = () => {
-            console.log("🔄 [TaskListSection] App focused - refreshing games to get admin updates");
             dispatch(fetchGamesBySection({
                 uiSection: sectionKey,
                 user: userProfile,
@@ -168,7 +141,6 @@ export const TaskListSection = () => {
 
         const handleVisibilityChange = () => {
             if (!document.hidden && userProfile) {
-                console.log("🔄 [TaskListSection] App visible - refreshing games to get admin updates");
                 dispatch(fetchGamesBySection({
                     uiSection: sectionKey,
                     user: userProfile,
@@ -253,12 +225,8 @@ export const TaskListSection = () => {
         if (fullGame) {
             try {
                 localStorage.setItem('selectedGameData', JSON.stringify(fullGame));
-                console.log('💾 [TaskListSection] Stored full game data with besitosRawData:', {
-                    hasBesitosRawData: !!fullGame.besitosRawData,
-                    gameId: game.id || game._id
-                });
             } catch (error) {
-                console.error('❌ Failed to store game data:', error);
+                // Failed to store game data
             }
         }
 

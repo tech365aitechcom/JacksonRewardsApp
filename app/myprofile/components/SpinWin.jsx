@@ -41,6 +41,9 @@ const SpinWin = () => {
                             className="absolute top-[2px] left-[46px]"
                             alt="Coin"
                             src="https://c.animaapp.com/V1uc3arn/img/image-3937-3@2x.png"
+                            loading="eager"
+                            decoding="async"
+                            priority
                         />
                     </div>
                     <p className="font-medium text-white text-xs">
@@ -54,6 +57,9 @@ const SpinWin = () => {
                     className="absolute top-[18px] left-[195px]"
                     alt="Spin wheel"
                     src="https://c.animaapp.com/V1uc3arn/img/spin-icon@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
 
                 {/* decorative assets kept as-is */}
@@ -63,6 +69,9 @@ const SpinWin = () => {
                     className="absolute top-[22px] left-[145px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/-----6@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={30}
@@ -70,6 +79,9 @@ const SpinWin = () => {
                     className="absolute top-[63px] left-[175px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/-----9@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={44}
@@ -77,6 +89,9 @@ const SpinWin = () => {
                     className="absolute top-14 left-[275px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/-----5@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={44}
@@ -84,6 +99,9 @@ const SpinWin = () => {
                     className="absolute top-[3px] left-[291px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/-----10@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={8}
@@ -91,6 +109,9 @@ const SpinWin = () => {
                     className="absolute top-1.5 left-48"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-3.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={8}
@@ -98,6 +119,9 @@ const SpinWin = () => {
                     className="absolute top-[19px] left-[129px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-4.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={5}
@@ -105,6 +129,9 @@ const SpinWin = () => {
                     className="absolute top-[46px] left-48"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-5.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={5}
@@ -112,6 +139,9 @@ const SpinWin = () => {
                     className="absolute top-11 left-[302px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-6.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={8}
@@ -119,6 +149,9 @@ const SpinWin = () => {
                     className="absolute top-[70px] left-[164px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-8.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={8}
@@ -126,6 +159,9 @@ const SpinWin = () => {
                     className="absolute top-[13px] left-[270px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/vector-8.svg"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 <Image
                     width={26}
@@ -133,6 +169,9 @@ const SpinWin = () => {
                     className="absolute top-[73px] left-[250px]"
                     alt=""
                     src="https://c.animaapp.com/V1uc3arn/img/-----8@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    priority
                 />
                 </div>
             </div>

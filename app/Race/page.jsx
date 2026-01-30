@@ -49,7 +49,7 @@ const RacePage = () => {
                 }
             }
         } catch (err) {
-            console.warn("⚠️ [RacePage] Failed to load cache:", err);
+            // Failed to load cache
         }
     }, [token]);
 
@@ -77,7 +77,6 @@ const RacePage = () => {
                 }
             } catch (err) {
                 setErrorXP('Failed to fetch XP data');
-                console.error("❌ [RacePage] Error fetching XP tier data:", err);
             } finally {
                 setIsLoadingXP(false);
             }
@@ -224,6 +223,10 @@ const RacePage = () => {
                             className="relative w-6 h-6 mt-[-65182.00px] mr-[-15123.00px]"
                             alt="Messages chat"
                             src="/img/messages-chat.png"
+                            loading="eager"
+                            decoding="async"
+                            width="24"
+                            height="24"
                         />
                     </button>
                     {/* Show a clickable info icon that opens a tooltip modal */}
@@ -246,25 +249,77 @@ const RacePage = () => {
                     {showTooltip && (
                         <div
                             ref={tooltipRef}
-                            className="absolute top-[34px] right-[-8px] z-50 w-[320px] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-3 shadow-2xl border border-gray-600/50 animate-fade-in"
+                            className="absolute top-[34px] right-[-8px] z-50 w-[340px] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-4 shadow-2xl border border-gray-600/50 animate-fade-in"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal">
-                                <div className="text-center text-gray-200">
-                                    {isLoadingXP ? (
-                                        "Loading XP data..."
-                                    ) : errorXP ? (
-                                        `Error: ${errorXP}`
-                                    ) : (
-                                        <>
-                                            <p className="font-semibold mb-2">Your XP Progress</p>
-                                            <p>Current XP: {progressData.currentXP}</p>
-                                            <p>Next Tier: {progressData.currentTier?.name}</p>
-                                            <p>XP to next tier: {progressData.currentTier ? progressData.currentTier.xpMax - progressData.currentXP : 'N/A'}</p>
-                                            <p>Total XP: {progressData.totalXP}</p>
-                                        </>
-                                    )}
+                            <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal space-y-3">
+                                {/* Main Information */}
+                                <div className="bg-purple-600/20 rounded-lg p-3 border border-purple-500/30">
+                                    <p className="font-semibold mb-2 text-purple-300 text-center">🏁 How It Works</p>
+                                    <p className="text-gray-200 text-xs mb-2">
+                                        Complete tasks to climb the ladder faster. Levels unlock sequentially, rewards increase, and higher tiers unlock more races.
+                                    </p>
                                 </div>
+
+                                {/* XP Progress Section */}
+                                {isLoadingXP ? (
+                                    <div className="text-center text-gray-300">
+                                        <p>⏳ Loading XP data...</p>
+                                    </div>
+                                ) : errorXP ? (
+                                    <div className="text-center text-red-400">
+                                        <p>❌ Error: {errorXP}</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="bg-white/5 rounded-lg p-2 border border-white/10">
+                                            <p className="font-semibold mb-2 text-center text-gray-100">📊 Your Progress</p>
+                                            <div className="space-y-1.5 text-xs">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Current XP:</span>
+                                                    <span className="text-purple-400 font-semibold">{progressData.currentXP}</span>
+                                                </div>
+                                                {progressData.currentTier && (
+                                                    <>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-300">Current Tier:</span>
+                                                            <span className="text-yellow-400 font-semibold">{progressData.currentTier.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-300">XP to Next Tier:</span>
+                                                            <span className="text-green-400 font-semibold">
+                                                                {Math.max(0, progressData.currentTier.xpMax - progressData.currentXP)}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Total XP Needed:</span>
+                                                    <span className="text-gray-200 font-semibold">{progressData.totalXP}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Tips Section */}
+                                        <div className="bg-blue-500/10 rounded-lg p-2 border border-blue-500/30">
+                                            <p className="font-semibold mb-1.5 text-blue-300 text-xs">💡 Quick Tips</p>
+                                            <ul className="space-y-1 text-gray-300 text-xs">
+                                                <li className="flex gap-2">
+                                                    <span className="text-green-400">✓</span>
+                                                    <span>Complete tasks to earn XP and advance tiers</span>
+                                                </li>
+                                                <li className="flex gap-2">
+                                                    <span className="text-green-400">✓</span>
+                                                    <span>Higher tiers unlock better rewards and more race options</span>
+                                                </li>
+                                                <li className="flex gap-2">
+                                                    <span className="text-yellow-400">★</span>
+                                                    <span>Stay consistent to climb faster through the levels</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="absolute top-[-8px] right-[25px] w-4 h-4 bg-black/95 border-t border-l border-gray-600/50 transform rotate-45"></div>
                         </div>

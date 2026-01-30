@@ -6,22 +6,31 @@ import { QuestCard } from "../../../components/QuestCard";
 
 const WelcomeOfferSection = () => {
     // OPTIMIZED: Memoize selector to prevent unnecessary re-renders
-    const inProgressGames = useSelector((state) => state.games.inProgressGames);
+    const { inProgressGames, userDataStatus } = useSelector((state) => ({
+        inProgressGames: state.games.inProgressGames,
+        userDataStatus: state.games.userDataStatus
+    }));
     const [currentCardIndex, setCurrentCardIndex] = useState(0);
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
     const containerRef = useRef(null);
 
     // OPTIMIZED: Memoize expensive calculations
+    // Check if data is loading - if so, wait a bit before showing WelcomeOffer
+    // This prevents the flash of WelcomeOffer when data is being fetched
     const gameData = useMemo(() => {
-        const hasDownloadedGames = inProgressGames && inProgressGames.length > 0;
+        const hasDownloadedGames = inProgressGames && Array.isArray(inProgressGames) && inProgressGames.length > 0;
         const allGames = hasDownloadedGames ? inProgressGames : [];
+        // Only show loading if actively loading and no persisted data exists
+        // If we have persisted data (inProgressGames exists), show it immediately
+        const isLoading = userDataStatus === "loading" && !inProgressGames;
 
         return {
             hasDownloadedGames,
-            allGames
+            allGames,
+            isLoading
         };
-    }, [inProgressGames]);
+    }, [inProgressGames, userDataStatus]);
 
     // Handle touch events for swipe functionality
     const handleTouchStart = (e) => {
@@ -63,7 +72,12 @@ const WelcomeOfferSection = () => {
 
             {/* Conditional Rendering with Swipeable Cards */}
             <div className="relative w-full overflow-visible">
-                {gameData.hasDownloadedGames ? (
+                {/* Wait for data to load before showing WelcomeOffer to prevent flash */}
+                {gameData.isLoading ? (
+                    <div className="w-full h-[245px] flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : gameData.hasDownloadedGames ? (
                     <div className="relative">
                         {/* Swipeable Quest Cards */}
                         <div

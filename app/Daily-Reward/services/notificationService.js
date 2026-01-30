@@ -2,7 +2,7 @@
 export class NotificationService {
   static async requestPermission() {
     if (!("Notification" in window)) {
-      console.log("This browser does not support notifications");
+      // This browser does not support notifications
       return false;
     }
 

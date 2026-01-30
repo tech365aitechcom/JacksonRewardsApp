@@ -39,6 +39,10 @@ export default function WalletHeader({ balance = 0, appVersion = "V0.1.1", token
                         className="w-[23px] h-6"
                         alt="Coin"
                         src="/dollor.png"
+                        loading="eager"
+                        decoding="async"
+                        width={23}
+                        height={24}
                     />
                 </button>
             </div>

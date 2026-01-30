@@ -200,6 +200,12 @@ export default function BuySubscription() {
         // Clear the StripePaymentSheet immediately to prevent double modals
         setPurchaseResponse(null);
 
+        // Set loading state immediately to show processing modal and prevent black box
+        dispatch(setPurchaseStatus({
+            status: 'loading',
+            message: 'Processing your subscription...'
+        }));
+
         // This is called from our CapacitorCheckoutForm on success
         // Confirm the payment with the backend
         try {
@@ -333,7 +339,7 @@ export default function BuySubscription() {
                 <main className="w-full flex flex-col items-center ">
                     {purchaseStatus !== "idle" && (
                         <div
-                            className="fixed inset-0 flex justify-center items-center z-50"
+                            className="fixed inset-0 flex justify-center items-center z-50 bg-black/70 backdrop-blur-sm"
                             onClick={(e) => {
                                 // Only allow closing if modal is not locked and not in critical states
                                 if (!modalLocked && purchaseStatus !== "loading" && purchaseStatus !== "awaiting_payment") {

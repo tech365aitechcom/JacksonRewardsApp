@@ -54,6 +54,10 @@ export const GoalProgressSection = () => {
                             className="absolute w-[19px] h-[18px] top-[4px] left-[104px] aspect-[0.97]"
                             alt="Coin icon"
                             src="/dollor.png"
+                            loading="eager"
+                            decoding="async"
+                            width="19"
+                            height="18"
                         />
 
                         <span className="absolute h-[21px] top-[3px] left-[124px] [font-family:'Poppins',Helvetica] font-medium text-white text-[14px] tracking-[0] leading-[normal]">
@@ -64,6 +68,10 @@ export const GoalProgressSection = () => {
                             className="absolute w-[17px] h-[15px] top-1.5 left-[186px]"
                             alt="XP icon"
                             src="/xp.svg"
+                            loading="eager"
+                            decoding="async"
+                            width="17"
+                            height="15"
                         />
                     </div>
                 </div>
@@ -72,30 +80,50 @@ export const GoalProgressSection = () => {
                     className="absolute w-[113px] h-3 top-[146px] left-[33px]"
                     alt="Connection line"
                     src="/dot1.svg"
+                    loading="eager"
+                    decoding="async"
+                    width="113"
+                    height="12"
                 />
 
                 <img
                     className="absolute w-13 h-[132px] top-[154px] left-[282px]"
                     alt="Connection line"
                     src="/dot3.svg"
+                    loading="eager"
+                    decoding="async"
+                    width="52"
+                    height="132"
                 />
 
                 <img
                     className="absolute w-[86px] h-3 top-[152px] left-[163px]"
                     alt="Connection line"
                     src="/dot2.svg"
+                    loading="eager"
+                    decoding="async"
+                    width="86"
+                    height="12"
                 />
 
                 <img
                     className="absolute w-[59px] h-4 top-[280px] left-[196px]"
                     alt="Connection line"
                     src="/dot4.svg"
+                    loading="eager"
+                    decoding="async"
+                    width="59"
+                    height="16"
                 />
 
                 <img
                     className="absolute w-[71px] h-4 top-[272px] left-[80px]"
                     alt="Connection line"
                     src="/dot5.svg"
+                    loading="eager"
+                    decoding="async"
+                    width="71"
+                    height="16"
                 />
                 <div className="absolute w-[300px] max-w-[calc(100%-16px)] h-[184px] top-[129px] left-2">
                     {goalSteps.map((step, index) => (
@@ -112,6 +140,10 @@ export const GoalProgressSection = () => {
                                 className="relative w-[53px] h-[52.81px]"
                                 alt={`Step ${step.id} icon`}
                                 src={step.icon}
+                                loading="eager"
+                                decoding="async"
+                                width="53"
+                                height="53"
                             />
                             <div className="relative w-[85px] text-center [font-family:'Poppins',Helvetica] font-normal text-white text-xs tracking-[0] leading-[18px]">
                                 {step.title.split("\n").map((line, lineIndex) => (
@@ -135,6 +167,10 @@ export const GoalProgressSection = () => {
                                 className="relative w-[53px] h-[52.81px]"
                                 alt={`Step ${step.id} icon`}
                                 src={step.icon}
+                                loading="eager"
+                                decoding="async"
+                                width="53"
+                                height="53"
                             />
                             <p className="relative self-stretch text-center [font-family:'Poppins',Helvetica] font-normal text-white text-xs tracking-[0] leading-[18px]">
                                 {step.title}
@@ -146,6 +182,10 @@ export const GoalProgressSection = () => {
                     className="absolute w-[86px] h-[86px] top-[264px] left-3 object-contain"
                     alt="Trophy reward"
                     src="/trophy@2x.png"
+                    loading="eager"
+                    decoding="async"
+                    width="86"
+                    height="86"
                 />
             </div>
         </div>

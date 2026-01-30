@@ -14,6 +14,7 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
     const [formData, setFormData] = useState({
         amount: '',
@@ -35,7 +36,7 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
             await dispatch(fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }));
 
         } catch (error) {
-            console.error('❌ Error refetching wallet data:', error);
+            // Error refetching wallet data
         }
     };
 
@@ -57,6 +58,7 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
             setSelectedPaymentMethod(null);
             setError(null);
             setSuccess(null);
+            setShowSuccessModal(false);
             setFieldErrors({});
             setFormData({ amount: '', recipientName: '', recipientEmail: '' });
         }
@@ -122,7 +124,6 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
     const handleSubmitPayout = async () => {
         // CRITICAL FIX: Prevent double submission
         if (isSubmitting) {
-            console.warn('⚠️ Money transfer submission already in progress');
             return;
         }
 
@@ -200,18 +201,20 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
 
             if (result.success) {
                 setSuccess('Money transfer request submitted successfully!');
-
-                // Stop showing processing state immediately when success is set
                 setIsSubmitting(false);
 
-                // Close modal faster - 1 second is enough to see success message
+                // Show success modal
+                setShowSuccessModal(true);
+
+                // Close success modal and main modal after 4 seconds
                 setTimeout(() => {
+                    setShowSuccessModal(false);
                     onClose();
-                }, 1000);
+                }, 4000);
 
                 // Refetch wallet data in background (don't await - let it run in parallel)
                 refetchWalletData().catch(err => {
-                    console.error('Background wallet refetch error:', err);
+                    // Background wallet refetch error
                 });
             } else {
                 // Handle different types of errors with user-friendly messages
@@ -240,7 +243,6 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                 setError(errorMessage);
             }
         } catch (err) {
-            console.error('Money transfer error:', err);
             let errorMessage = 'An unexpected error occurred.';
 
             if (err.message) {
@@ -312,7 +314,11 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-            <div className="absolute inset-0 " onClick={onClose} />
+            <div
+                className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-md transition-all duration-300"
+                onClick={onClose}
+                style={{ backdropFilter: 'blur(12px)' }}
+            />
 
             <section
                 className={`flex flex-col w-full max-h-[90vh] ${showPaymentForm ? 'h-[min(88vh,640px)]' : 'h-[490px]'} items-start gap-2.5 pt-5 pb-8 px-2 relative bg-black border border-[#333] shadow-2xl shadow-purple-500/20 rounded-[20px_20px_0px_0px] overflow-y-auto`}
@@ -337,8 +343,22 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                             <h1 className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-semibold text-[#f3fcfc] text-[16px] opacity-[100%] tracking-[0] leading-[normal]">
                                 Money Transfer
                             </h1>
-
-
+                            <button
+                                onClick={onClose}
+                                className="text-[#A4A4A4] hover:text-[#f3fcfc] transition-colors p-1 -mt-1"
+                                aria-label="Close modal"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </header>
 
                         <nav role="list" className="w-full flex-1 overflow-y-auto">
@@ -398,7 +418,22 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                             <h1 className="[font-family:'Poppins',Helvetica] font-semibold text-[#f3fcfc] text-[16px]">
                                 {selectedPaymentMethod?.name} Transfer
                             </h1>
-                            <div></div>
+                            <button
+                                onClick={onClose}
+                                className="text-[#A4A4A4] hover:text-[#f3fcfc] transition-colors p-1"
+                                aria-label="Close modal"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </header>
 
                         {error && (
@@ -407,11 +442,6 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                             </div>
                         )}
 
-                        {success && (
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-4">
-                                <p className="text-green-400 text-sm">{success}</p>
-                            </div>
-                        )}
 
                         <div className="space-y-4" ref={formContainerRef}>
                             <div>
@@ -524,6 +554,41 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                     </div>
                 )}
             </section>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div
+                    className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-md transition-all duration-300"
+                    style={{ backdropFilter: 'blur(12px)' }}
+                >
+                    <div className="bg-black border border-[#4A4A4A] rounded-[16px] p-6 mx-4 max-w-sm w-full shadow-2xl shadow-purple-500/20 transition-all duration-300 relative">
+                        <div className="flex flex-col items-center ">
+                            {/* Success Icon */}
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-10 w-10 text-green-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <p className="text-[#f4f3fc] text-lg font-semibold mb-2 text-center">
+                                Success!
+                            </p>
+                            <p className="text-[#A4A4A4] text-sm mb-2 text-center">
+                                {success}
+                            </p>
+                            <p className="text-[#8B92DF] text-xs text-center">
+                                Your payout request will reflect within a few seconds in transaction log
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

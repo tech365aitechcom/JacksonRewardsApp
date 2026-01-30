@@ -106,9 +106,6 @@ export const WithdrawalOption = () => {
 
         if (validToken && validToken.length > 10) {
             setToken(validToken);
-
-            // Preload withdrawal data immediately when token is available
-            console.log("🚀 [WithdrawalOption] Preloading withdrawal data");
         } else {
             setError("Invalid authentication token. Please log in again.");
             setLoading(false);
@@ -145,7 +142,6 @@ export const WithdrawalOption = () => {
 
             } catch (err) {
                 // Only show error if both requests fail
-                console.warn("Withdrawal data loading failed:", err);
                 // Don't show error to user - let them try withdrawal options
             }
         };
@@ -236,7 +232,7 @@ export const WithdrawalOption = () => {
     return (
         <div className="flex w-full justify-center items-center ">
             <div className="w-full p-4 ">
-                <div className="flex flex-col items-center justify-start">
+                <div className="flex flex-col items-start justify-start w-full">
                     <h3 className="font-semibold text-[#f4f3fc] text-[16px] mb-2 w-full max-w-[335px] text-left">Withdrawal Options</h3>
                     <div className="w-full max-w-[335px] h-[53px] mb-4">
                         <div
@@ -251,6 +247,10 @@ export const WithdrawalOption = () => {
                                         className="w-[23px] h-6 aspect-[0.97]"
                                         alt="Dollar icon"
                                         src="/dollor.png"
+                                        loading="eager"
+                                        decoding="async"
+                                        width={23}
+                                        height={24}
                                     />
                                     <span className="[font-family:'Poppins',Helvetica] font-normal text-neutral-400 text-[13px] tracking-[0] leading-[normal]">
                                         above only
@@ -259,58 +259,58 @@ export const WithdrawalOption = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-                <div
-                    className={`
-                    flex 
-                    overflow-x-auto 
-                    snap-x snap-mandatory
-                    gap-3
-                    pb-2
-                    ${currentScaleClass} 
-                    transition-transform duration-200 ease-in-out 
-                    scrollbar-hide
-                    scroll-smooth
-                    px-4
-                `}
-                    style={{
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none',
-                        WebkitOverflowScrolling: 'touch',
-                        scrollBehavior: 'smooth'
-                    }}
-                >
-                    {error ? (
-                        <div className="flex flex-col items-center justify-center w-full h-20 text-red-400 text-sm px-4">
-                            <p className="text-center">{error}</p>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
-                            >
-                                Retry
-                            </button>
-                        </div>
-                    ) : (
-                        SERVICE_CARDS.map((card) => (
-                            <div
-                                key={card.id}
-                                onClick={() => handleWithdrawOption(card)}
-                                className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg"
-                                style={{ minWidth: '90px', maxWidth: '90px' }}
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Select ${card.title} withdrawal option`}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        handleWithdrawOption(card);
-                                    }
-                                }}
-                            >
-                                <ServiceCard card={card} />
+                    <div
+                        className={`
+                        w-full max-w-[335px]
+                        flex 
+                        overflow-x-auto 
+                        snap-x snap-mandatory
+                        gap-3
+                        pb-2
+                        ${currentScaleClass} 
+                        transition-transform duration-200 ease-in-out 
+                        scrollbar-hide
+                        scroll-smooth
+                    `}
+                        style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                            scrollBehavior: 'smooth'
+                        }}
+                    >
+                        {error ? (
+                            <div className="flex flex-col items-center justify-center w-full h-20 text-red-400 text-sm px-4">
+                                <p className="text-center">{error}</p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
+                                >
+                                    Retry
+                                </button>
                             </div>
-                        ))
-                    )}
+                        ) : (
+                            SERVICE_CARDS.map((card) => (
+                                <div
+                                    key={card.id}
+                                    onClick={() => handleWithdrawOption(card)}
+                                    className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg"
+                                    style={{ minWidth: '90px', maxWidth: '90px' }}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Select ${card.title} withdrawal option`}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleWithdrawOption(card);
+                                        }
+                                    }}
+                                >
+                                    <ServiceCard card={card} />
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
 
                 {/* Money Transfer Modal */}
@@ -362,7 +362,23 @@ export const WithdrawalOption = () => {
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-md transition-all duration-300"
                         style={{ backdropFilter: 'blur(12px)' }}
                     >
-                        <div className="bg-black border border-[#4A4A4A] rounded-[16px] p-6 mx-4 max-w-sm w-full shadow-2xl shadow-purple-500/20 transition-all duration-300">
+                        <div className="bg-black border border-[#4A4A4A] rounded-[16px] p-6 mx-4 max-w-sm w-full shadow-2xl shadow-purple-500/20 transition-all duration-300 relative">
+                            <button
+                                onClick={handleCloseInsufficientBalanceModal}
+                                className="absolute top-4 right-4 text-[#A4A4A4] hover:text-[#f3fcfc] transition-colors p-1"
+                                aria-label="Close modal"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                             <div className="flex flex-col items-center ">
                                 {/* Image at the top, 3x original size */}
                                 <img
@@ -372,6 +388,8 @@ export const WithdrawalOption = () => {
                                     height={240}
                                     className="mx-auto"
                                     style={{ objectFit: "contain", width: "240px", height: "200px" }}
+                                    loading="eager"
+                                    decoding="async"
                                 />
                                 {/* Text immediately below the image, with no gap */}
                                 <p className="text-[#A4A4A4] text-sm mt-0 mb-4 text-center">

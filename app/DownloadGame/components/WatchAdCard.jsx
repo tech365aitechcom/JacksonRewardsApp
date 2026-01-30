@@ -151,7 +151,7 @@ const WatchAdCard = ({
                 throw new Error(errorData.message || 'Failed to process reward');
             }
         } catch (error) {
-            console.error('❌ Ad watch failed:', error);
+            // Ad watch failed
             setError(error.message || 'Failed to process ad reward. Please try again.');
 
             // Clear error after 5 seconds
@@ -211,6 +211,9 @@ const WatchAdCard = ({
                                         src="/dollor.png"
                                         width={34}
                                         height={30}
+                                        loading="eager"
+                                        decoding="async"
+                                        priority
                                     />
                                 </div>
                             ) : (
@@ -230,6 +233,9 @@ const WatchAdCard = ({
                         src="https://c.animaapp.com/3mn7waJw/img/image-3941@2x.png"
                         width={85}
                         height={85}
+                        loading="eager"
+                        decoding="async"
+                        priority
                     />
 
                     {/* Loading Overlay */}
