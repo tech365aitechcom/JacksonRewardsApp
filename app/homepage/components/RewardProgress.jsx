@@ -3,13 +3,14 @@ import React, { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
-
+// Coins from profile API (https://rewardsapi.hireagent.co/api/profile) -> wallet.balance
 const RewardProgress = ({ stats }) => {
     const router = useRouter();
     const rewardGoal = 10000;
 
+    const profile = useSelector((state) => state.profile.details);
     const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
-    const balance = walletScreen?.wallet?.balance || 0;
+    const balance = profile?.wallet?.balance ?? profile?.data?.wallet?.balance ?? walletScreen?.wallet?.balance ?? 0;
 
     // OPTIMIZED: Memoize expensive calculations to prevent re-computation
     const pointsData = useMemo(() => {

@@ -57,7 +57,7 @@ const Homepage = () => {
         <MostPlayedGames />
         <WelcomeOfferSection />
         <GameCard />
-        <div className="mt-8">
+        <div className="mt-">
           <NonGameOffersSection />
         </div>
 

@@ -11,6 +11,7 @@ const SurveysSection = () => {
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [isSwiping, setIsSwiping] = useState(false);
     const MIN_SWIPE_DISTANCE = 50;
     const HORIZONTAL_SPREAD = 120;
 
@@ -90,10 +91,20 @@ const SurveysSection = () => {
     const onTouchStart = (e) => {
         setTouchEnd(null);
         setTouchStart(e.targetTouches[0].clientX);
+        setIsSwiping(false);
     };
 
     const onTouchMove = (e) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        const currentX = e.targetTouches[0].clientX;
+        setTouchEnd(currentX);
+
+        // Mark as swiping when there is meaningful horizontal movement
+        if (touchStart !== null) {
+            const distance = Math.abs(touchStart - currentX);
+            if (distance > 5 && !isSwiping) {
+                setIsSwiping(true);
+            }
+        }
     };
 
     const onTouchEnd = () => {
@@ -113,6 +124,9 @@ const SurveysSection = () => {
             setActivesIndex((prev) => (prev - 1 + surveys.length) % surveys.length);
             setTimeout(() => setIsAnimating(false), 400);
         }
+
+        // Reset swipe flag after handling gesture
+        setIsSwiping(false);
     };
 
     // Format title with line break (matching NonGameOffersSection)
@@ -157,16 +171,16 @@ const SurveysSection = () => {
     // Background fetching happens automatically without blocking UI
 
     return (
-        <div className="w-[335px] h-[275px] mx-auto mt-1 flex flex-col items-center">
+        <div className={`w-[335px] mx-auto mt-1 flex flex-col items-center ${surveys?.length ? 'h-[275px]' : 'min-h-20'}`}>
             <div className="w-full h-[24px] px-4 mb-2.5 mr-4">
                 <h2 className="font-['Poppins',Helvetica] text-[16px] font-semibold leading-normal tracking-[0] text-[#FFFFFF]">
                     Get Paid to do Surveys
                 </h2>
             </div>
 
-            {/* Card viewport - slightly reduced height */}
+            {/* Card viewport - 240px when surveys exist, compact when empty */}
             <div
-                className="relative w-full h-[240px] overflow-hidden"
+                className={`relative w-full overflow-hidden ${surveys?.length ? 'h-[240px]' : 'min-h-20'}`}
                 style={{ perspective: '1000px' }}
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
@@ -203,6 +217,10 @@ const SurveysSection = () => {
                             className="absolute top-0 left-1/2 cursor-pointer"
                             style={cardStyle}
                             onClick={() => {
+                                // If this interaction was a swipe, do not redirect
+                                if (isSwiping) {
+                                    return;
+                                }
                                 if (index !== activesIndex) {
                                     setIsAnimating(true);
                                     setActivesIndex(index);
@@ -235,7 +253,7 @@ const SurveysSection = () => {
 
                                     {/* Bottom gradient section - increased height by 2px: h-[52px] - faded to differentiate from Earn button */}
                                     <div className="absolute bottom-0 h-[63px] w-full bg-gradient-to-b from-[#9EADF7]/50 to-[#716AE7]/50 rounded-b-[6px] flex flex-col items-center justify-center py-1 backdrop-blur-sm">
-                                        <div className="text-center font-['Poppins',Helvetica] text-base font-semibold leading-4 tracking-[0] text-white px-2">
+                                        <div className="text-center font-['Poppins',Helvetica] text-base font-semibold leading-4 tracking-[0] text-white px-2 line-clamp-2 overflow-hidden text-ellipsis break-words w-full">
                                             {formatTitle(surveyTitle)}
                                         </div>
                                         {estimatedTime > 0 && (
@@ -300,13 +318,15 @@ const SurveysSection = () => {
                         </article>
                     );
                 }) : (
-                    <div className="w-full flex flex-col items-center justify-center py-6 px-4">
-                        <h4 className="[font-family:'Poppins',Helvetica] font-semibold text-[#F4F3FC] text-[14px] text-center mb-2">
-                            No Surveys Available
-                        </h4>
-                        <p className="[font-family:'Poppins',Helvetica] font-normal text-white text-[12px] text-center opacity-90">
-                            Check back later for new survey opportunities!
-                        </p>
+                    <div className="w-full min-h-[5rem] flex items-center justify-center">
+                        <div className="flex flex-col items-center justify-center py-6 px-4">
+                            <h4 className="[font-family:'Poppins',Helvetica] font-semibold text-[#F4F3FC] text-[14px] text-center mb-2">
+                                No Surveys Available
+                            </h4>
+                            <p className="[font-family:'Poppins',Helvetica] font-normal text-white text-[12px] text-center opacity-90">
+                                Check back later for new survey opportunities!
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>

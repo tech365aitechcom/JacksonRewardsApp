@@ -50,14 +50,15 @@ export default function AchieveGoalsPage() {
     }, []);
 
     return (
-        <div className="flex flex-col overflow-x-hidden w-full h-full gap-4 items-center justify-center px-4 pb-3 pt-1 bg-black max-w-[390px] mx-auto relative">
+        <div className="flex flex-col overflow-x-hidden overflow-y-auto w-full min-h-screen items-center justify-start  gap-4 px-4 pb-2 pt-1 bg-black max-w-[390px] mx-auto relative">
             <Header />
             <GoalProgressSection />
             <TaskListSection />
             <BannerSection />
-            <div className="-mt-8">
+            <div className="-mt-8 pb-26">
                 <SurveysSection />
             </div>
+            <HomeIndicator />
         </div>
     );
 }

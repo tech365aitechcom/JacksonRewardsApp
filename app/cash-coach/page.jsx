@@ -118,7 +118,7 @@ export default function CashCoachPage() {
     );
 
     return (
-        <div className="flex flex-col overflow-x-hidden w-full h-full items-center justify-center px-4 pb-3 pt-1 bg-black max-w-[390px] mx-auto relative">
+        <div className="flex flex-col overflow-x-hidden overflow-y-auto w-full min-h-screen items-center justify-start px-4 pb-2 pt-1 bg-black max-w-[390px] mx-auto relative">
             {/* App Version */}
             <div className="absolute top-[1px] left-3 w-full h-[40px] z-10">
                 <div className="absolute top-[10px] left-1 [font-family:'Poppins',Helvetica] font-light text-[#A4A4A4] text-[10px] tracking-[0] leading-3 whitespace-nowrap">
@@ -133,7 +133,9 @@ export default function CashCoachPage() {
                 />
             </div>
             <EarningsOverviewSection />
-            <GoalsAndTargetsSection />
+            <div className="mb-2">
+                <GoalsAndTargetsSection />
+            </div>
             <HomeIndicator />
 
             {/* Audio element for coin sound effect */}

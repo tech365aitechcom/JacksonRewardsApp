@@ -34,7 +34,7 @@ const validateName = (name, fieldName = 'Name') => {
 
 const SignUp = () => {
   const router = useRouter();
-  const { signUpAndSignIn } = useAuth();
+  const { signUpAndSignIn, signIn } = useAuth();
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -120,7 +120,10 @@ const SignUp = () => {
           // Manually render the widget
           setIsTurnstileLoading(true);
           const widgetId = window.turnstile.render(turnstileRef.current, {
-            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
+              console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
+              return '1x00000000000000000000AA'; // Test key - replace with production key
+            })(),
             callback: (token) => {
               setTurnstileToken(token);
               setIsTurnstileLoading(false);
@@ -396,16 +399,52 @@ const SignUp = () => {
       // We only need to handle the error case here.
       if (!result.ok) {
         const backendError = result?.error;
-        if (backendError && backendError.errors) {
-          const newErrors = {};
-          backendError.errors.forEach(err => {
-            if (err.param) newErrors[err.param] = err.msg;
-          });
-          setError(newErrors);
+        
+        // Extract error message from various possible structures
+        const errorMessage = 
+          backendError?.error || 
+          backendError?.message || 
+          backendError?.body?.error ||
+          backendError?.body?.message ||
+          (backendError?.body?.errors && backendError.body.errors[0]?.msg) ||
+          "";
+        
+        // Check if error is "Email already exists" or similar
+        const isEmailExistsError = 
+          errorMessage.toLowerCase().includes("email already exists") ||
+          errorMessage.toLowerCase().includes("user already exists") ||
+          errorMessage.toLowerCase().includes("email is already registered") ||
+          errorMessage.toLowerCase().includes("email already registered");
+
+        // If user already exists, attempt to log them in instead
+        if (isEmailExistsError) {
+          try {
+            const loginResult = await signIn(formData.email, formData.password, turnstileToken);
+            
+            if (loginResult.ok) {
+              // Login successful - AuthProvider will handle redirect
+              return;
+            } else {
+              // Login failed - show error
+              setError({ form: "Account exists but password is incorrect. Please try logging in." });
+            }
+          } catch (loginErr) {
+            // Login attempt failed - show original error
+            setError({ form: "Account already exists. Please try logging in instead." });
+          }
         } else {
-          const errorMessage = backendError?.error || backendError?.message || "An unknown error occurred. Please try again.";
-          setError({ form: errorMessage });
+          // Handle other errors normally
+          if (backendError && backendError.errors) {
+            const newErrors = {};
+            backendError.errors.forEach(err => {
+              if (err.param) newErrors[err.param] = err.msg;
+            });
+            setError(newErrors);
+          } else {
+            setError({ form: errorMessage || "An unknown error occurred. Please try again." });
+          }
         }
+        
         // Reset Turnstile on error so user can try again
         resetTurnstileWidget();
         setTurnstileToken(null);
@@ -544,7 +583,10 @@ const SignUp = () => {
 
                 setIsTurnstileLoading(true);
                 const widgetId = window.turnstile.render(turnstileRef.current, {
-                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
+              console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
+              return '1x00000000000000000000AA'; // Test key - replace with production key
+            })(),
                   callback: (token) => {
                     setTurnstileToken(token);
                     setIsTurnstileLoading(false);

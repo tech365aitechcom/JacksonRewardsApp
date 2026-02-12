@@ -190,8 +190,8 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 // Failed to store game data - silently handle
             }
 
-            // Use 'id' field first (as expected by API), fallback to '_id'
-            const gameId = currentGame.id || currentGame._id || currentGame.gameId;
+            // Use provider gameId (BitLabs/Besitos) for get-game-by-id API; fallback to id/_id
+            const gameId = currentGame.gameId || currentGame.details?.id || currentGame.id || currentGame._id;
             router.push(`/gamedetails?gameId=${gameId}&source=swipe`);
         }
     }, [currentGameIndex, swipeGames, logSwipePreference, router]);
@@ -478,72 +478,51 @@ const GameCard = ({ onClose: onCloseProp }) => {
         return swipeGames[currentGameIndex];
     }, [swipeGames, currentGameIndex]);
 
-    // Calculate coins and total XP for current game (same logic as TaskListSection and HighestEarningGame)
+    // Calculate coins and total XP for current game (normalizer prefers API rewards.coins / rewards.xp)
     const currentGameRewards = useMemo(() => {
         if (!currentGame) return { coins: 0, totalXP: 0 };
-
-        const rawData = currentGame.besitosRawData || {};
-
-        // Calculate coins - use rewards.coins first (from API), then fallback to amount
-        // Priority: rewards.coins > besitosRawData.amount > game.amount
-        const coinAmount = currentGame.rewards?.coins || rawData.amount || currentGame.amount || 0;
-        const coins = typeof coinAmount === 'number' ? coinAmount : (typeof coinAmount === 'string' ? parseFloat(coinAmount.replace('$', '')) || 0 : 0);
-
-        // Calculate total XP with progressive multiplier (same as game details page)
-        // Task 1: baseXP × multiplier^0
-        // Task 2: baseXP × multiplier^1
-        // Task 3: baseXP × multiplier^2
-        // ...
-        // Total = sum of all task XPs
-        let totalXP = 0;
-        if (currentGame.rewards?.xp) {
-            // Use rewards.xp if available
-            totalXP = currentGame.rewards.xp;
-        } else {
-            // Calculate from xpRewardConfig with progressive multiplier
-            const xpConfig = currentGame.xpRewardConfig || { baseXP: 1, multiplier: 1 };
-            const baseXP = xpConfig.baseXP || 1;
-            const multiplier = xpConfig.multiplier || 1;
-
-            // Get total number of tasks/goals
-            const goals = rawData.goals || currentGame.goals || [];
-            const totalTasks = goals.length || 0;
-
-            // Calculate total XP: sum of baseXP × multiplier^taskIndex for all tasks
-            // This is a geometric series: baseXP × (multiplier^totalTasks - 1) / (multiplier - 1) when multiplier ≠ 1
-            // When multiplier = 1, it's just baseXP × totalTasks
-            if (multiplier === 1) {
-                // Simple case: all tasks have same XP
-                totalXP = baseXP * totalTasks;
-            } else if (totalTasks > 0) {
-                // Geometric series: baseXP × (multiplier^totalTasks - 1) / (multiplier - 1)
-                totalXP = baseXP * (Math.pow(multiplier, totalTasks) - 1) / (multiplier - 1);
-            }
+        try {
+            const { getTotalPromisedPoints } = require("@/lib/gameDataNormalizer");
+            const { totalCoins, totalXP } = getTotalPromisedPoints(currentGame);
+            const coins = typeof totalCoins === "number" ? totalCoins : (parseFloat(totalCoins) || 0);
+            const xp = typeof totalXP === "number" ? totalXP : (parseFloat(totalXP) || 0);
+            return { coins, totalXP: xp };
+        } catch (e) {
+            const coinAmount = currentGame.rewards?.coins ?? currentGame.rewards?.gold ?? currentGame.besitosRawData?.amount ?? currentGame.amount ?? 0;
+            const coins = typeof coinAmount === "number" ? coinAmount : (parseFloat(String(coinAmount).replace("$", "")) || 0);
+            const xp = currentGame.rewards?.xp ?? 0;
+            return { coins, totalXP: typeof xp === "number" ? xp : (parseFloat(xp) || 0) };
         }
-
-        return {
-            coins: coins,
-            totalXP: Math.floor(totalXP)
-        };
     }, [currentGame]);
 
+    const formatCoins = (n) => (Number(n) === Math.round(Number(n)) ? String(Math.round(Number(n))) : Number(n).toFixed(2));
+    const formatXP = (n) => String(Math.round(Number(n)) || 0);
 
-    // OPTIMIZED: Memoize game data processing with image optimization - using besitosRawData
+
+    // OPTIMIZED: Memoize game data processing with image optimization - using normalizer for both besitos and bitlab
     const gameData = useMemo(() => {
         if (!currentGame) return null;
 
-        // Use besitosRawData if available, otherwise fallback to existing structure
-        const rawData = currentGame.besitosRawData || {};
+        // Import normalizer functions
+        const { normalizeGameImages, normalizeGameTitle, normalizeGameDescription, normalizeGameCategory, normalizeGameAmount } = require('@/lib/gameDataNormalizer');
 
-        // OPTIMIZED: Prioritize smaller images for faster loading - use besitosRawData first
+        // Normalize game data for both besitos and bitlab
+        const images = normalizeGameImages(currentGame);
+        const title = normalizeGameTitle(currentGame);
+        const description = normalizeGameDescription(currentGame);
+        const category = normalizeGameCategory(currentGame);
+        const amount = normalizeGameAmount(currentGame);
+
+        // OPTIMIZED: Prioritize smaller images for faster loading
         const getOptimizedImage = () => {
             const imageSources = [
-                rawData.square_image, // From besitosRawData
-                rawData.image, // From besitosRawData
+                images.square_image,
+                images.icon,
+                images.banner,
+                images.large_image,
                 currentGame?.images?.square_image,
                 currentGame?.images?.banner,
                 currentGame?.images?.large_image,
-                rawData.large_image, // From besitosRawData
                 currentGame?.image,
                 currentGame?.square_image,
                 currentGame?.details?.image
@@ -553,13 +532,13 @@ const GameCard = ({ onClose: onCloseProp }) => {
         };
 
         return {
-            title: rawData.title || currentGame.details?.name || currentGame.title || 'Unknown Game',
+            title: title,
             image: getOptimizedImage(),
-            description: rawData.description || currentGame.details?.description || currentGame.description || '',
-            category: rawData.categories?.[0]?.name || currentGame.category || 'Games',
-            genre: rawData.categories?.[0]?.name || currentGame.genre || 'Casual',
+            description: description,
+            category: category,
+            genre: category,
             id: currentGame._id || currentGame.id || currentGame.gameId,
-            amount: rawData.amount || currentGame.rewards?.coins,
+            amount: amount,
             fullGameData: currentGame // Store full game including besitosRawData
         };
     }, [currentGame]);
@@ -589,27 +568,13 @@ const GameCard = ({ onClose: onCloseProp }) => {
     // Show last card if user clicked "Got it"
     if (showLastCard && isLastCardReached) {
         return (
-            <main className="relative w-[335px] h-[549px] mx-auto" data-model-id="2035:14588">
-                {/* Action buttons section - only show close button - moved further below footer with more spacing */}
-                <section
-                    className="absolute w-[320px] h-[62px] top-[550px] left-10"
-                    aria-label="Action buttons"
-                >
-                    <button
-                        className="left-0 absolute w-[62px] h-[62px] top-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
-                        aria-label="Close"
-                        onClick={handleClose}
-                    >
-                        <img className="w-full h-full" alt="Close" src="https://c.animaapp.com/DfFsihWg/img/group-2@2x.png" loading="eager" decoding="async" width="62" height="62" />
-                    </button>
-                </section>
-
+            <main className="relative flex flex-col items-center w-full max-w-[335px] mx-auto min-h-[549px]" data-model-id="2035:14588">
                 {/* Last card display */}
-                <article className="absolute w-[335px] h-[429px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden shadow-[0px_27.92px_39.88px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
-                    <section className="absolute w-[400px] h-[303px] top-[90px] ">
+                <article className="relative w-full max-w-[335px] h-[429px] flex-shrink-0 rounded-[12px_12px_0px_0px] overflow-hidden shadow-[0px_27.92px_39.88px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)]">
+                    <section className="absolute left-1/2 -translate-x-1/2 w-[400px] max-w-[120%] h-[303px] top-[90px]">
                         {/* REMOVED: Image loading state for better Android UX */}
                         <img
-                            className="absolute w-[400px] h-[344px] top-[-2px]  aspect-[1] object-cover "
+                            className="absolute w-[400px] max-w-full h-[344px] top-[-2px] aspect-[1] object-cover"
                             alt={`${gameData?.title || 'Game'} artwork`}
                             src={gameData?.image || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
                             loading="eager"
@@ -643,10 +608,10 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     </section>
 
                     {/* Header message */}
-                    <header className="absolute w-[334px] h-[88px] -top-0.5 left-0">
-                        <div className="relative w-[335px] h-[87px] top-px bg-[#442a3b] rounded-[10px_10px_0px_0px]">
+                    <header className="absolute w-full h-[88px] -top-0.5 left-0 right-0">
+                        <div className="relative w-full h-[87px] top-px bg-[#442a3b] rounded-[10px_10px_0px_0px]">
                             <p
-                                className="absolute w-[304px] top-3.5 left-[15px] [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
+                                className="absolute w-[calc(100%-30px)] max-w-[304px] left-[15px] top-3.5 [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
                                 style={{
                                     wordBreak: 'break-word',
                                     overflowWrap: 'break-word',
@@ -664,10 +629,10 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 </article>
 
                 {/* Footer */}
-                <footer className="absolute w-[335px] min-h-[80px] top-[429px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset" style={{ paddingLeft: '7px', paddingRight: '6px' }}>
-                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '200px', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
+                <footer className="relative w-full max-w-[335px] min-h-[80px] flex-shrink-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px' }}>
+                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
                         {/* Line 1: Game Name */}
-                        <div className="flex items-start gap-2 w-full">
+                        <div className="flex items-start gap-2 w-full min-w-0">
                             <h3
                                 className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
                                 style={{
@@ -699,7 +664,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         {/* Line 3: Coins and XP points */}
                         <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{currentGameRewards.coins || 0}</span>
+                                <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
                                 <img
                                     className="w-5 h-5 flex-shrink-0"
                                     alt="Coin icon"
@@ -712,7 +677,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                             </div>
                             <span className="text-white/90 font-medium flex-shrink-0">&</span>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{currentGameRewards.totalXP || 0}</span>
+                                <span className="font-semibold text-white whitespace-nowrap">{formatXP(currentGameRewards.totalXP)}</span>
                                 <img
                                     className="w-5 h-5 flex-shrink-0"
                                     alt="XP icon"
@@ -739,10 +704,21 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     </button>
                 </footer>
 
+                {/* Action buttons - close only */}
+                <section className="flex flex-row justify-center items-center w-full py-4 flex-shrink-0" aria-label="Action buttons">
+                    <button
+                        className="relative w-[62px] h-[62px] flex-shrink-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
+                        aria-label="Close"
+                        onClick={handleClose}
+                    >
+                        <img className="w-full h-full" alt="Close" src="https://c.animaapp.com/DfFsihWg/img/group-2@2x.png" loading="eager" decoding="async" width="62" height="62" />
+                    </button>
+                </section>
+
                 {showTooltip && (
                     <div
                         ref={tooltipRef}
-                        className="absolute top-[472px] right-[-8px] z-50 w-[320px] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-3 shadow-2xl border border-gray-600/50 animate-fade-in"
+                        className="absolute top-[472px] right-[-8px] z-50 w-[320px] max-w-[calc(100vw-2rem)] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-3 shadow-2xl border border-gray-600/50 animate-fade-in"
                     >
                         <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal">
                             <div className="text-center text-gray-200">
@@ -761,52 +737,32 @@ const GameCard = ({ onClose: onCloseProp }) => {
         return null;
     }
 
-    // Show empty state if no games available
+    // Show empty state if no games available - same compact height pattern as NonGameOffersSection / SurveysSection
     if (!swipeGames || swipeGames.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center w-[335px] h-[549px] mx-auto p-6">
-                <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-xl mb-2 text-center">
-                    Gaming - Swipe
-                </h2>
-                <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-base text-center">
-                    No games available
-                </p>
+            <div className="w-full max-w-[335px] mx-auto min-h-[5rem] flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center py-6 px-4">
+                    <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-xl mb-2 text-center">
+                        Gaming - Swipe
+                    </h2>
+                    <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-base text-center">
+                        No games available
+                    </p>
+                </div>
             </div>
         );
     }
 
     return (
-        <main className="relative w-[335px] h-[549px] mx-auto animate-fade-in" data-model-id="2035:14588">
-            {/* Action buttons section - moved further below footer with more spacing */}
-            <section
-                className="absolute w-[320px] h-[62px] top-[524px] left-10"
-                aria-label="Action buttons"
-            >
-                {actionButtons.map((button) => (
-                    <button
-                        key={button.id}
-                        className={`${button.position}  absolute w-[62px] h-[62px] top-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full`}
-                        aria-label={button.alt}
-                        onClick={button.onClick}
-                    >
-                        <img className="w-full h-full" alt={button.alt} src={button.src} loading="eager" decoding="async" width="62" height="62" />
-
-                        {/* Conditionally render the label if `hasLabel` is true */}
-                        {button.label && (
-                            <div className="absolute bottom-[-18px] left-2/4 -translate-x-1/2 z-10 flex items-center justify-center">
-                                <UndoActionLabel
-                                    current={button.label.current}
-                                    total={button.label.total} />
-                            </div>
-                        )}
-                    </button>
-                ))}
-            </section>
-
+        <main
+            className="relative flex flex-col items-center w-full max-w-[335px] mx-auto animate-fade-in min-h-[549px]"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 549 }}
+            data-model-id="2035:14588"
+        >
             {/* Main game card */}
             <article
                 ref={cardRef}
-                className="absolute w-[335px] h-[429px] top-0 left-0 rounded-[12px_12px_0px_0px] cursor-grab active:cursor-grabbing"
+                className="relative w-full max-w-[335px] h-[429px] rounded-[12px_12px_0px_0px] cursor-grab active:cursor-grabbing"
                 onMouseDown={(e) => handleStart(e.clientX)}
                 onMouseMove={(e) => handleMove(e.clientX)}
                 onMouseUp={handleEnd}
@@ -815,6 +771,8 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 onTouchMove={(e) => handleMove(e.touches[0].clientX)}
                 onTouchEnd={handleEnd}
                 style={{
+                    flex: '0 0 429px',
+                    minHeight: 429,
                     transform: isDragging ? `translateX(${currentX - startX}px)` : 'translateX(0)',
                     transition: isDragging ? 'none' : 'transform 0.3s ease-out'
                 }}
@@ -822,13 +780,13 @@ const GameCard = ({ onClose: onCloseProp }) => {
 
                 {/* Main card container */}
                 <div
-                    className="absolute w-[335px] h-[429px] top-0 left-0 rounded-[12px_12px_0px_0px] overflow-hidden shadow-[0px_27.92px_39.88px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)] cursor-pointer hover:opacity-95 transition-opacity duration-200"
+                    className="absolute inset-0 w-full h-full rounded-[12px_12px_0px_0px] overflow-hidden shadow-[0px_27.92px_39.88px_#4d0d3399] bg-[linear-gradient(180deg,rgba(95,14,58,1)_0%,rgba(16,8,25,1)_100%)] cursor-pointer hover:opacity-95 transition-opacity duration-200"
                     onClick={handleGameCardClick}
                 >
-                    <section className="absolute w-[400px] h-[303px] top-[90px] ">
+                    <section className="absolute left-1/2 -translate-x-1/2 w-[400px] max-w-[120%] h-[303px] top-[90px]">
                         {/* REMOVED: Image loading state for better Android UX */}
                         <img
-                            className="absolute w-[400px] h-[344px] top-[-2px] object-cover  "
+                            className="absolute w-[400px] max-w-full h-[344px] top-[-2px] object-cover"
                             alt={`${gameData?.title || 'Game'} artwork`}
                             src={gameData?.image || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
                             loading="eager"
@@ -849,10 +807,10 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     </section>
 
                     {/* Header message */}
-                    <header className="absolute w-[334px] h-[88px] -top-0.5 left-0">
-                        <div className={`relative w-[335px] h-[87px] top-px rounded-[10px_10px_0px_0px] ${isLoopMode ? 'bg-gradient-to-r from-purple-600/80 to-pink-600/80' : 'bg-[#442a3b]'}`}>
+                    <header className="absolute w-full h-[88px] -top-0.5 left-0 right-0">
+                        <div className={`relative w-full h-[87px] top-px rounded-[10px_10px_0px_0px] ${isLoopMode ? 'bg-gradient-to-r from-purple-600/80 to-pink-600/80' : 'bg-[#442a3b]'}`}>
                             <p
-                                className="absolute w-[304px] top-3.5 left-[15px] [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
+                                className="absolute w-[calc(100%-30px)] max-w-[304px] left-[15px] top-3.5 [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
                                 style={{
                                     wordBreak: 'break-word',
                                     overflowWrap: 'break-word',
@@ -883,10 +841,11 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 </div>
             </article>
             <>
-                <footer className="absolute w-[335px] min-h-[80px] top-[429px] left-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset" style={{ paddingLeft: '7px', paddingRight: '6px' }}>
-                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '200px', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
+                <div className="flex flex-col flex-shrink-0 w-full max-w-[335px] items-center" style={{ flex: '0 0 auto' }}>
+                <footer className="relative w-full max-w-[335px] min-h-[80px] rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px', flex: '0 0 auto' }}>
+                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
                         {/* Line 1: Game Name */}
-                        <div className="flex items-start gap-2 w-full">
+                        <div className="flex items-start gap-2 w-full min-w-0">
                             <h3
                                 className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
                                 style={{
@@ -918,7 +877,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         {/* Line 3: Coins and XP points */}
                         <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{currentGameRewards.coins || 0}</span>
+                                <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
                                 <img
                                     className="w-5 h-5 flex-shrink-0"
                                     alt="Coin icon"
@@ -931,7 +890,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                             </div>
                             <span className="text-white/70 font-medium flex-shrink-0">&</span>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{currentGameRewards.totalXP || 0}</span>
+                                <span className="font-semibold text-white whitespace-nowrap">{formatXP(currentGameRewards.totalXP)}</span>
                                 <img
                                     className="w-5 h-5 flex-shrink-0"
                                     alt="XP icon"
@@ -958,10 +917,38 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     </button>
                 </footer>
 
+                {/* Action buttons section - flex row, min-height so Android doesn't collapse */}
+                <section
+                    className="flex flex-row justify-center items-center gap-6 w-full py-4 flex-shrink-0 min-h-[90px]"
+                    aria-label="Action buttons"
+                    style={{ flex: '0 0 auto' }}
+                >
+                    {actionButtons.map((button) => (
+                        <button
+                            key={button.id}
+                            className="relative w-[62px] h-[62px] flex-shrink-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
+                            aria-label={button.alt}
+                            onClick={button.onClick}
+                        >
+                            <img className="w-full h-full" alt={button.alt} src={button.src} loading="eager" decoding="async" width="62" height="62" />
+
+                            {/* Conditionally render the label if `hasLabel` is true */}
+                            {button.label && (
+                                <div className="absolute bottom-[-18px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
+                                    <UndoActionLabel
+                                        current={button.label.current}
+                                        total={button.label.total} />
+                                </div>
+                            )}
+                        </button>
+                    ))}
+                </section>
+                </div>
+
                 {showTooltip && (
                     <div
                         ref={tooltipRef}
-                        className="absolute top-[472px] right-[-8px] z-50 w-[320px] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-3 shadow-2xl border border-gray-600/50 animate-fade-in"
+                        className="absolute top-[472px] right-[-8px] z-50 w-[320px] max-w-[calc(100vw-2rem)] bg-black/95 backdrop-blur-sm rounded-[12px] px-4 py-3 shadow-2xl border border-gray-600/50 animate-fade-in"
                     >
                         <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal">
                             <div className="text-center text-gray-200">

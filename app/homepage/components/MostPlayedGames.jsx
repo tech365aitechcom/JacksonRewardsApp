@@ -9,6 +9,16 @@ import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
 const MostPlayedGames = () => {
     const router = useRouter();
     const dispatch = useDispatch();
+
+    // Touch handling state for Android WebView
+    const touchState = React.useRef({
+        startX: 0,
+        startY: 0,
+        hasMoved: false,
+        touchStartTime: 0,
+        game: null
+    });
+    const scrollContainerRef = React.useRef(null);
     const {
         gamesBySection,
         gamesBySectionStatus,
@@ -27,19 +37,50 @@ const MostPlayedGames = () => {
         return mostPlayedGames;
     }, [mostPlayedGames]);
 
-    // OPTIMIZED: Map games using besitosRawData for display
+    // OPTIMIZED: Map games using normalizer for both besitos and bitlab (coins + total XP from tasks)
     const filteredGames = useMemo(() => {
+        const { normalizeGameImages, normalizeGameTitle, normalizeGameAmount, normalizeGameCategory, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
+
         return allGames.map(game => {
-            // Use besitosRawData if available, otherwise fallback to existing structure
-            const rawData = game.besitosRawData || {};
+            // Normalize game data for both besitos and bitlab
+            const images = normalizeGameImages(game);
+            const title = normalizeGameTitle(game);
+            const amount = normalizeGameAmount(game);
+            const coinVal = game.rewards?.coins ?? game.rewards?.gold ?? amount;
+            const raw = typeof coinVal === 'number' ? coinVal : (typeof coinVal === 'string' ? parseFloat(String(coinVal).replace('$', '')) || 0 : 0);
+            const displayCoins = Number.isFinite(raw) ? (raw === Math.round(raw) ? Math.round(raw) : Math.round(raw * 100) / 100) : 0;
+            const { totalXP } = getTotalPromisedPoints(game);
+            const displayXP = Number.isFinite(totalXP) ? Math.round(totalXP) : 0;
+            const category = normalizeGameCategory(game);
+
+            // Get optimized image - ensure we have a valid URL (not empty string)
+            const getOptimizedImage = () => {
+                const candidates = [
+                    images.square_image,
+                    images.icon,
+                    game.details?.square_image,
+                    game.images?.icon,
+                    game.images?.square_image,
+                    game.square_image,
+                    game.image
+                ];
+
+                // Find first valid non-empty URL
+                for (const candidate of candidates) {
+                    if (candidate && typeof candidate === 'string' && candidate.trim() !== '' && candidate !== 'null' && candidate !== 'undefined') {
+                        return candidate;
+                    }
+                }
+                return null; // Return null instead of empty string to trigger placeholder
+            };
 
             return {
                 ...game,
-                // Map from besitosRawData for display
-                optimizedImage: rawData.square_image || rawData.image || game.details?.square_image || game.images?.icon,
-                displayTitle: rawData.title || game.title || game.details?.name,
-                displayAmount: rawData.amount ? `$${rawData.amount}` : (game.rewards?.coins ? `$${game.rewards.coins}` : '$0'),
-                displayCategory: rawData.categories?.[0]?.name || game.details?.category,
+                // Map from normalized data for display
+                optimizedImage: getOptimizedImage(),
+                displayTitle: title,
+                displayAmount: displayCoins ? `$${displayCoins}` : '$0',
+                displayCategory: category,
                 // Keep full game data including besitosRawData for details page
                 fullGameData: game
             };
@@ -51,7 +92,7 @@ const MostPlayedGames = () => {
         if (filteredGames.length > 0) {
             // Only preload first game for immediate display
             const firstGame = filteredGames[0];
-            if (firstGame?.optimizedImage && firstGame.optimizedImage !== "/placeholder-game.png") {
+            if (firstGame?.optimizedImage && firstGame.optimizedImage && firstGame.optimizedImage.trim() !== '') {
                 const img = new Image();
                 img.src = firstGame.optimizedImage;
             }
@@ -72,10 +113,84 @@ const MostPlayedGames = () => {
             }
         }
 
-        // Use 'id' field first (as expected by API), fallback to '_id'
-        const gameId = game.id || game._id || game.gameId;
+        // Use provider gameId (BitLabs/Besitos) for get-game-by-id API; fallback to id/_id
+        const gameId = game.gameId || game.details?.id || game.id || game._id;
         router.push(`/gamedetails?gameId=${gameId}&source=mostPlayed`);
     }, [router, dispatch]);
+
+    // Passive touch listeners on scroll container so browser can scroll without waiting for JS; we only detect tap vs scroll for click
+    useEffect(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        const games = filteredGames;
+        const onStart = (e) => {
+            const card = e.target?.closest?.('[data-game-index]');
+            if (!card) return;
+            const index = parseInt(card.getAttribute('data-game-index'), 10);
+            if (Number.isNaN(index) || index < 0 || index >= games.length) return;
+            const t = e.touches[0];
+            touchState.current = { startX: t.clientX, startY: t.clientY, hasMoved: false, touchStartTime: Date.now(), game: games[index] };
+        };
+        const onMove = (e) => {
+            if (!touchState.current.game) return;
+            const t = e.touches[0];
+            const dx = Math.abs(t.clientX - touchState.current.startX);
+            const dy = Math.abs(t.clientY - touchState.current.startY);
+            if (dx > 10 || dy > 10) touchState.current.hasMoved = true;
+        };
+        const onEnd = () => {
+            const { game, hasMoved, touchStartTime } = touchState.current;
+            if (!hasMoved && Date.now() - touchStartTime < 200 && game) handleGameClick(game);
+            touchState.current = { startX: 0, startY: 0, hasMoved: false, touchStartTime: 0, game: null };
+        };
+        el.addEventListener('touchstart', onStart, { passive: true });
+        el.addEventListener('touchmove', onMove, { passive: true });
+        el.addEventListener('touchend', onEnd, { passive: true });
+        return () => {
+            el.removeEventListener('touchstart', onStart);
+            el.removeEventListener('touchmove', onMove);
+            el.removeEventListener('touchend', onEnd);
+        };
+    }, [filteredGames, handleGameClick]);
+
+    // Android WebView fallback: programmatic horizontal scroll when native scroll is blocked
+    const androidScrollState = React.useRef({ lastX: 0, lastY: 0, scrolling: false });
+    useEffect(() => {
+        const isAndroid = typeof window !== "undefined" && (
+            (window.Capacitor && window.Capacitor.getPlatform?.() === "android") ||
+            /Android/i.test(navigator.userAgent || "")
+        );
+        if (!isAndroid) return;
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        const onStart = (e) => {
+            if (!e.target?.closest?.(".most-played-games-scroll")) return;
+            const t = e.touches[0];
+            androidScrollState.current = { lastX: t.clientX, lastY: t.clientY, scrolling: false };
+        };
+        const onMove = (e) => {
+            if (!e.target?.closest?.(".most-played-games-scroll")) return;
+            const t = e.touches[0];
+            const state = androidScrollState.current;
+            const dx = Math.abs(t.clientX - state.lastX);
+            const dy = Math.abs(t.clientY - state.lastY);
+            if (!state.scrolling && (dx > 8 || dy > 8)) {
+                state.scrolling = dx >= dy;
+            }
+            if (state.scrolling) {
+                e.preventDefault();
+                el.scrollLeft -= t.clientX - state.lastX;
+            }
+            state.lastX = t.clientX;
+            state.lastY = t.clientY;
+        };
+        el.addEventListener("touchstart", onStart, { passive: true });
+        el.addEventListener("touchmove", onMove, { passive: false });
+        return () => {
+            el.removeEventListener("touchstart", onStart);
+            el.removeEventListener("touchmove", onMove);
+        };
+    }, []);
 
     // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
     useEffect(() => {
@@ -164,6 +279,29 @@ const MostPlayedGames = () => {
 
     return (
         <div className="flex flex-col items-start gap-4 relative w-full animate-fade-in">
+            {/* Scoped styles for smooth, fast horizontal scroll (web + Android WebView) */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                    .most-played-games-scroll,
+                    .most-played-games-scroll * {
+                        touch-action: pan-x !important;
+                    }
+                    .most-played-games-scroll {
+                        min-width: 0;
+                        -webkit-overflow-scrolling: touch !important;
+                        overflow-x: scroll !important;
+                        overflow-y: hidden;
+                        scroll-behavior: smooth;
+                        scroll-snap-type: x proximity;
+                        scroll-padding-inline: 0;
+                        will-change: scroll-position;
+                    }
+                    .most-played-games-scroll > * {
+                        scroll-snap-align: center;
+                        scroll-snap-stop: normal;
+                    }
+                `
+            }} />
             <div className="flex w-full items-center justify-between">
                 <div className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
                     Most Played Games
@@ -176,13 +314,23 @@ const MostPlayedGames = () => {
                     See All
                 </Link>
             </div>
-            <div className="flex h-[110px] items-start gap-1 w-full justify-start">
+            <div
+                ref={scrollContainerRef}
+                className="most-played-games-scroll flex h-[110px] min-w-0 items-start gap-1 w-full justify-start scrollbar-hide overscroll-x-contain"
+                style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollBehavior: 'smooth',
+                }}
+            >
                 {filteredGames.length > 0 ? (
                     filteredGames.map((game, index) => {
                         return (
                             <div
                                 key={game._id || game.id}
-                                className="items-start inline-flex flex-col gap-1.5 relative flex-[0_0_auto] w-[80px] cursor-pointer hover:scale-105 transition-all duration-200"
+                                data-game-index={index}
+                                className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer hover:scale-105 transition-all duration-200 snap-center touch-pan-x"
                                 onClick={() => handleGameClick(game)}
                             >
                                 <div
@@ -195,19 +343,27 @@ const MostPlayedGames = () => {
                                         <img
                                             className="w-full h-full object-cover rounded-full"
                                             alt={game.displayTitle || game.details?.name}
-                                            src={game.optimizedImage || "/placeholder-game.png"}
+                                            src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
                                             loading="eager"
                                             decoding="async"
                                             width="72"
                                             height="72"
                                             onError={(e) => {
-                                                e.target.src = "/placeholder-game.png";
+                                                // Fallback to a valid placeholder image
+                                                if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
+                                                    e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
+                                                }
                                             }}
                                         />
                                     </div>
                                 </div>
                                 <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
                                     {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
+                                </div>
+                                <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
+                                    <span>{game.displayAmount ?? '$0'}</span>
+                                    <span>·</span>
+                                    <span>{game.displayXP ?? 0} XP</span>
                                 </div>
 
                                 {/* New tag - only for first game */}

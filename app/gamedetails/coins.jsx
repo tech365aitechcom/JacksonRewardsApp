@@ -52,7 +52,11 @@ export const Coins = ({ game, viewCount, onBack, onChat }) => {
 
                 <div className="inline-flex items-center absolute top-12 left-[17px]">
                     <div className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-light text-white text-xs tracking-[0] leading-[normal]">
-                        Earn up to {game?.amount || 0}
+                        Earn up to {(() => {
+                            const n = game?.rewards?.coins ?? game?.rewards?.gold ?? game?.amount ?? 0;
+                            const num = Number(n);
+                            return Number.isFinite(num) ? (num === Math.round(num) ? String(Math.round(num)) : num.toFixed(2)) : '0';
+                        })()}
                     </div>
 
                     <img

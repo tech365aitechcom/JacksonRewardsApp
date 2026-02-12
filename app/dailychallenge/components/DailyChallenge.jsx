@@ -26,14 +26,72 @@ export const DailyChallenge = () => {
         error
     } = useSelector((state) => state.dailyChallenge || {});
 
+    const [pullRefreshState, setPullRefreshState] = useState('idle'); // 'idle', 'pulling', 'refreshing'
+    const [pullDistance, setPullDistance] = useState(0);
+    const touchStartY = useRef(0);
+    const isPulling = useRef(false);
+
     const [isMonthLoading, setIsMonthLoading] = useState(false);
     const [pendingCalendar, setPendingCalendar] = useState(null);
     const calendarCacheRef = useRef({});
     const isLoading = calendarStatus === "loading" || todayStatus === "loading" || isMonthLoading;
 
+    // Handle pull-to-refresh
+    const handleTouchStart = (e) => {
+        if (window.scrollY === 0 && !isLoading) {
+            touchStartY.current = e.touches[0].clientY;
+            isPulling.current = true;
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isPulling.current || isLoading) return;
+
+        const currentY = e.touches[0].clientY;
+        const distance = currentY - touchStartY.current;
+
+        if (distance > 0) {
+            e.preventDefault();
+            const pullDistance = Math.min(distance * 0.5, 80); // Max pull distance of 80px
+            setPullDistance(pullDistance);
+
+            if (pullDistance > 50) {
+                setPullRefreshState('pulling');
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (!isPulling.current) return;
+
+        isPulling.current = false;
+
+        if (pullDistance > 50) {
+            setPullRefreshState('refreshing');
+            handleRefresh();
+
+            // Reset after animation
+            setTimeout(() => {
+                setPullRefreshState('idle');
+                setPullDistance(0);
+            }, 1000);
+        } else {
+            setPullRefreshState('idle');
+            setPullDistance(0);
+        }
+    };
+
     // Fetch data on component mount (only if not already prefetched)
     useEffect(() => {
+        console.log("📱 [DAILY CHALLENGE COMPONENT] Component mounted/updated:", {
+            hasToken: !!token,
+            calendarStatus,
+            todayStatus,
+            timestamp: new Date().toISOString(),
+        });
+
         if (!token) {
+            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No authentication token available for daily challenge");
             return;
         }
 
@@ -41,24 +99,41 @@ export const DailyChallenge = () => {
         const year = now.getFullYear();
         const month = now.getMonth();
 
+        console.log("📱 [DAILY CHALLENGE COMPONENT] Preparing to fetch data:", {
+            year,
+            month,
+            calendarStatus,
+            todayStatus,
+        });
+
         // Avoid duplicate requests if prefetch already ran
         if (calendarStatus === "idle") {
+            console.log("📱 [DAILY CHALLENGE COMPONENT] Dispatching fetchCalendar");
             dispatch(fetchCalendar({ year, month, token }));
         }
         if (todayStatus === "idle") {
+            console.log("📱 [DAILY CHALLENGE COMPONENT] Dispatching fetchToday");
             dispatch(fetchToday({ token }));
         }
     }, [dispatch, token, calendarStatus, todayStatus]);
 
-    // Clear errors when component unmounts
+    // Listen for global challenge update events
     useEffect(() => {
-        return () => {
-            dispatch(clearError());
+        const handleChallengeUpdate = () => {
+            console.log("📡 [DAILY CHALLENGE COMPONENT] Received challenge update event");
+            handleRefresh();
         };
-    }, [dispatch]);
+
+        window.addEventListener('dailyChallengeUpdate', handleChallengeUpdate);
+        return () => window.removeEventListener('dailyChallengeUpdate', handleChallengeUpdate);
+    }, [token]); // Include token in dependency to ensure handleRefresh has latest token
 
     // Keep local loading true during month navigation until calendar request settles
     useEffect(() => {
+        console.log("📅 [DAILY CHALLENGE COMPONENT] Calendar status changed:", {
+            calendarStatus,
+            timestamp: new Date().toISOString(),
+        });
         if (calendarStatus === "loading") {
             setIsMonthLoading(true);
         } else {
@@ -153,10 +228,18 @@ export const DailyChallenge = () => {
 
     // Handle month navigation
     const handlePreviousMonth = () => {
+        console.log("⬅️ [DAILY CHALLENGE COMPONENT] handlePreviousMonth called:", {
+            isMonthLoading,
+            calendarStatus,
+            currentYear: calendar?.year,
+            currentMonth: calendar?.month,
+        });
         if (isMonthLoading || calendarStatus === "loading") {
+            console.log("⬅️ [DAILY CHALLENGE COMPONENT] Navigation blocked (already loading)");
             return;
         }
         if (!token) {
+            console.warn("⬅️ [DAILY CHALLENGE COMPONENT] No token, navigation blocked");
             return;
         }
 
@@ -164,10 +247,19 @@ export const DailyChallenge = () => {
         const previousMonth = new Date(currentDate);
         previousMonth.setMonth(previousMonth.getMonth() - 1);
 
+        console.log("⬅️ [DAILY CHALLENGE COMPONENT] Navigating to previous month:", {
+            year: previousMonth.getFullYear(),
+            month: previousMonth.getMonth(),
+        });
+
         setIsMonthLoading(true);
         {
             const key = `${previousMonth.getFullYear()}-${previousMonth.getMonth()}`;
             const cached = calendarCacheRef.current[key];
+            console.log("⬅️ [DAILY CHALLENGE COMPONENT] Cache check:", {
+                key,
+                hasCached: !!cached,
+            });
             setPendingCalendar(cached || generateSkeletonCalendar(previousMonth.getFullYear(), previousMonth.getMonth()));
         }
         dispatch(fetchCalendar({
@@ -178,10 +270,18 @@ export const DailyChallenge = () => {
     };
 
     const handleNextMonth = () => {
+        console.log("➡️ [DAILY CHALLENGE COMPONENT] handleNextMonth called:", {
+            isMonthLoading,
+            calendarStatus,
+            currentYear: calendar?.year,
+            currentMonth: calendar?.month,
+        });
         if (isMonthLoading || calendarStatus === "loading") {
+            console.log("➡️ [DAILY CHALLENGE COMPONENT] Navigation blocked (already loading)");
             return;
         }
         if (!token) {
+            console.warn("➡️ [DAILY CHALLENGE COMPONENT] No token, navigation blocked");
             return;
         }
 
@@ -189,10 +289,19 @@ export const DailyChallenge = () => {
         const nextMonth = new Date(currentDate);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
 
+        console.log("➡️ [DAILY CHALLENGE COMPONENT] Navigating to next month:", {
+            year: nextMonth.getFullYear(),
+            month: nextMonth.getMonth(),
+        });
+
         setIsMonthLoading(true);
         {
             const key = `${nextMonth.getFullYear()}-${nextMonth.getMonth()}`;
             const cached = calendarCacheRef.current[key];
+            console.log("➡️ [DAILY CHALLENGE COMPONENT] Cache check:", {
+                key,
+                hasCached: !!cached,
+            });
             setPendingCalendar(cached || generateSkeletonCalendar(nextMonth.getFullYear(), nextMonth.getMonth()));
         }
         dispatch(fetchCalendar({
@@ -202,9 +311,82 @@ export const DailyChallenge = () => {
         }));
     };
 
-    // Handle today's challenge click
+    // Handle refresh - force refresh both calendar and today data
+    const handleRefresh = () => {
+        console.log("🔄 [DAILY CHALLENGE COMPONENT] Manual refresh triggered");
+        if (!token) {
+            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No token for refresh");
+            return;
+        }
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        // Force refresh calendar
+        dispatch(fetchCalendar({ year, month, token, force: true }));
+        // Force refresh today
+        dispatch(fetchToday({ token, force: true }));
+    };
+
+    // Handle today click - navigate to current month and open today's challenge
     const handleTodayClick = () => {
-        dispatch(setModalOpen(true));
+        console.log("📅 [DAILY CHALLENGE COMPONENT] handleTodayClick called:", {
+            isMonthLoading,
+            calendarStatus,
+            currentYear: calendar?.year,
+            currentMonth: calendar?.month,
+        });
+
+        if (isMonthLoading || calendarStatus === "loading") {
+            console.log("📅 [DAILY CHALLENGE COMPONENT] Today click blocked (already loading)");
+            return;
+        }
+
+        if (!token) {
+            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No token, today click blocked");
+            return;
+        }
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+
+        // Check if we're already on the current month
+        const isCurrentMonth = calendar?.year === currentYear && calendar?.month === currentMonth;
+
+        if (!isCurrentMonth) {
+            // Navigate to current month
+            console.log("📅 [DAILY CHALLENGE COMPONENT] Navigating to current month:", {
+                year: currentYear,
+                month: currentMonth,
+            });
+
+            setIsMonthLoading(true);
+            {
+                const key = `${currentYear}-${currentMonth}`;
+                const cached = calendarCacheRef.current[key];
+                console.log("📅 [DAILY CHALLENGE COMPONENT] Cache check:", {
+                    key,
+                    hasCached: !!cached,
+                });
+                setPendingCalendar(cached || generateSkeletonCalendar(currentYear, currentMonth));
+            }
+            dispatch(fetchCalendar({
+                year: currentYear,
+                month: currentMonth,
+                token
+            }));
+        } else {
+            // Already on current month, open today's challenge modal
+            console.log("📅 [DAILY CHALLENGE COMPONENT] Already on current month, opening today's challenge");
+            if (today?.hasChallenge) {
+                dispatch(setModalOpen(true));
+            } else {
+                // Show message that no challenge is available today
+                alert("No challenge available for today. Check back tomorrow!");
+            }
+        }
     };
 
     // Generate streak indicators dynamically based on streak data
@@ -312,7 +494,39 @@ export const DailyChallenge = () => {
         <div
             className="relative w-full min-h-screen bg-black flex flex-col items-center"
             data-model-id="3291:8378"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
+            {/* Pull-to-refresh indicator */}
+            {(pullRefreshState === 'pulling' || pullRefreshState === 'refreshing') && (
+                <div
+                    className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300"
+                    style={{
+                        height: pullDistance,
+                        transform: `translateY(${pullRefreshState === 'refreshing' ? 0 : -pullDistance}px)`
+                    }}
+                >
+                    <div className="flex items-center gap-2 text-white">
+                        <svg
+                            className={`w-5 h-5 ${pullRefreshState === 'refreshing' ? 'animate-spin' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                        <span className="text-sm font-medium">
+                            {pullRefreshState === 'refreshing' ? 'Refreshing...' : 'Pull to refresh'}
+                        </span>
+                    </div>
+                </div>
+            )}
             <div className="absolute top-[8px] left-7 [font-family:'Poppins',Helvetica] font-light text-[#A4A4A4] text-[10px] tracking-[0] leading-3 whitespace-nowrap">
                 App Version: V0.0.1
             </div>
@@ -326,18 +540,34 @@ export const DailyChallenge = () => {
                             className="relative w-6 h-6"
                             alt="Arrow back ios new"
                             src="https://c.animaapp.com/b23YVSTi/img/arrow-back-ios-new@2x.png"
-                            loading="eager"
-                            decoding="async"
-                            width="24"
-                            height="24"
                         />
                     </button>
 
-                    <h1 className="relative w-[255px] [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[0] leading-5">
+                    <h1 className="relative flex-1 [font-family:'Poppins',Helvetica] font-semibold text-white text-xl tracking-[0] leading-5">
                         Daily Challenge
                     </h1>
 
-
+                    <button
+                        onClick={handleRefresh}
+                        disabled={isLoading}
+                        className={`relative w-6 h-6 transition-opacity ${isLoading ? 'opacity-50' : 'hover:opacity-80'}`}
+                        aria-label="Refresh challenges"
+                        title="Refresh challenges"
+                    >
+                        <svg
+                            className={`w-6 h-6 ${isLoading ? 'animate-spin text-gray-400' : 'text-white'}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                    </button>
                 </nav>
             </header>
 

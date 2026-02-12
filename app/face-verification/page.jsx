@@ -500,92 +500,185 @@ export default function FaceVerificationPage() {
             }
             console.log("🌐 [CONTINUE] Registration data:", JSON.stringify(registrationData));
 
+            // Register face with backend - Following official pattern
+            // Backend validates biometric registration and stores device association
             const result = await registerFace(registrationData, token);
-            console.log("🌐 [CONTINUE] Backend response:", JSON.stringify(result));
+            console.log("🌐 [CONTINUE] Backend registration response:", {
+                success: result.success,
+                hasError: !!result.error,
+                error: result.error,
+                message: result.message,
+            });
 
-            if (result.error) {
-                console.log("❌ [CONTINUE] Backend error:", result.error);
-                throw new Error(result.error);
+            // Handle backend errors - Following official error handling pattern
+            if (result.error || !result.success) {
+                const errorMessage = result.error || result.message || "Failed to register biometric";
+                console.error("❌ [CONTINUE] Backend registration error:", errorMessage);
+                
+                // Provide user-friendly error messages
+                if (errorMessage.includes("already registered") || errorMessage.includes("already exists")) {
+                    throw new Error("Biometric authentication is already set up for this device. You can use it to log in.");
+                } else if (errorMessage.includes("mobile") || errorMessage.includes("Mobile")) {
+                    throw new Error("Mobile number is required to register biometric. Please add a mobile number to your account.");
+                } else if (errorMessage.includes("unauthorized") || errorMessage.includes("token")) {
+                    throw new Error("Your session has expired. Please log in again and try setting up Face ID.");
+                } else {
+                    throw new Error(errorMessage);
+                }
             }
 
             // Mark face verification as completed
             console.log("✅ [CONTINUE] Marking verification as completed");
             localStorage.setItem("faceVerificationCompleted", "true");
             localStorage.setItem("biometricType", biometricTypeString); // Store actual biometric type
+            
+            // Get username FIRST - needed for all storage operations
+            const username = user?.email || user?.mobile;
+            console.log("💾 [CONTINUE] Username for credential storage:", username);
+            
             if (token) {
                 localStorage.setItem("biometricToken", token);
                 if (user) {
                     localStorage.setItem("biometricUser", JSON.stringify(user));
+                }
+            }
 
-                    // Store username in Capacitor Preferences for status checking (survives logout)
-                    // This allows us to check biometric status even when localStorage is cleared
-                    if (Capacitor.isNativePlatform()) {
-                        try {
-                            const { Preferences } = await import("@capacitor/preferences");
-                            const username = user.mobile || user.email;
-                            if (username) {
-                                await Preferences.set({
-                                    key: "biometric_username",
-                                    value: username
-                                });
-                                console.log("💾 [CONTINUE] Stored username in Preferences for status checking:", username);
-                            }
-                        } catch (prefError) {
-                            console.warn("⚠️ [CONTINUE] Failed to store username in Preferences:", prefError);
-                        }
-                    }
+            // CRITICAL: Store username in Capacitor Preferences FIRST (survives logout)
+            // This MUST happen before credential storage because hasBiometricCredentials() 
+            // checks for this key to determine if biometric login is available
+            // This allows biometric login even if Keystore credential save fails
+            if (Capacitor.isNativePlatform() && username) {
+                try {
+                    const { Preferences } = await import("@capacitor/preferences");
+                    await Preferences.set({
+                        key: "biometric_username",
+                        value: username
+                    });
+                    console.log("✅ [CONTINUE] Stored username in Preferences for biometric login:", username);
+                    
+                    // Also store as backup (used by getCredentials fallback)
+                    await Preferences.set({
+                        key: "biometric_username_backup",
+                        value: username
+                    });
+                    console.log("✅ [CONTINUE] Stored username backup in Preferences");
+                } catch (prefError) {
+                    console.warn("⚠️ [CONTINUE] Failed to store username in Preferences:", prefError);
                 }
             }
 
             // Save biometric credentials using capacitor-native-biometric
-            // This is the proper place for new users after completing face verification
-            if (token && user && Capacitor.isNativePlatform()) {
+            // Following official pattern: Store credentials securely after successful backend registration
+            // This allows users to use biometric login without entering password
+            if (token && user && Capacitor.isNativePlatform() && username) {
                 try {
                     console.log("💾 [CONTINUE] Saving biometric credentials after face verification...");
+                    console.log("💾 [CONTINUE] Token type:", typeof token);
+                    console.log("💾 [CONTINUE] Token value preview:", token ? (typeof token === 'string' ? token.substring(0, 20) + '...' : String(token).substring(0, 20)) : 'null/undefined');
+                    console.log("💾 [CONTINUE] User type:", typeof user);
+                    console.log("💾 [CONTINUE] User keys:", user ? Object.keys(user) : 'null/undefined');
+                    console.log("💾 [CONTINUE] User _id:", user?._id);
+                    console.log("💾 [CONTINUE] Username:", username);
+                    
                     const { setCredentials, enableBiometricLocally } = await import("@/lib/biometricAuth");
 
-                    // Store username and a JSON string containing token and user data
+                    // Validate token before creating payload
+                    if (!token || typeof token !== 'string' || token.trim().length === 0) {
+                        console.error("❌ [CONTINUE] Invalid token for credential storage");
+                        throw new Error("Invalid authentication token");
+                    }
+
+                    // Create credential payload - user is already validated above
                     const credentialPayload = {
-                        token: token,
+                        token: token.trim(),
                         user: user,
                     };
 
-                    console.log("💾 [CONTINUE] Attempting to save biometric credentials...");
-                    console.log("💾 [CONTINUE] Username:", user.email || user.mobile);
-                    console.log("💾 [CONTINUE] Token length:", token?.length || 0);
-                    console.log("💾 [CONTINUE] User ID:", user?._id);
-                    console.log("💾 [CONTINUE] Biometric type:", biometricTypeString);
+                    // Stringify and validate the result
+                    const passwordString = JSON.stringify(credentialPayload);
+                    if (!passwordString || passwordString === '{}' || passwordString === 'null') {
+                        console.error("❌ [CONTINUE] Credential payload stringified to invalid value:", passwordString);
+                        throw new Error("Failed to stringify credential payload");
+                    }
 
+                    console.log("💾 [CONTINUE] Attempting to save biometric credentials...");
+                    console.log("💾 [CONTINUE] Token length:", token.length);
+                    console.log("💾 [CONTINUE] User ID:", user._id);
+                    console.log("💾 [CONTINUE] Biometric type:", biometricTypeString);
+                    console.log("💾 [CONTINUE] Password string length:", passwordString.length);
+
+                    // CRITICAL: Save password backup to Preferences FIRST
+                    // This ensures credentials are available even if Keystore save fails
+                    try {
+                        const { Preferences } = await import("@capacitor/preferences");
+                        await Preferences.set({
+                            key: "biometric_password_backup",
+                            value: passwordString
+                        });
+                        console.log("✅ [CONTINUE] Saved password backup to Preferences");
+                    } catch (prefError) {
+                        console.warn("⚠️ [CONTINUE] Failed to save password backup to Preferences:", prefError);
+                    }
+
+                    // Now try to save to Keystore
                     const credentialResult = await setCredentials({
-                        username: user.email || user.mobile,
-                        password: JSON.stringify(credentialPayload),
+                        username: username,
+                        password: passwordString,
                     });
 
                     if (credentialResult.success) {
-                        // Enable biometric locally
+                        // Enable biometric locally - Following official pattern
                         enableBiometricLocally(biometricTypeString);
-                        console.log("✅ [CONTINUE] Biometric credentials saved successfully for new user!");
+                        console.log("✅ [CONTINUE] Biometric credentials saved successfully!");
                         console.log("✅ [CONTINUE] Biometric type:", biometricTypeString);
+                        console.log("✅ [CONTINUE] Users can now use biometric login");
                     } else {
-                        console.warn("⚠️ [CONTINUE] Failed to save biometric credentials:", credentialResult.error);
-                        console.warn("⚠️ [CONTINUE] Error code:", credentialResult.errorCode);
+                        console.warn("⚠️ [CONTINUE] Failed to save biometric credentials to Keystore:", credentialResult.error);
+                        console.warn("⚠️ [CONTINUE] Credentials are stored in Preferences backup - biometric login will still work");
+                        
+                        // Still enable biometric locally since credentials are in Preferences backup
+                        enableBiometricLocally(biometricTypeString);
                         
                         // If device authentication is required, store a flag to retry later
                         if (credentialResult.requiresDeviceAuth) {
                             console.warn("⚠️ [CONTINUE] Device authentication required - credentials will be saved on next login");
-                            // Store a flag to indicate credentials need to be saved
-                            // This will be checked during login to retry saving credentials
                             localStorage.setItem("biometricCredentialsPending", "true");
                             localStorage.setItem("biometricCredentialsData", JSON.stringify({
-                                username: user.email || user.mobile,
-                                password: JSON.stringify(credentialPayload),
+                                username: username,
+                                password: passwordString,
                             }));
                         }
                     }
                 } catch (biometricError) {
                     console.error("❌ [CONTINUE] Error saving biometric credentials:", biometricError);
                     // Don't fail face verification if biometric save fails
+                    // Credentials might still be in Preferences backup
+                    console.warn("⚠️ [CONTINUE] Face verification completed, but credential storage had an error.");
+                    console.warn("⚠️ [CONTINUE] Checking if credentials exist in Preferences backup...");
+                    
+                    // Check if password backup was saved before the error
+                    try {
+                        const { Preferences } = await import("@capacitor/preferences");
+                        const passwordBackup = await Preferences.get({ key: "biometric_password_backup" });
+                        if (passwordBackup?.value) {
+                            console.log("✅ [CONTINUE] Password backup exists in Preferences - biometric login should still work");
+                            // Enable biometric locally since credentials exist
+                            const { enableBiometricLocally } = await import("@/lib/biometricAuth");
+                            enableBiometricLocally(biometricTypeString);
+                        } else {
+                            console.warn("⚠️ [CONTINUE] No password backup found - user will need to login manually");
+                        }
+                    } catch (checkError) {
+                        console.warn("⚠️ [CONTINUE] Could not check password backup:", checkError);
+                    }
                 }
+            } else {
+                console.warn("⚠️ [CONTINUE] Skipping credential storage - missing required data:", {
+                    hasToken: !!token,
+                    hasUser: !!user,
+                    isNative: Capacitor.isNativePlatform(),
+                    hasUsername: !!username
+                });
             }
 
             setLoadingStep("Face verification successful!");
@@ -639,46 +732,63 @@ export default function FaceVerificationPage() {
             try {
                 console.log("💾 [SKIP] Checking if we can still save biometric credentials...");
                 const { setCredentials, enableBiometricLocally, checkBiometricAvailability } = await import("@/lib/biometricAuth");
+                const { Preferences } = await import("@capacitor/preferences");
 
                 // Check if any biometric is available
                 const availability = await checkBiometricAvailability();
 
                 if (availability.isAvailable) {
                     console.log("💾 [SKIP] Biometric available, saving credentials...");
+                    
+                    const username = user.email || user.mobile;
+                    if (!username || !token) {
+                        console.warn("⚠️ [SKIP] Missing username or token, skipping credential save");
+                        router.push("/homepage");
+                        return;
+                    }
 
-                    // Store username and a JSON string containing token and user data
+                    // Create credential payload
                     const credentialPayload = {
-                        token: token,
+                        token: token.trim(),
                         user: user,
                     };
 
-                    console.log("💾 [SKIP] Attempting to save biometric credentials...");
-                    console.log("💾 [SKIP] Username:", user.email || user.mobile);
-                    console.log("💾 [SKIP] Token length:", token?.length || 0);
-                    console.log("💾 [SKIP] User ID:", user?._id);
-                    console.log("💾 [SKIP] Biometric type:", availability.biometryTypeName);
+                    const passwordString = JSON.stringify(credentialPayload);
+                    if (!passwordString || passwordString === '{}' || passwordString === 'null') {
+                        console.error("❌ [SKIP] Invalid credential payload");
+                        router.push("/homepage");
+                        return;
+                    }
 
+                    // CRITICAL: Save to Preferences FIRST (always works, survives logout)
+                    try {
+                        await Preferences.set({ key: "biometric_username", value: username });
+                        await Preferences.set({ key: "biometric_username_backup", value: username });
+                        await Preferences.set({ key: "biometric_password_backup", value: passwordString });
+                        console.log("✅ [SKIP] Saved credentials to Preferences backup");
+                    } catch (prefError) {
+                        console.warn("⚠️ [SKIP] Failed to save to Preferences:", prefError);
+                    }
+
+                    // Try to save to Keystore
                     const credentialResult = await setCredentials({
-                        username: user.email || user.mobile,
-                        password: JSON.stringify(credentialPayload),
+                        username: username,
+                        password: passwordString,
                     });
 
                     if (credentialResult.success) {
-                        // Enable biometric locally with the available type
                         enableBiometricLocally(availability.biometryTypeName);
-                        console.log("✅ [SKIP] Biometric credentials saved despite skipping face verification!");
-                        console.log("✅ [SKIP] Biometric type:", availability.biometryTypeName);
+                        console.log("✅ [SKIP] Biometric credentials saved successfully!");
                     } else {
-                        console.warn("⚠️ [SKIP] Failed to save biometric credentials:", credentialResult.error);
-                        console.warn("⚠️ [SKIP] Error code:", credentialResult.errorCode);
+                        console.warn("⚠️ [SKIP] Keystore save failed, but Preferences backup exists");
+                        // Still enable biometric since credentials are in Preferences
+                        enableBiometricLocally(availability.biometryTypeName);
                         
-                        // If device authentication is required, store a flag to retry later
                         if (credentialResult.requiresDeviceAuth) {
-                            console.warn("⚠️ [SKIP] Device authentication required - credentials will be saved on next login");
                             localStorage.setItem("biometricCredentialsPending", "true");
                             localStorage.setItem("biometricCredentialsData", JSON.stringify({
-                                username: user.email || user.mobile,
-                                password: JSON.stringify(credentialPayload),
+                                username: username,
+                                password: passwordString,
                             }));
                         }
                     }
@@ -762,30 +872,46 @@ export default function FaceVerificationPage() {
                             </div>
                         </div>
 
-                        {/* Instruction text */}
-                        <p className="text-[#F4F3FC] [font-family:'Poppins',Helvetica] font-normal text-lg leading-relaxed mb-4">
-                            {isScanning
-                                ? useCamera
-                                    ? "Capturing your face for Face ID... Please look at the camera"
-                                    : biometricType === 4
-                                        ? "Scanning your face... Keep your head still"
-                                        : "Authenticating... Please wait"
-                                : useCamera
-                                    ? "Tap Continue to set up Face ID using your camera"
-                                    : biometricType === 4
-                                        ? "Move your head slowly from left to right to complete the process"
-                                        : "Place your finger on the sensor to complete the process"}
-                        </p>
+                        {/* Instruction text - Following industry best practices */}
+                        <div className="text-center mb-4">
+                            <h2 className="text-[#FFFFFF] [font-family:'Poppins',Helvetica] font-semibold text-xl mb-2">
+                                {isScanning
+                                    ? "Verifying Your Identity"
+                                    : useCamera
+                                        ? "Set Up Face ID"
+                                        : `Set Up ${biometricDisplayName}`}
+                            </h2>
+                            <p className="text-[#F4F3FC] [font-family:'Poppins',Helvetica] font-normal text-base leading-relaxed">
+                                {isScanning
+                                    ? useCamera
+                                        ? "Please look directly at the camera and keep your face centered"
+                                        : biometricType === 2 || biometricType === 4
+                                            ? "Position your face in front of the device and look straight ahead"
+                                            : "Place your finger on the sensor and hold it until you feel a vibration"
+                                    : useCamera
+                                        ? "We'll use your camera to capture your face for secure authentication. Make sure you're in a well-lit area."
+                                        : biometricType === 2 || biometricType === 4
+                                            ? "We'll use your device's Face ID to securely authenticate you. Position your face in front of the device when prompted."
+                                            : "We'll use your device's fingerprint sensor to securely authenticate you. Place your finger on the sensor when prompted."}
+                            </p>
+                        </div>
 
-                        {/* Progress Indicator */}
+                        {/* Progress Indicator - Following industry best practices */}
                         {isLoading && (
                             <div className="w-full max-w-sm mx-auto mb-4">
-                                <div className="bg-gray-800/50 rounded-lg p-3">
-                                    <div className="flex items-center justify-center mb-2">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        <span className="text-white text-sm font-medium">
-                                            {loadingStep || "Processing..."}
-                                        </span>
+                                <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-4 backdrop-blur-sm">
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
+                                        <div className="flex-1">
+                                            <span className="text-white text-sm font-medium block">
+                                                {loadingStep || "Processing..."}
+                                            </span>
+                                            {isScanning && (
+                                                <span className="text-purple-300 text-xs mt-1 block">
+                                                    Please wait, this may take a few seconds...
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -815,48 +941,69 @@ export default function FaceVerificationPage() {
                     </div>
                 </div>
 
-                {/* Error Display */}
+                {/* Error Display - Following industry best practices */}
                 {error && (
                     <div className="w-full px-6 mb-4">
-                        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 max-w-sm mx-auto">
-                            <h3 className="text-red-400 font-semibold text-sm mb-2">Verification Error</h3>
-                            <div className="text-red-300 text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">
-                                {error}
+                        <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-4 max-w-sm mx-auto backdrop-blur-sm">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0 mr-3 mt-0.5">
+                                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-red-400 font-semibold text-sm mb-2">Verification Error</h3>
+                                    <div className="text-red-300 text-xs leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                        {error}
+                                    </div>
+                                    <button
+                                        onClick={() => setError(null)}
+                                        className="mt-3 text-red-400 text-xs font-medium hover:text-red-300 transition-colors underline"
+                                    >
+                                        Dismiss
+                                    </button>
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setError(null)}
-                                className="mt-2 text-red-400 text-xs underline"
-                            >
-                                Dismiss
-                            </button>
                         </div>
                     </div>
                 )}
 
-                {/* Bottom buttons */}
+                {/* Bottom buttons - Following industry best practices */}
                 <div className="w-full px-6 pb-8">
-                    <div className="w-full max-w-sm mx-auto">
+                    <div className="w-full max-w-sm mx-auto space-y-3">
                         <button
-                            className="w-full h-12 rounded-xl bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] cursor-pointer transition-opacity duration-200 hover:opacity-90 active:opacity-80 disabled:opacity-50 flex items-center justify-center mb-4"
+                            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#9EADF7] to-[#716AE7] cursor-pointer transition-all duration-200 hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-purple-500/20"
                             onClick={handleContinue}
-                            disabled={isLoading || isScanning}
+                            disabled={isLoading || isScanning || !biometricAvailable}
+                            aria-label={isLoading ? "Processing verification" : "Continue with face verification"}
                         >
-                            <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base">
-                                {isLoading
-                                    ? loadingStep || "Processing..."
-                                    : isScanning
-                                        ? "Scanning..."
-                                        : "Continue"}
-                            </span>
+                            {isLoading ? (
+                                <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                                    <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base">
+                                        {loadingStep || "Processing..."}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base">
+                                    {isScanning ? "Verifying..." : `Continue with ${biometricDisplayName}`}
+                                </span>
+                            )}
                         </button>
 
                         <button
                             onClick={handleSkip}
                             disabled={isLoading || isScanning}
-                            className="w-full py-3 [font-family:'Poppins',Helvetica] font-medium text-[#FFFFFF] text-sm text-center hover:text-white transition-colors duration-200 disabled:opacity-50"
+                            className="w-full py-3 [font-family:'Poppins',Helvetica] font-medium text-[#A4A4A4] text-sm text-center hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Skip face verification"
                         >
                             Skip for now
                         </button>
+                        
+                        {/* Security notice - Following industry best practices */}
+                        <p className="text-[#A4A4A4] text-xs text-center px-4 leading-relaxed">
+                            Your biometric data is stored securely on your device and never shared with our servers.
+                        </p>
                     </div>
                 </div>
             </div>

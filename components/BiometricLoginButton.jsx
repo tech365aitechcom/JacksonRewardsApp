@@ -286,30 +286,38 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
                 deviceId: deviceId.substring(0, 10) + "...", // Log partial deviceId for privacy
             });
 
+            // Step 3: Call backend biometric login endpoint to get fresh token
+            // Following official pattern: Backend validates biometric registration and returns fresh JWT
             const loginResult = await biometricLogin(loginData);
-            console.log("🌐 [LOGIN-BTN] Biometric login result:", {
-                success: !loginResult.error,
-                hasToken: !!(loginResult.token || loginResult.data?.token),
-                hasUser: !!(loginResult.user || loginResult.data?.user),
+
+            console.log("🌐 [LOGIN-BTN] Biometric login API response:", {
+                success: loginResult.success,
+                hasToken: !!loginResult.token,
+                hasUser: !!loginResult.user,
+                hasError: !!loginResult.error,
                 error: loginResult.error,
             });
 
             // Handle API errors (404, HTML responses, etc.) - apiRequest returns error objects
-            if (loginResult.error) {
+            if (loginResult.error || !loginResult.success) {
                 console.error("❌ [LOGIN-BTN] Biometric login API error:", loginResult.error);
 
-                if (loginResult.error.includes("not found") ||
-                    loginResult.error.includes("HTML") ||
+                // Handle endpoint not found (404, HTML responses)
+                if (loginResult.error?.includes("not found") ||
+                    loginResult.error?.includes("HTML") ||
                     loginResult.status === 404) {
                     onError?.("Biometric login endpoint is not available. Please ensure backend routes are implemented. Sign in manually for now.");
                     setIsAuthenticating(false);
                     return;
                 }
 
-                // Handle specific backend error messages
-                if (loginResult.error.includes("not registered") ||
-                    loginResult.error.includes("not set up") ||
-                    loginResult.error.includes("Biometric not")) {
+                // Handle specific backend error messages (following backend response structure)
+                const errorMessage = loginResult.error || loginResult.message || "Biometric login failed";
+
+                if (errorMessage.includes("not registered") ||
+                    errorMessage.includes("not set up") ||
+                    errorMessage.includes("Biometric not") ||
+                    errorMessage.includes("Biometric authentication is not set up")) {
                     onError?.("Face ID is not registered. Please log in first to register Face ID for faster login next time.", {
                         showRedirectLink: true,
                         redirectPath: "/login",
@@ -319,30 +327,97 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
                     return;
                 }
 
-                if (loginResult.error.includes("locked") || loginResult.error.includes("Account locked")) {
+                if (errorMessage.includes("locked") || errorMessage.includes("Account locked")) {
                     onError?.("Account is temporarily locked. Please try again later or sign in manually.");
                     setIsAuthenticating(false);
                     return;
                 }
 
-                if (loginResult.error.includes("not active") || loginResult.error.includes("suspended")) {
+                if (errorMessage.includes("not active") || errorMessage.includes("suspended") || errorMessage.includes("Account not active")) {
                     onError?.("Account is not active. Please contact support.");
                     setIsAuthenticating(false);
                     return;
                 }
-            }
 
-            // Handle different response structures
-            const token = loginResult.token || loginResult.data?.token;
-            const user = loginResult.user || loginResult.data?.user;
+                if (errorMessage.includes("User not found")) {
+                    onError?.("Account not found. Please sign in manually.");
+                    setIsAuthenticating(false);
+                    return;
+                }
 
-            if (loginResult.error || !token || !user) {
-                console.error("❌ [LOGIN-BTN] Backend biometric login failed:", loginResult.error);
-                const errorMessage = loginResult.error || "Biometric login failed. Please try again or sign in manually.";
-                onError?.(errorMessage);
+                // Generic error fallback
+                onError?.(errorMessage || "Biometric login failed. Please try again or sign in manually.");
                 setIsAuthenticating(false);
                 return;
             }
+
+            // Extract token and user from response (backend returns at top level)
+            // Backend structure: { success: true, token: "...", user: {...} }
+            let token = loginResult.token;
+            let user = loginResult.user;
+
+            // Handle nested response structure (defensive fallback)
+            if (!token && loginResult.data) {
+                token = loginResult.data.token;
+                user = loginResult.data.user;
+            }
+
+            // Validate response has required data
+            if (!token || !user) {
+                console.error("❌ [LOGIN-BTN] Backend biometric login response missing token or user:", {
+                    hasToken: !!token,
+                    hasUser: !!user,
+                    responseKeys: Object.keys(loginResult),
+                    hasData: !!loginResult.data,
+                    dataKeys: loginResult.data ? Object.keys(loginResult.data) : 'null',
+                    loginResult: loginResult
+                });
+                onError?.("Invalid response from server. Please try again or sign in manually.");
+                setIsAuthenticating(false);
+                return;
+            }
+
+            // Ensure user._id is a string (MongoDB ObjectIds are serialized to strings in JSON, but be defensive)
+            if (user && user._id && typeof user._id !== 'string') {
+                console.log("🔄 [LOGIN-BTN] Converting user._id to string:", typeof user._id);
+                user = {
+                    ...user,
+                    _id: String(user._id)
+                };
+            }
+
+            // Validate user object has required fields (_id is critical for credential storage)
+            if (!user || typeof user !== 'object' || Object.keys(user).length === 0) {
+                console.error("❌ [LOGIN-BTN] Invalid user object:", {
+                    hasUser: !!user,
+                    userType: typeof user,
+                    userKeys: user ? Object.keys(user) : 'null',
+                    userValue: user
+                });
+                onError?.("Invalid user data received from server. Please try again or sign in manually.");
+                setIsAuthenticating(false);
+                return;
+            }
+
+            if (!user._id) {
+                console.error("❌ [LOGIN-BTN] User object missing _id field:", {
+                    userKeys: Object.keys(user),
+                    userObject: user,
+                    userType: typeof user,
+                    hasId: '_id' in user,
+                    idValue: user._id
+                });
+                // Don't fail login - user is authenticated, but we can't save credentials
+                console.warn("⚠️ [LOGIN-BTN] User object missing _id - credentials will not be saved");
+            } else {
+                console.log("✅ [LOGIN-BTN] User object validated successfully:", {
+                    hasId: !!user._id,
+                    idType: typeof user._id,
+                    userKeys: Object.keys(user).slice(0, 10)
+                });
+            }
+
+            console.log("✅ [LOGIN-BTN] Backend biometric login successful, refreshing session...");
 
             // Step 5: Refresh session with fresh token from backend
             const refreshResult = await refreshSession({
@@ -352,6 +427,114 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
 
             if (refreshResult?.ok) {
                 console.log("✅ [LOGIN-BTN] Session restored successfully with fresh token!");
+
+                // Step 6: Save fresh credentials to secure storage for next Face ID login
+                // This ensures credentials are updated with the latest token and user data
+                if (Capacitor.isNativePlatform()) {
+                    try {
+                        const {
+                            setCredentials,
+                            checkBiometricAvailability,
+                        } = await import("@/lib/biometricAuth");
+
+                        // Check if biometric is available before saving
+                        const availability = await checkBiometricAvailability();
+                        if (availability.isAvailable) {
+                            console.log("💾 [LOGIN-BTN] Saving fresh credentials to secure storage...");
+
+                            // Get username from user object (mobile or email)
+                            const username = user.email || user.mobile || userIdentifier;
+
+                            if (username) {
+                                // Ensure user._id is a string (defensive check)
+                                let validatedUser = user;
+                                if (user._id && typeof user._id !== 'string') {
+                                    validatedUser = {
+                                        ...user,
+                                        _id: String(user._id)
+                                    };
+                                    console.log("🔄 [LOGIN-BTN] Converted user._id to string for credential storage");
+                                }
+
+                                // Validate user object has required fields before creating payload
+                                if (!validatedUser || typeof validatedUser !== 'object' || Object.keys(validatedUser).length === 0 || !validatedUser._id) {
+                                    console.error("❌ [LOGIN-BTN] Invalid user object for credential storage:", {
+                                        hasUser: !!validatedUser,
+                                        userType: typeof validatedUser,
+                                        userKeys: validatedUser ? Object.keys(validatedUser) : 'null',
+                                        hasUserId: !!validatedUser?._id,
+                                        userIdType: typeof validatedUser?._id,
+                                        userObject: validatedUser
+                                    });
+                                    console.warn("⚠️ [LOGIN-BTN] Cannot save biometric credentials - invalid user object");
+                                    // Don't fail login - user is already authenticated, just skip credential save
+                                } else {
+                                    // Create credential payload with fresh token and validated user data
+                                    const credentialPayload = {
+                                        token: token.trim(),
+                                        user: validatedUser, // Use validated user with string _id
+                                    };
+
+                                    // Validate payload before stringifying
+                                    if (credentialPayload.token && credentialPayload.user && Object.keys(credentialPayload.user).length > 0 && credentialPayload.user._id) {
+                                        const passwordString = JSON.stringify(credentialPayload);
+
+                                        if (passwordString && passwordString !== '{}' && passwordString !== 'null') {
+                                            const credentialResult = await setCredentials({
+                                                username: username,
+                                                password: passwordString,
+                                            });
+
+                                            if (credentialResult.success) {
+                                                console.log("✅ [LOGIN-BTN] Fresh credentials saved successfully!");
+
+                                                // Update stored username in Preferences
+                                                try {
+                                                    await Preferences.set({
+                                                        key: "biometric_username",
+                                                        value: username
+                                                    });
+                                                    console.log("✅ [LOGIN-BTN] Updated biometric username in Preferences");
+                                                } catch (prefError) {
+                                                    console.warn("⚠️ [LOGIN-BTN] Failed to update username in Preferences:", prefError);
+                                                }
+                                            } else {
+                                                console.warn("⚠️ [LOGIN-BTN] Failed to save fresh credentials to Keystore:", credentialResult.error);
+
+                                                // IMPORTANT: Save username to Preferences even if Keystore save failed
+                                                // This is critical because credentials are saved to Preferences backup,
+                                                // and hasBiometricCredentials() checks for username in Preferences
+                                                // Without this, biometric login won't work even though credentials exist in backup
+                                                try {
+                                                    await Preferences.set({
+                                                        key: "biometric_username",
+                                                        value: username
+                                                    });
+                                                    console.log("✅ [LOGIN-BTN] Saved biometric username to Preferences (Keystore save failed, but credentials exist in backup)");
+                                                } catch (prefError) {
+                                                    console.warn("⚠️ [LOGIN-BTN] Failed to update username in Preferences:", prefError);
+                                                }
+                                                // Don't fail login if credential save fails - user is already logged in
+                                            }
+                                        } else {
+                                            console.warn("⚠️ [LOGIN-BTN] Invalid credential payload - cannot save");
+                                        }
+                                    } else {
+                                        console.warn("⚠️ [LOGIN-BTN] Credential payload validation failed - cannot save");
+                                    }
+                                }
+                            } else {
+                                console.warn("⚠️ [LOGIN-BTN] No username available - cannot save credentials");
+                            }
+                        } else {
+                            console.log("ℹ️ [LOGIN-BTN] Biometric not available - skipping credential save");
+                        }
+                    } catch (biometricError) {
+                        console.error("❌ [LOGIN-BTN] Error saving fresh credentials:", biometricError);
+                        // Don't fail login if credential save fails - user is already logged in
+                    }
+                }
+
                 onSuccess?.({
                     token: token,
                     user: user

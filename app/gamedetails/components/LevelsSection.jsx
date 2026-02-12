@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { RulesModal } from "./RulesModal";
 import sessionManager from "@/lib/sessionManager";
 
-export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdate }) => {
+export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdate, claimedBatches = [], isDownloadedGame = false }) => {
     const [processedGoals, setProcessedGoals] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,6 +21,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     const [isGameDownloaded, setIsGameDownloaded] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [sessionId, setSessionId] = useState(null);
+    const [unlockNextBatch, setUnlockNextBatch] = useState(false);
 
     const dispatch = useDispatch();
     const router = useRouter();
@@ -74,13 +75,13 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
             // IMPORTANT: Count completed UNLOCKED tasks only for batch-based progression
             const unlockedGoals = processedGoals.filter(g => !g.isLocked);
             const completedUnlockedTasksCount = unlockedGoals.filter(g => g.isCompleted).length;
-            
+
             // Get taskProgression rules for batch calculation
             const taskProgression = game?.taskProgression || null;
             const hasProgressionRule = taskProgression?.hasProgressionRule || false;
             const firstBatchSize = taskProgression?.firstBatchSize || 0;
             const nextBatchSize = taskProgression?.nextBatchSize || 0;
-            
+
             onSessionUpdate({
                 sessionCoins,
                 sessionXP,
@@ -110,9 +111,30 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 return;
             }
 
-            // Use besitosRawData goals if available (they have the most complete data)
-            const rawData = game?.besitosRawData || {};
-            const goalsToUse = rawData.goals || game.goals || [];
+            // Use normalizer to get goals/events for both besitos and bitlab
+            const { normalizeGameGoals, getSdkProvider } = require('@/lib/gameDataNormalizer');
+            const goalsToUse = normalizeGameGoals(game) || game.goals || [];
+            const provider = getSdkProvider(game);
+            const isBitLab = provider === 'bitlab';
+
+            console.log('🎯 LevelsSection - Processing goals:', {
+                provider,
+                rawGoals: game?.besitosRawData?.goals,
+                rawEvents: game?.besitosRawData?.events,
+                normalizedGoals: goalsToUse,
+                goalsCount: goalsToUse.length,
+                firstGoal: goalsToUse[0] ? {
+                    id: goalsToUse[0].id,
+                    goal_id: goalsToUse[0].goal_id,
+                    name: goalsToUse[0].name,
+                    text: goalsToUse[0].text,
+                    title: goalsToUse[0].title,
+                    completed: goalsToUse[0].completed,
+                    type: goalsToUse[0].type,
+                    goal_type: goalsToUse[0].goal_type,
+                    section: goalsToUse[0].section
+                } : null
+            });
 
             // Get taskProgression rules for unlocking tasks
             const taskProgression = game?.taskProgression || null;
@@ -133,11 +155,28 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
             try {
                 // Process goals with ACTUAL API data (completed, failed, days_left) - from besitosRawData
                 const allGoals = goalsToUse.map((goal, index) => {
-                    // Use actual completion status from API
-                    const isCompleted = goal.completed === true;
-                    const isFailed = goal.failed === true;
-                    const isLinear = goal.goal_type === 'linear';
-                    const isNonLinear = goal.goal_type === 'non-linear';
+                    // Debug log for first few goals
+                    if (index < 3) {
+                        console.log(`🔍 [Goal ${index}] Raw data:`, {
+                            id: goal.id,
+                            goal_id: goal.goal_id,
+                            name: goal.name,
+                            text: goal.text,
+                            title: goal.title,
+                            completed: goal.completed,
+                            failed: goal.failed,
+                            status: goal.status,
+                            type: goal.type,
+                            goal_type: goal.goal_type,
+                            section: goal.section
+                        });
+                    }
+
+                    // Use actual completion status from API - handle both boolean and string values
+                    const isCompleted = goal.completed === true || goal.completed === 'true' || goal.status === 'completed' || goal.status === 'success';
+                    const isFailed = goal.failed === true || goal.failed === 'true' || goal.status === 'failed' || goal.status === 'expired';
+                    const isLinear = goal.goal_type === 'linear' || goal.type === 'linear';
+                    const isNonLinear = goal.goal_type === 'non-linear' || goal.type === 'non-linear' || goal.type === 'turbo' || goal.type === 'flat';
 
                     // Check if expired based on days_left
                     const isExpired = goal.days_left !== null && goal.days_left <= 0 && !isCompleted;
@@ -147,84 +186,83 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     // PRIORITY: Use progression data from API if available (for downloaded games)
                     // Otherwise, calculate based on taskProgression rules
                     const isLocked = (() => {
-                        // Check if goal has progression data from API (downloaded games)
+                        console.log(`[Debug] Checking lock status for goal: "${goal.text || goal.name || goal.title}" (Batch: ${goal.progression?.batchNumber})`);
+
+                        // BitLab: use API progression lock state as source of truth (each event has progression.isLocked / isUnlocked)
+                        if (isBitLab && goal.progression && (typeof goal.progression.isLocked === 'boolean' || typeof goal.progression.isUnlocked === 'boolean')) {
+                            const apiLocked = goal.progression.isLocked === true;
+                            console.log('[Debug] BitLab: Using API progression.isLocked:', apiLocked, 'for', goal.name || goal.text);
+                            return apiLocked;
+                        }
+                        // Non-BitLab or no progression: use progression from API when available (e.g. downloaded Besitos)
                         if (goal.progression && typeof goal.progression.isLocked === 'boolean') {
+                            const taskBatchNumber = goal.progression.batchNumber;
+                            if (taskBatchNumber && claimedBatches.length > 0) {
+                                const maxClaimedBatch = Math.max(...claimedBatches);
+                                const nextbatch = userData?.nextbatch || 1;
+                                const shouldBeLocked = taskBatchNumber > maxClaimedBatch + nextbatch;
+                                return shouldBeLocked;
+                            }
                             return goal.progression.isLocked;
                         }
+                        // BitLab without API progression: unlock by event order (all prior events completed)
+                        if (isBitLab) {
+                            const myNum = goal.event_number ?? goal.position ?? index + 1;
+                            const priorGoals = goalsToUse.filter(g => (g.event_number ?? g.position ?? 999) < myNum);
+                            const allPriorCompleted = priorGoals.length === 0 || priorGoals.every(p => p.completed === true || p.status === 'completed');
+                            return !allPriorCompleted;
+                        }
 
+                        console.log('[Debug] Using fallback progression logic.');
                         // Fallback: Calculate based on taskProgression rules (for games without progression data)
-                        // If no progression rule, use old logic (groups of 3)
                         if (!hasProgressionRule || firstBatchSize === 0) {
-                            // Determine which block of three this index belongs to
                             const blockIndex = Math.floor(index / 3); // 0-based block
-
-                            // Block 0 (first three) is always unlocked
                             if (blockIndex === 0) {
+                                console.log('[Debug] Fallback: First block, unlocked.');
                                 return false;
                             }
-
-                            // For subsequent blocks, require all tasks in the previous block to be completed
                             const prevBlockStart = (blockIndex - 1) * 3;
-                            const prevBlockEnd = prevBlockStart + 3; // non-inclusive
+                            const prevBlockEnd = prevBlockStart + 3;
                             const previousBlockGoals = goalsToUse.slice(prevBlockStart, prevBlockEnd);
+                            const previousBlockCompleted = previousBlockGoals.every(prevGoal => prevGoal.completed === true || prevGoal.status === 'completed');
 
-                            const previousBlockCompleted = previousBlockGoals.length > 0 && previousBlockGoals.every(prevGoal => {
-                                return prevGoal.completed === true || prevGoal.status === 'completed';
-                            });
-
-                            // Lock if previous block not fully completed
+                            console.log(`[Debug] Fallback: Block ${blockIndex}. Previous block completed: ${previousBlockCompleted}`);
                             return !previousBlockCompleted;
                         }
 
                         // Use taskProgression rules
-                        // First batch is always unlocked (firstBatchSize tasks: 0 to firstBatchSize-1)
                         if (index < firstBatchSize) {
-                            return false; // First batch is always unlocked
+                            console.log(`[Debug] Task index ${index} is within firstBatchSize ${firstBatchSize}, unlocked.`);
+                            return false;
                         }
 
-                        // Calculate which batch this task belongs to (after first batch)
-                        // Batch 0 = first batch (0 to firstBatchSize-1) - already handled above
-                        // Batch 1 = second batch (firstBatchSize to firstBatchSize + nextBatchSize - 1)
-                        // Batch 2 = third batch, etc.
                         const batchNumber = Math.floor((index - firstBatchSize) / nextBatchSize) + 1;
-
-                        // Check if all previous batches are completed
                         for (let b = 0; b < batchNumber; b++) {
                             let batchStart, batchEnd;
-
                             if (b === 0) {
-                                // First batch
                                 batchStart = 0;
                                 batchEnd = firstBatchSize;
                             } else {
-                                // Subsequent batches
                                 batchStart = firstBatchSize + (b - 1) * nextBatchSize;
                                 batchEnd = Math.min(batchStart + nextBatchSize, goalsToUse.length);
                             }
-
-                            // Get goals in this batch
                             const batchGoals = goalsToUse.slice(batchStart, batchEnd);
+                            const batchCompleted = batchGoals.every(g => g.completed === true || g.status === 'completed');
 
-                            // Check if all goals in this batch are completed
-                            const batchCompleted = batchGoals.length > 0 && batchGoals.every(goal => {
-                                return goal.completed === true || goal.status === 'completed';
-                            });
-
-                            // If this is the immediate previous batch and it's not completed, task is locked
                             if (b === batchNumber - 1) {
-                                // This is the immediate previous batch
-                                // Task is unlocked if previous batch is completed AND can unlock next
-                                return !(batchCompleted && (canUnlockNextTasks || thresholdReached));
+                                const result = !(batchCompleted && (canUnlockNextTasks || thresholdReached));
+                                console.log(`[Debug] Task in batch ${batchNumber}. Predecessor batch ${b} completed: ${batchCompleted}. canUnlock: ${canUnlockNextTasks}, threshold: ${thresholdReached}. Locked: ${result}`);
+                                return result;
                             }
-
-                            // If any earlier batch is not completed, task is locked
                             if (!batchCompleted) {
-                                return true; // Locked because an earlier batch is not completed
+                                console.log(`[Debug] Task in batch ${batchNumber}. Previous batch ${b} not completed. Locked.`);
+                                return true;
                             }
                         }
 
-                        // All previous batches completed, check if we can unlock next
-                        return !(canUnlockNextTasks || thresholdReached);
+                        const finalResult = !(canUnlockNextTasks || thresholdReached || unlockNextBatch);
+                        console.log(`[Debug] Final check. canUnlock: ${canUnlockNextTasks}, threshold: ${thresholdReached}, unlockNextBatch: ${unlockNextBatch}. Locked: ${finalResult}`);
+                        return finalResult;
                     })();
 
                     // Determine task status
@@ -234,23 +272,16 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     else if (isExpired) taskStatus = 'expired';
                     else if (isPending) taskStatus = 'pending';
 
-                    // Calculate rewards (only if completed)
-                    const coinReward = isCompleted ? goal.amount : 0;
+                    // Coins: use promised_points (goal.amount) per task for both BitLab and Besitos
+                    const goalAmount = parseFloat(goal.amount || goal.points || 0) || 0;
+                    const coinReward = isCompleted ? goalAmount : 0;
 
-                    // Calculate XP based on xpRewardConfig with progressive multiplier
-                    // Task 1 (index 0): baseXP × multiplier^0 = baseXP
-                    // Task 2 (index 1): baseXP × multiplier^1 = baseXP × multiplier
-                    // Task 3 (index 2): baseXP × multiplier^2
-                    // Task 4 (index 3): baseXP × multiplier^3
-                    // Each subsequent task multiplies the previous task's XP by the multiplier
-                    const xpConfig = game?.xpRewardConfig || { baseXP: 1, multiplier: 1 };
-                    const baseXP = xpConfig.baseXP || 1;
-                    const multiplier = xpConfig.multiplier || 1;
-                    // Calculate: baseXP × (multiplier ^ taskIndex)
-                    // index is 0-based, so Task 1 = index 0, Task 2 = index 1, etc.
-                    // This ensures each task's XP is progressively multiplied
-                    const calculatedXP = Math.round((baseXP * Math.pow(multiplier, index)) * 100) / 100;
-                    // XP reward is only given if task is completed, but XP value is shown for all tasks
+                    // XP: BitLab = baseXP (1st task), baseXP*multiplier (2nd), ... Ensure baseXP >= 1 so XP always updates when tasks complete
+                    const xpConfig = game?.xpRewardConfig || game?.bitlabsRawData?.xpRewardConfig || game?.besitosRawData?.xpRewardConfig || { baseXP: 1, multiplier: 1 };
+                    const baseXP = Math.max(1, Number(xpConfig.baseXP) || 1);
+                    const multiplier = Number(xpConfig.multiplier) || 1;
+                    const xpIndex = index;
+                    const calculatedXP = Math.round((baseXP * Math.pow(multiplier, xpIndex)) * 100) / 100;
                     const xpReward = isCompleted ? calculatedXP : 0;
 
                     // Format time limit
@@ -281,13 +312,13 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
                     return {
                         id: index + 1,
-                        title: goal.text,
+                        title: goal.text || goal.name || goal.title || `Task ${index + 1}`,
                         timeLimit,
-                        reward: goal.amount,
+                        reward: (goal.amount != null && goal.amount !== '' ? String(goal.amount) : (goal.points != null && goal.points !== '' ? String(goal.points) : '0')),
                         points: `+${calculatedXP}`,
                         gradient,
-                        goalId: goal.goal_id,
-                        section: goal.section,
+                        goalId: goal.goal_id || goal.id || goal.uuid || goal.hash,
+                        section: goal.section || (goal.type === 'turbo' || goal.type === 'non-linear' ? 'turbo' : 'linear'),
                         isCompleted,
                         isFailed,
                         isLocked,
@@ -375,7 +406,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
         };
 
         processGameData();
-    }, [game, userData]);
+    }, [game, userData, unlockNextBatch, claimedBatches]);
 
     // Helper functions for styling
     const getGradientForLevel = (level) => {
@@ -488,7 +519,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
         setClaiming(true);
         try {
             // Call backend API to claim rewards
-            const response = await fetch('/api/claim-rewards', {
+            const response = await fetch('https://rewardsapi.hireagent.co/api/claim-rewards', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -505,14 +536,24 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
             const result = await response.json();
 
             if (result.success) {
-                // Update Redux store with claimed rewards
-
                 setIsClaimed(true);
                 setShowClaimModal(false);
 
-                // Show success toast as per requirements
-                alert(`Your rewards have been added to your wallet! +${result.coinsTransferred} coins, +${result.xpTransferred} XP`);
+                // Update claimedBatches dynamically
+                const updatedClaimedBatches = [...claimedBatches, result.data.totalBatchesClaimed];
+                setUnlockNextBatch(true);
 
+                // Trigger re-evaluation of processedGoals
+                setProcessedGoals((prevGoals) => {
+                    return prevGoals.map((goal) => {
+                        if (goal.progression && goal.progression.batchNumber === result.data.totalBatchesClaimed + 1) {
+                            return { ...goal, isLocked: false };
+                        }
+                        return goal;
+                    });
+                });
+
+                alert(`Your rewards have been added to your wallet! +${result.data.totalCoinsClaimed} coins, +${result.data.totalXPClaimed} XP`);
             } else {
                 throw new Error(result.message || 'Failed to claim rewards');
             }
@@ -915,7 +956,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 {lockedLevels.map((level, index) => (
                     <div key={`locked-${index}`} className="flex items-center gap-3 w-full relative z-10">
                         <div className="flex w-[38px] h-[38px] items-center justify-center bg-[#2f344a] rounded-full flex-shrink-0 relative">
-                            <div className="font-semibold text-white-f4f3fc text-[12px]">
+                            <div className="font-semibold text-[#f4f3fc] text-[12px]">
                                 {level.id}
                             </div>
                             {/* Lock overlay */}

@@ -148,6 +148,13 @@ export default function BuySubscription() {
                 _forceNew: Date.now()
             }));
 
+            // Check if the thunk was rejected
+            if (response.type && response.type.endsWith('/rejected')) {
+                const errorMessage = response.payload || "Payment initiation failed. Please try again.";
+                alert(`Subscription error: ${errorMessage}`);
+                return;
+            }
+
             // ✅ FIX: Backend returns data in response.payload.data (nested)
             const payloadData = response.payload?.data || response.payload;
 
@@ -181,7 +188,9 @@ export default function BuySubscription() {
                 }
             }
         } catch (error) {
-            alert("An error occurred. Please try again.");
+            console.error("Payment initiation error:", error);
+            const errorMessage = error?.message || error?.body?.message || "An error occurred. Please try again.";
+            alert(`Subscription error: ${errorMessage}`);
         }
     };
 
@@ -248,24 +257,44 @@ export default function BuySubscription() {
                 }
             }, 3000); // Increased delay to show success message
         } catch (error) {
+            console.error("❌ [handlePaymentSuccess] Error details:", error);
+            console.error("❌ [handlePaymentSuccess] Error type:", typeof error);
+            console.error("❌ [handlePaymentSuccess] Error keys:", error ? Object.keys(error) : "null");
+            
             // More detailed error handling
             let errorMessage = 'Payment confirmation failed. Please contact support.';
-            if (error.message) {
-                errorMessage = `Payment confirmation failed: ${error.message}`;
-            } else if (error.body?.message) {
-                errorMessage = `Payment confirmation failed: ${error.body.message}`;
+            
+            // Extract error message from various possible locations
+            // The error from unwrap() is the rejected value from rejectWithValue
+            if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            } else if (error?.body?.error) {
+                errorMessage = error.body.error;
+            } else if (error?.body?.message) {
+                errorMessage = error.body.message;
+            } else if (error?.error) {
+                errorMessage = error.error;
+            }
+
+            // Check if this is a backend configuration issue (like missing Stripe customer)
+            if (errorMessage.includes("No such customer") || 
+                errorMessage.includes("customer") || 
+                errorMessage.includes("Customer")) {
+                errorMessage = "Payment processing error: Account configuration issue detected. Your payment was processed, but we need to set up your account. Please contact support with your payment details and we'll activate your subscription.";
             }
 
             // Check if this is a network/server error vs validation error
-            const isNetworkError = !error.status || error.status >= 500;
-            const isValidationError = error.status >= 400 && error.status < 500;
+            const isNetworkError = !error?.status || error?.status >= 500;
+            const isValidationError = error?.status >= 400 && error?.status < 500;
 
-            if (isNetworkError) {
+            if (isNetworkError && !errorMessage.includes("No such customer") && !errorMessage.includes("Account configuration")) {
                 // For network errors, show a more user-friendly message
                 errorMessage = 'Network error during payment confirmation. Your payment was successful, but we need to verify it. Please contact support if this persists.';
-            } else if (isValidationError) {
+            } else if (isValidationError && !errorMessage.includes("No such customer") && !errorMessage.includes("Account configuration")) {
                 // For validation errors, show the specific error
-                errorMessage = `Payment confirmation failed: ${error.message || 'Invalid request parameters'}`;
+                errorMessage = `Payment confirmation failed: ${errorMessage}`;
             }
 
             dispatch(setPurchaseStatus({

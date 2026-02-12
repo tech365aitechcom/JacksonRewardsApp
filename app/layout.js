@@ -19,6 +19,21 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Verisoul SDK - Official Browser Integration */}
+        {/* Docs: https://docs.verisoul.ai/integration/frontend/browser */}
+        {/* Using PRODUCTION environment with your Project ID */}
+        {process.env.NEXT_PUBLIC_VERISOUL_PROJECT_ID && (
+          <script
+            async
+            src="https://js.verisoul.ai/prod/bundle.js"
+            verisoul-project-id={process.env.NEXT_PUBLIC_VERISOUL_PROJECT_ID}
+          />
+        )}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!function(e){if(e.Verisoul)return;const r=[],t={},o=new Proxy(t,{get:(e,o)=>o in t?t[o]:(...e)=>new Promise(((t,n)=>r.push([o,e,t,n]))),set:(e,r,o)=>(t[r]=o,!0)});e.Verisoul=o;const n=()=>{Object.keys(t).length&&r.splice(0).forEach((([e,r,o,n])=>{try{Promise.resolve(t[e](...r)).then(o,n)}catch(e){n(e)}}))},c=document.querySelector("script[verisoul-project-id]"),s=()=>r.splice(0).forEach((([,,,e])=>e(new Error("Failed to load Verisoul SDK"))));if(!c)return void s();c.addEventListener("load",n,{once:!0}),c.addEventListener("error",(()=>{clearInterval(i),s()}),{once:!0});const i=setInterval((()=>{Object.keys(t).length&&(clearInterval(i),n())}),40)}(window);`,
+          }}
+        />
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -58,10 +73,12 @@ export default function RootLayout({ children }) {
               -ms-overflow-style: none !important;
               scrollbar-width: none !important;
               overflow-x: hidden !important;
+              overflow-y: auto !important;
               overscroll-behavior: none !important;
               overscroll-behavior-y: none !important;
               overscroll-behavior-x: none !important;
               background-color: #000000 !important;
+              touch-action: pan-y !important;
             }
             html::-webkit-scrollbar, body::-webkit-scrollbar {
               display: none !important;
@@ -73,7 +90,7 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className="antialiased overflow-x-hidden">
+      <body className="antialiased overflow-x-hidden overflow-y-auto">
         <SplashScreen>
           <ReduxProvider>
             <AuthProvider>

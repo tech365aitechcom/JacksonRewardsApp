@@ -103,7 +103,10 @@ export default function LoginPage() {
           // Manually render the widget
           setIsTurnstileLoading(true);
           const widgetId = window.turnstile.render(turnstileRef.current, {
-            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
+              console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
+              return '1x00000000000000000000AA'; // Test key - replace with production key
+            })(),
             callback: (token) => {
               setTurnstileToken(token);
               setIsTurnstileLoading(false);
@@ -257,16 +260,21 @@ export default function LoginPage() {
       }
       else {
         const backendError = result?.error;
-        if (backendError && backendError.errors) {
+        if (typeof backendError === "string") {
+          setError({ form: backendError });
+        } else if (backendError && Array.isArray(backendError.errors)) {
           const newErrors = {};
-          backendError.errors.forEach(err => {
-            if (err.param) newErrors[err.param] = err.msg;
+          backendError.errors.forEach((err) => {
+            if (err.param && err.msg) newErrors[err.param] = err.msg;
           });
-          setError(newErrors);
-        }
-        else {
-          const errorMessage = backendError?.error || backendError?.message || "An unknown error occurred. Please try again.";
-          setError({ form: errorMessage });
+          if (Object.keys(newErrors).length > 0) setError(newErrors);
+          else {
+            const msg = backendError?.error || backendError?.message;
+            if (msg) setError({ form: msg });
+          }
+        } else {
+          const errorMessage = backendError?.error || backendError?.message;
+          setError({ form: errorMessage || "Something went wrong." });
         }
         // Reset Turnstile on error so user can try again
         resetTurnstileWidget();
@@ -274,7 +282,13 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("Login component error:", err);
-      setError({ form: "A client-side error occurred. Please try again." });
+      const msg =
+        err?.message ||
+        err?.body?.message ||
+        err?.body?.error ||
+        (Array.isArray(err?.body?.errors) && err.body.errors[0]?.msg) ||
+        null;
+      setError({ form: msg || "Something went wrong." });
       // Reset Turnstile on error so user can try again
       resetTurnstileWidget();
       setTurnstileToken(null);
@@ -437,7 +451,10 @@ export default function LoginPage() {
 
                 setIsTurnstileLoading(true);
                 const widgetId = window.turnstile.render(turnstileRef.current, {
-                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
+                    console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
+                    return '1x00000000000000000000AA'; // Test key - replace with production key
+                  })(),
                   callback: (token) => {
                     setTurnstileToken(token);
                     setIsTurnstileLoading(false);

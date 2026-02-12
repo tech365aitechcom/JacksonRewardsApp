@@ -7,7 +7,21 @@ import {
   getProfile,
   getDailyRewardsWeek,
   getXPTierProgressBar,
+  getWelcomeBonusTasks,
+  authenticateFraudSession,
+  getFraudSessionStatus,
+  unauthenticateFraudSession,
+  syncMyGames,
 } from "@/lib/api";
+import {
+  getDeviceMetadata,
+  clearVerisoulSessionId,
+} from "@/lib/deviceUtils";
+import {
+  initializeVerisoulSDK,
+  getVerisoulSessionId,
+  reinitializeVerisoulSession,
+} from "@/lib/verisoulSDK";
 import useOnboardingStore from "@/stores/useOnboardingStore";
 import { App } from "@capacitor/app";
 import { useDispatch, useSelector } from "react-redux";
@@ -43,6 +57,7 @@ import {
   fetchCalendar as fetchDailyCalendar,
   fetchToday as fetchDailyToday,
   fetchBonusDays,
+  resetDailyChallengeState,
 } from "@/lib/redux/slice/dailyChallengeSlice";
 import {
   fetchSurveys,
@@ -99,43 +114,56 @@ export function AuthProvider({ children }) {
   // Deep link listener useEffect - Handles both custom scheme and HTTPS deep links
   useEffect(() => {
     let listener = null;
+    let cancelled = false;
 
     // Check if we're in a Capacitor environment
     if (typeof window !== "undefined" && window.Capacitor && App) {
       try {
-        listener = App.addListener("appUrlOpen", (event) => {
-          const urlString = event.url;
+        (async () => {
+          try {
+            // Capacitor v7+: addListener returns a Promise<PluginListenerHandle>
+            listener = await App.addListener("appUrlOpen", (event) => {
+              const urlString = event.url;
 
-          let parsableUrl;
-          let path;
-          let token;
+              let parsableUrl;
+              let path;
+              let token;
 
-          // Handle custom URL scheme (com.jackson.app://)
-          if (urlString.startsWith("com.jackson.app://")) {
-            parsableUrl = new URL(
-              urlString.replace("com.jackson.app://", "http://app/")
-            );
-            path = parsableUrl.pathname;
-            token = parsableUrl.searchParams.get("token");
-          }
-          // Handle HTTPS deep links (Android App Links)
-          else if (urlString.startsWith("https://")) {
-            parsableUrl = new URL(urlString);
-            path = parsableUrl.pathname;
-            token = parsableUrl.searchParams.get("token");
-          }
+              // Handle custom URL scheme (com.jackson.app://)
+              if (urlString.startsWith("com.jackson.app://")) {
+                parsableUrl = new URL(
+                  urlString.replace("com.jackson.app://", "http://app/")
+                );
+                path = parsableUrl.pathname;
+                token = parsableUrl.searchParams.get("token");
+              }
+              // Handle HTTPS deep links (Android App Links)
+              else if (urlString.startsWith("https://")) {
+                parsableUrl = new URL(urlString);
+                path = parsableUrl.pathname;
+                token = parsableUrl.searchParams.get("token");
+              }
 
-          // Process the deep link
-          if (path && token) {
-            if (path === "/reset-password") {
-              router.push(`/reset-password?token=${token}`);
-            } else if (path === "/auth/callback") {
-              handleSocialAuthCallback(token).then((result) => {
-                router.replace(result.ok ? "/location" : "/login");
-              });
+              // Process the deep link
+              if (path && token) {
+                if (path === "/reset-password") {
+                  router.push(`/reset-password?token=${token}`);
+                } else if (path === "/auth/callback") {
+                  handleSocialAuthCallback(token).then((result) => {
+                    router.replace(result.ok ? "/location" : "/login");
+                  });
+                }
+              }
+            });
+
+            if (cancelled && listener?.remove) {
+              await listener.remove();
+              listener = null;
             }
+          } catch (e) {
+            console.warn("App.addListener failed:", e);
           }
-        });
+        })();
       } catch (error) {
         console.warn(
           "App.addListener not available in this environment:",
@@ -145,21 +173,20 @@ export function AuthProvider({ children }) {
     }
 
     return () => {
+      cancelled = true;
       if (listener) {
         try {
           // Try different possible cleanup methods
-          if (listener.remove && typeof listener.remove === "function") {
-            listener.remove();
-          } else if (
-            listener.unsubscribe &&
-            typeof listener.unsubscribe === "function"
-          ) {
-            listener.unsubscribe();
-          } else if (
-            listener.destroy &&
-            typeof listener.destroy === "function"
-          ) {
-            listener.destroy();
+          if (listener && typeof listener === "object") {
+            if (typeof listener.remove === "function") {
+              listener.remove();
+            } else if (typeof listener.unsubscribe === "function") {
+              listener.unsubscribe();
+            } else if (typeof listener.destroy === "function") {
+              listener.destroy();
+            } else if (typeof listener === "function") {
+              listener();
+            }
           } else if (typeof listener === "function") {
             listener();
           }
@@ -170,21 +197,128 @@ export function AuthProvider({ children }) {
     };
   }, [router]);
 
+  // Initialize Verisoul SDK on app start
+  useEffect(() => {
+    const initVerisoul = async () => {
+      try {
+        const result = await initializeVerisoulSDK();
+        if (result.success) {
+          console.log("✅ [AuthContext] Verisoul SDK initialized with session:", result.sessionId);
+        } else {
+          console.warn("⚠️ [AuthContext] Verisoul SDK initialization failed (non-blocking):", result.error);
+        }
+      } catch (error) {
+        console.error("❌ [AuthContext] Failed to initialize Verisoul SDK (non-blocking):", error);
+      }
+    };
+    
+    initVerisoul();
+  }, []);
+
   // MODIFIED: This effect now focuses only on loading the session from storage
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("authToken");
-      const storedUser = localStorage.getItem("user");
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+    const loadSession = async () => {
+      try {
+        const storedToken = localStorage.getItem("authToken");
+        const storedUser = localStorage.getItem("user");
+        if (storedToken && storedUser) {
+          setToken(storedToken);
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+
+          // Sync my-games in background (non-blocking)
+          syncMyGames(storedToken).catch(() => {});
+
+          // Check fraud session status when app opens
+          try {
+            const storedSessionId = localStorage.getItem("verisoul_session_id");
+            if (storedSessionId) {
+              const statusResponse = await getFraudSessionStatus(storedSessionId, storedToken);
+              if (statusResponse?.success) {
+                const status = statusResponse?.data?.status;
+                const riskScore = statusResponse?.data?.risk_score || 0;
+                
+                console.log("🔍 [AuthContext] Fraud session status on app open:", {
+                  status,
+                  riskScore,
+                });
+
+                // Re-authenticate if session is not active
+                if (status !== "active") {
+                  console.log("🔄 [AuthContext] Session not active on app open, re-authenticating...");
+                  const deviceMetadata = await getDeviceMetadata();
+                  
+                  // Get Verisoul SDK session ID (required for full fraud detection)
+                  const verisoulSessionId = await getVerisoulSessionId();
+                  
+                  const sessionAuthData = {
+                    accountId: parsedUser._id || parsedUser.id || String(parsedUser._id || parsedUser.id),
+                    email: parsedUser.email || "",
+                    metadata: {
+                      deviceId: deviceMetadata.deviceId,
+                      appVersion: deviceMetadata.appVersion,
+                      deviceModel: deviceMetadata.deviceModel,
+                      osVersion: deviceMetadata.osVersion,
+                      platform: deviceMetadata.platform,
+                    },
+                    group: parsedUser.group || parsedUser.userGroup || "regular_users", // Required by API
+                  };
+                  
+                  // Add Verisoul SDK session_id if available (enables full fraud detection)
+                  if (verisoulSessionId) {
+                    sessionAuthData.session_id = verisoulSessionId;
+                  }
+
+                  const fraudResponse = await authenticateFraudSession(sessionAuthData, storedToken);
+                  if (fraudResponse?.success && fraudResponse?.sessionId) {
+                    localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
+                  }
+                }
+              }
+            } else {
+              // No session ID found, authenticate new session
+              console.log("🔄 [AuthContext] No fraud session found, creating new session...");
+              const deviceMetadata = await getDeviceMetadata();
+              
+              // Get Verisoul SDK session ID (required for full fraud detection)
+              const verisoulSessionId = await getVerisoulSessionId();
+              
+              const sessionAuthData = {
+                accountId: parsedUser._id || parsedUser.id || String(parsedUser._id || parsedUser.id),
+                email: parsedUser.email || "",
+                metadata: {
+                  deviceId: deviceMetadata.deviceId,
+                  appVersion: deviceMetadata.appVersion,
+                  deviceModel: deviceMetadata.deviceModel,
+                  osVersion: deviceMetadata.osVersion,
+                  platform: deviceMetadata.platform,
+                },
+                group: parsedUser.group || parsedUser.userGroup || "regular_users", // Required by API
+              };
+              
+              // Add Verisoul SDK session_id if available (enables full fraud detection)
+              if (verisoulSessionId) {
+                sessionAuthData.session_id = verisoulSessionId;
+              }
+
+              const fraudResponse = await authenticateFraudSession(sessionAuthData, storedToken);
+              if (fraudResponse?.success && fraudResponse?.sessionId) {
+                localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
+              }
+            }
+          } catch (error) {
+            console.error("❌ [AuthContext] Error checking/creating fraud session on app open (non-blocking):", error);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Failed to load session from storage", error);
+        localStorage.clear();
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("❌ Failed to load session from storage", error);
-      localStorage.clear();
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    loadSession();
   }, []);
 
   // OPTIMIZED: Smart data fetching with persistence awareness
@@ -307,15 +441,73 @@ export function AuthProvider({ children }) {
   }, [token, dispatch, user]);
 
   // Refresh profile and wallet when app comes to foreground (to get admin updates)
+  // Also check fraud session status
   useEffect(() => {
     if (!token) return;
 
-    const handleFocus = () => {
-      dispatch(fetchUserProfile({ token, force: true }));
+    const handleFocus = async () => {
+      dispatch(fetchUserProfile({ token, force: true, background: true }));
       dispatch(fetchVipStatus(token));
       // Also refresh wallet/balance/XP when app comes to foreground
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
+      // Refresh account overview in background (real data like rest of project)
+      dispatch(fetchAccountOverview({ force: true, background: true }));
+
+      // Check fraud session status
+      try {
+        const storedSessionId = localStorage.getItem("verisoul_session_id");
+        if (storedSessionId) {
+          const statusResponse = await getFraudSessionStatus(storedSessionId, token);
+          if (statusResponse?.success) {
+            const riskScore = statusResponse?.data?.risk_score || 0;
+            const status = statusResponse?.data?.status;
+            
+            console.log("🔍 [AuthContext] Fraud session status checked:", {
+              status,
+              riskScore,
+            });
+
+            // Handle high risk or inactive session
+            if (riskScore > 0.7) {
+              console.warn("⚠️ [AuthContext] High risk detected on app resume:", riskScore);
+            }
+            
+            if (status !== "active") {
+              // Re-authenticate if session is not active
+              console.log("🔄 [AuthContext] Session not active, re-authenticating...");
+              if (user) {
+                const deviceMetadata = await getDeviceMetadata();
+                
+                // Get Verisoul SDK session ID (required for full fraud detection)
+                const verisoulSessionId = await getVerisoulSessionId();
+                
+                const sessionAuthData = {
+                  accountId: user._id || user.id || String(user._id || user.id),
+                  email: user.email || "",
+                  metadata: {
+                    deviceId: deviceMetadata.deviceId,
+                    appVersion: deviceMetadata.appVersion,
+                    deviceModel: deviceMetadata.deviceModel,
+                    osVersion: deviceMetadata.osVersion,
+                    platform: deviceMetadata.platform,
+                  },
+                  group: user.group || user.userGroup || "regular_users", // Required by API
+                };
+                
+                // Add Verisoul SDK session_id if available (enables full fraud detection)
+                if (verisoulSessionId) {
+                  sessionAuthData.session_id = verisoulSessionId;
+                }
+                
+                await authenticateFraudSession(sessionAuthData, token);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("❌ [AuthContext] Error checking fraud session status (non-blocking):", error);
+      }
     };
 
     window.addEventListener("focus", handleFocus);
@@ -323,7 +515,7 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [token, dispatch]);
+  }, [token, dispatch, user]);
 
   // useEffect(() => {
   //   // Only fetch if we haven't fetched before
@@ -425,16 +617,16 @@ export function AuthProvider({ children }) {
     return () => {
       if (backButtonListener) {
         try {
-          if (
-            backButtonListener.remove &&
-            typeof backButtonListener.remove === "function"
-          ) {
-            backButtonListener.remove();
-          } else if (
-            backButtonListener.unsubscribe &&
-            typeof backButtonListener.unsubscribe === "function"
-          ) {
-            backButtonListener.unsubscribe();
+          if (backButtonListener && typeof backButtonListener === "object") {
+            if (typeof backButtonListener.remove === "function") {
+              backButtonListener.remove();
+            } else if (typeof backButtonListener.unsubscribe === "function") {
+              backButtonListener.unsubscribe();
+            } else if (typeof backButtonListener.destroy === "function") {
+              backButtonListener.destroy();
+            }
+          } else if (typeof backButtonListener === "function") {
+            backButtonListener();
           }
         } catch (error) {
           console.warn("⚠️ Error cleaning up back button listener:", error);
@@ -480,10 +672,156 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const handleAuthSuccess = async (data) => {
-    const { token, user } = data;
+    // Log the full response structure for debugging
+    console.log("🔍 [AuthContext] handleAuthSuccess received:", {
+      hasData: !!data,
+      dataType: typeof data,
+      dataKeys: data ? Object.keys(data) : [],
+      fullData: data
+    });
+
+    // Extract token and user - handle multiple possible response structures:
+    // 1. { token, user } - direct structure
+    // 2. { data: { token, user } } - nested in data
+    // 3. { success: true, data: { token, user } } - API response wrapper
+    // 4. { success: true, token, user } - API response with token/user at top level
+    let token = null;
+    let user = null;
+
+    // Try direct access first
+    if (data?.token) token = data.token;
+    if (data?.user) user = data.user;
+
+    // Try nested in data object
+    if (!token && data?.data?.token) token = data.data.token;
+    if (!user && data?.data?.user) user = data.data.user;
+
+    // Try alternative nested structures
+    if (!token && data?.response?.token) token = data.response.token;
+    if (!user && data?.response?.user) user = data.response.user;
+
+    // Validate token and user before proceeding
+    if (!token || !user) {
+      // Enhanced error logging with full response structure
+      const errorDetails = {
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenValue: token ? (typeof token === 'string' ? token.substring(0, 20) + '...' : String(token)) : null,
+        userValue: user ? (typeof user === 'object' ? Object.keys(user) : String(user)) : null,
+        dataKeys: data ? Object.keys(data) : [],
+        dataType: typeof data,
+        hasSuccess: !!data?.success,
+        successValue: data?.success,
+        hasError: !!data?.error,
+        errorValue: data?.error,
+        hasMessage: !!data?.message,
+        messageValue: data?.message,
+        fullDataStructure: JSON.stringify(data, null, 2).substring(0, 1000)
+      };
+      
+      console.error("❌ [AuthContext] Invalid auth data:", errorDetails);
+      
+      // Provide more helpful error message
+      const errorMessage = data?.error?.message || 
+                          data?.error || 
+                          data?.message || 
+                          "Invalid authentication data received from server";
+      
+      throw new Error(errorMessage);
+    }
+
+    // CRITICAL: Save to localStorage FIRST (synchronously) before setting state
+    // This ensures token is available immediately for navigation
+    try {
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      console.log("✅ [AuthContext] Token saved to localStorage");
+    } catch (err) {
+      console.error("❌ Failed to save to localStorage", err);
+      throw new Error("Failed to persist authentication token");
+    }
 
     setUser(user);
     setToken(token); // Setting the token here triggers the Redux fetch effect above
+
+    // Sync my-games in background after login/signup (non-blocking)
+    syncMyGames(token).catch(() => {});
+
+    // Authenticate session with Verisoul Fraud Prevention API
+    try {
+      const deviceMetadata = await getDeviceMetadata();
+      
+      // Get Verisoul session ID from SDK (required for full fraud detection)
+      // Documentation: https://docs.verisoul.ai/integration/frontend/browser
+      let verisoulSessionId = await getVerisoulSessionId();
+      
+      // Reinitialize Verisoul session on login to ensure fresh signals
+      if (verisoulSessionId) {
+        const reinitResult = await reinitializeVerisoulSession();
+        if (reinitResult?.sessionId) {
+          verisoulSessionId = reinitResult.sessionId;
+        }
+      }
+      
+      const sessionAuthData = {
+        accountId: user._id || user.id || String(user._id || user.id),
+        email: user.email || "",
+        metadata: {
+          deviceId: deviceMetadata.deviceId,
+          appVersion: deviceMetadata.appVersion,
+          deviceModel: deviceMetadata.deviceModel,
+          osVersion: deviceMetadata.osVersion,
+          platform: deviceMetadata.platform,
+          userAgent: deviceMetadata.userAgent,
+          language: deviceMetadata.language,
+          timezone: deviceMetadata.timezone,
+          loginTime: new Date().toISOString(),
+        },
+        group: user.group || user.userGroup || "regular_users", // Required by API
+      };
+      
+      // Add Verisoul SDK session_id (enables full fraud detection)
+      // This is the session_id from the frontend SDK, NOT a custom session ID
+      if (verisoulSessionId) {
+        sessionAuthData.session_id = verisoulSessionId;
+        console.log("✅ [AuthContext] Using Verisoul SDK session_id:", verisoulSessionId);
+      } else {
+        console.warn("⚠️ [AuthContext] Verisoul SDK session_id not available - limited fraud detection");
+      }
+
+      // Add signup date if this is a new user
+      if (user.createdAt || user.created_at) {
+        sessionAuthData.metadata.signupDate = user.createdAt || user.created_at;
+      }
+
+      const fraudResponse = await authenticateFraudSession(sessionAuthData, token);
+      
+      if (fraudResponse?.success && fraudResponse?.sessionId) {
+        // Store Verisoul session ID
+        localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
+        
+        // Check risk score and handle accordingly
+        const riskScore = fraudResponse?.data?.risk_score || 0;
+        const decision = fraudResponse?.data?.decision || "allow";
+        
+        console.log("✅ [AuthContext] Fraud session authenticated:", {
+          sessionId: fraudResponse.sessionId,
+          riskScore,
+          decision,
+        });
+
+        // Store risk information for later use
+        if (riskScore > 0.7 || decision === "deny") {
+          console.warn("⚠️ [AuthContext] High risk detected:", { riskScore, decision });
+          // You can add additional verification steps here if needed
+        }
+      } else {
+        console.warn("⚠️ [AuthContext] Fraud session authentication failed or incomplete:", fraudResponse);
+      }
+    } catch (error) {
+      // Don't fail auth if fraud prevention fails - log and continue
+      console.error("❌ [AuthContext] Error authenticating fraud session (non-blocking):", error);
+    }
 
     // PRIORITY 1: Fetch wallet screen data FIRST (needed for RewardProgress and XPTierTracker)
     // This must happen before other dispatches to ensure data is available immediately
@@ -581,21 +919,182 @@ export function AuthProvider({ children }) {
 
         // Preload non-game offers (cashback_shopping) - used by NonGameOffersSection component
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
+
+        // Preload welcome bonus tasks - used by WelcomeOfferSection component
+        // Cache in background without blocking UI
+        getWelcomeBonusTasks(token)
+          .then((response) => {
+            if (response.success && response.data) {
+              const CACHE_KEY = "welcomeBonusTasks";
+              const cacheData = {
+                data: response.data,
+                timestamp: Date.now(),
+              };
+              try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+                console.log("✅ [AuthContext] Welcome bonus tasks cached");
+              } catch (err) {
+                console.warn("⚠️ [AuthContext] Failed to cache welcome bonus tasks:", err);
+              }
+            }
+          })
+          .catch((err) => {
+            console.error("❌ [AuthContext] Failed to preload welcome bonus tasks (non-blocking):", err);
+            // Don't fail auth if this fails - it's just a preload
+          });
       }, 300); // Defer by 300ms to allow homepage to render first
     }
 
-    try {
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("authToken", token);
-    } catch (err) {
-      console.error("❌ Failed to save to localStorage", err);
-    }
+    // Token and user already saved to localStorage above (before state update)
+    // This ensures they're available immediately for navigation
     return { ok: true, user };
   };
 
   const signIn = async (emailOrMobile, password, turnstileToken = null) => {
     try {
-      const data = await login(emailOrMobile, password, turnstileToken);
+      let data = await login(emailOrMobile, password, turnstileToken);
+      
+      // Log the raw login response for debugging
+      console.log("🔍 [AuthContext] Login API response:", {
+        hasData: !!data,
+        dataType: typeof data,
+        dataKeys: data ? Object.keys(data) : [],
+        hasToken: !!data?.token,
+        hasUser: !!data?.user,
+        hasDataData: !!data?.data,
+        dataDataKeys: data?.data ? Object.keys(data.data) : [],
+        hasSuccess: !!data?.success,
+        successValue: data?.success,
+        fullResponse: data
+      });
+      
+      // Check if biometric verification is required - MUST check this BEFORE error check
+      const biometricRequired = data?.biometricRequired === true || data?.data?.biometricRequired === true;
+      const biometricToken = data?.biometricToken || data?.data?.biometricToken;
+      
+      console.log("🔍 [AuthContext] Checking biometric requirement:", {
+        biometricRequired,
+        biometricToken: biometricToken ? "present" : "missing",
+        hasToken: !!data?.token,
+        hasUser: !!data?.user
+      });
+      
+      if (biometricRequired) {
+        console.log("🔐 [AuthContext] Biometric verification required, triggering device biometric...");
+        
+        // Check if we're on a native platform (biometric only works on native)
+        if (
+          typeof window !== "undefined" &&
+          window.Capacitor &&
+          window.Capacitor.isNativePlatform()
+        ) {
+          try {
+            const { authenticateWithBiometric } = await import("@/lib/biometricAuth");
+            
+            // Trigger device biometric verification
+            const biometricResult = await authenticateWithBiometric({
+              reason: "Complete login to your Jackson account",
+              title: "Biometric Verification",
+              subtitle: "Verify your identity to continue",
+              description: "Use your biometric to complete login",
+            });
+            
+            if (!biometricResult.success) {
+              console.error("❌ [AuthContext] Biometric verification failed:", biometricResult.error);
+              return {
+                ok: false,
+                error: biometricResult.error || "Biometric verification failed. Please try again."
+              };
+            }
+            
+            console.log("✅ [AuthContext] Biometric verification successful, retrying login...");
+            
+            // Retry login after successful biometric verification
+            // The backend should now allow login after device biometric is verified
+            const retryData = await login(emailOrMobile, password, turnstileToken);
+            
+            // Log the retry response
+            console.log("🔍 [AuthContext] Login retry response:", {
+              hasToken: !!retryData?.token,
+              hasUser: !!retryData?.user,
+              biometricRequired: retryData?.biometricRequired,
+            });
+            
+            // Check if retry was successful
+            const retryHasToken = !!(retryData?.token || retryData?.data?.token);
+            const retryHasUser = !!(retryData?.user || retryData?.data?.user);
+            
+            if (!retryHasToken || !retryHasUser) {
+              console.error("❌ [AuthContext] Login retry failed after biometric verification");
+              return {
+                ok: false,
+                error: retryData?.error || retryData?.message || "Login failed after biometric verification. Please try again."
+              };
+            }
+            
+            // Use the retry data for the rest of the flow
+            data = retryData;
+          } catch (biometricError) {
+            console.error("❌ [AuthContext] Error during biometric verification:", biometricError);
+            return {
+              ok: false,
+              error: biometricError.message || "Biometric verification failed. Please try again."
+            };
+          }
+        } else {
+          // Not on native platform - return error asking user to complete biometric on mobile app
+          console.warn("⚠️ [AuthContext] Biometric required but not on native platform");
+          return {
+            ok: false,
+            error: data?.message || "Biometric verification is required. Please use the mobile app to complete login."
+          };
+        }
+      }
+      
+      // Check if login was successful - handle multiple error response patterns
+      // Pattern 1: { success: false, error: {...}, message: "..." }
+      // Pattern 2: { success: false, body: {...}, error: {...} }
+      // Pattern 3: { error: "...", message: "...", status: ... }
+      // Pattern 4: { success: false, ... } without token/user
+      // IMPORTANT: Exclude biometricRequired responses from error check - they are handled above
+      const isBiometricResponse = data?.biometricRequired === true || data?.data?.biometricRequired === true;
+      const isErrorResponse = !isBiometricResponse && (
+        data?.success === false || 
+        (data?.error && !data?.token && !data?.user && !data?.data?.token && !data?.data?.user) ||
+        (!data?.token && !data?.user && !data?.data?.token && !data?.data?.user && (data?.error || data?.message))
+      );
+      
+      if (isErrorResponse) {
+        console.error("❌ [AuthContext] Login API returned error:", data);
+        const errorMessage = 
+          data?.error?.message || 
+          data?.error || 
+          data?.body?.error || 
+          data?.message || 
+          "Login failed";
+        return { 
+          ok: false, 
+          error: typeof errorMessage === 'string' ? errorMessage : (errorMessage?.message || "Login failed")
+        };
+      }
+
+      // Additional validation: ensure we have token and user before proceeding
+      const hasToken = !!(data?.token || data?.data?.token);
+      const hasUser = !!(data?.user || data?.data?.user);
+      
+      if (!hasToken || !hasUser) {
+        console.error("❌ [AuthContext] Login response missing token or user:", {
+          hasToken,
+          hasUser,
+          dataKeys: data ? Object.keys(data) : [],
+          responseStructure: JSON.stringify(data, null, 2).substring(0, 500)
+        });
+        return {
+          ok: false,
+          error: data?.error || data?.message || "Invalid response from server. Missing authentication data."
+        };
+      }
+      
       localStorage.setItem("permissionsAccepted", "true");
       // Purge persisted state to avoid showing previous account balances
       try {
@@ -706,20 +1205,173 @@ export function AuthProvider({ children }) {
             // If pending credentials weren't saved or don't exist, save current credentials
             if (!credentialResult || !credentialResult.success) {
               console.log("💾 [AuthContext] Saving biometric credentials for current login...");
-              // Save credentials securely using native biometric storage
-              // Store username and a JSON string containing token and user data
-              // This way we don't rely on localStorage for user data during biometric login
-              const credentialPayload = {
-                token: data.token,
-                user: data.user,
-              };
-
-              credentialResult = await setCredentials({
-                username: emailOrMobile,
-                password: JSON.stringify(credentialPayload), // Store token + user as JSON
+              console.log("💾 [AuthContext] Raw login response structure:", {
+                hasData: !!data,
+                hasToken: !!data.token,
+                tokenType: typeof data.token,
+                tokenValue: data.token ? (typeof data.token === 'string' ? data.token.substring(0, 50) : String(data.token).substring(0, 50)) : 'null',
+                hasUser: !!data.user,
+                hasDataData: !!data.data,
+                dataKeys: data ? Object.keys(data) : 'null',
+                nestedDataKeys: data?.data ? Object.keys(data.data) : 'null'
               });
+              
+              // Extract token and user using the SAME pattern as handleAuthSuccess
+              // handleAuthSuccess does: const { token, user } = data;
+              // So we should extract the same way to ensure consistency
+              let actualToken = data.token;
+              let actualUser = data.user;
+              
+              // If not at top level, check nested data (defensive fallback)
+              if (!actualToken && data.data) {
+                actualToken = data.data.token;
+                actualUser = data.data.user;
+              }
+              
+              // Log the raw values before any processing
+              console.log("💾 [AuthContext] Token extraction:", {
+                rawToken: actualToken,
+                tokenType: typeof actualToken,
+                tokenIsString: typeof actualToken === 'string',
+                tokenLength: actualToken?.length || (typeof actualToken === 'object' ? 'N/A (object)' : 0),
+                hasUser: !!actualUser,
+                userType: typeof actualUser,
+                userKeys: actualUser ? Object.keys(actualUser).slice(0, 5) : 'null'
+              });
+              
+              // Handle cases where token might be an object (shouldn't happen, but defensive coding)
+              if (actualToken && typeof actualToken === 'object') {
+                console.error("❌ [AuthContext] Token is an object instead of string!", {
+                  tokenKeys: Object.keys(actualToken),
+                  tokenStringified: JSON.stringify(actualToken).substring(0, 100)
+                });
+                console.warn("⚠️ [AuthContext] Attempting to extract token string from object...");
+                // Try common patterns where token might be nested in an object
+                if (actualToken.token && typeof actualToken.token === 'string') {
+                  actualToken = actualToken.token;
+                  console.log("✅ [AuthContext] Extracted token string from token.token");
+                } else if (actualToken.value && typeof actualToken.value === 'string') {
+                  actualToken = actualToken.value;
+                  console.log("✅ [AuthContext] Extracted token string from token.value");
+                } else if (actualToken.accessToken && typeof actualToken.accessToken === 'string') {
+                  actualToken = actualToken.accessToken;
+                  console.log("✅ [AuthContext] Extracted token string from token.accessToken");
+                } else {
+                  // Last resort: check if it's a stringified JSON that needs parsing
+                  try {
+                    const parsed = JSON.parse(JSON.stringify(actualToken));
+                    if (typeof parsed === 'string' && parsed.length > 0) {
+                      actualToken = parsed;
+                      console.log("⚠️ [AuthContext] Extracted token via JSON stringify/parse (last resort)");
+                    } else {
+                      console.error("❌ [AuthContext] Cannot extract valid token from object:", actualToken);
+                      actualToken = null;
+                    }
+                  } catch (e) {
+                    console.error("❌ [AuthContext] Failed to extract token from object:", e);
+                    actualToken = null;
+                  }
+                }
+              }
 
-              if (credentialResult.success) {
+              // Declare passwordString in outer scope for pending credentials storage
+              let passwordString = null;
+
+              // Validate and normalize token - must be a non-empty string
+              // Convert token to string if it's not already (handle edge cases)
+              if (actualToken && typeof actualToken !== 'string') {
+                // Token is not a string - try to convert or extract
+                if (typeof actualToken === 'object') {
+                  // Try common patterns where token string might be nested
+                  const tokenString = actualToken.token || actualToken.value || actualToken.accessToken || actualToken.jwt;
+                  if (tokenString && typeof tokenString === 'string' && tokenString.trim().length > 0) {
+                    actualToken = tokenString.trim();
+                    console.log("✅ [AuthContext] Extracted token string from object:", actualToken.substring(0, 20) + '...');
+                  } else {
+                    // Try JSON stringify as last resort (unlikely but handles edge cases)
+                    try {
+                      const stringified = JSON.stringify(actualToken);
+                      if (stringified && stringified !== '{}' && stringified.length > 10) {
+                        actualToken = stringified;
+                        console.log("⚠️ [AuthContext] Using stringified token object as fallback");
+                      } else {
+                        console.error("❌ [AuthContext] Cannot extract valid token string from object:", actualToken);
+                        actualToken = null;
+                      }
+                    } catch (e) {
+                      console.error("❌ [AuthContext] Failed to stringify token object:", e);
+                      actualToken = null;
+                    }
+                  }
+                } else {
+                  // Convert to string if it's a number or other type
+                  actualToken = String(actualToken);
+                  console.log("✅ [AuthContext] Converted token to string:", typeof actualToken);
+                }
+              }
+              
+              // Final validation: token must be a non-empty string
+              if (!actualToken || typeof actualToken !== 'string' || actualToken.trim().length === 0) {
+                console.error("❌ [AuthContext] Invalid token for credential storage after normalization:", {
+                  hasToken: !!actualToken,
+                  tokenType: typeof actualToken,
+                  tokenLength: actualToken?.length || 0,
+                  tokenPreview: actualToken ? (typeof actualToken === 'string' ? actualToken.substring(0, 30) : String(actualToken).substring(0, 30)) : 'null',
+                  hasDataToken: !!data.token,
+                  hasNestedToken: !!data.data?.token,
+                  dataTokenType: typeof data.token
+                });
+                console.warn("⚠️ [AuthContext] Cannot save biometric credentials - invalid token");
+                // Don't throw - just skip credential saving
+              } else if (!actualUser || typeof actualUser !== 'object' || Object.keys(actualUser).length === 0 || !actualUser._id) {
+                console.error("❌ [AuthContext] Invalid user object for credential storage:", {
+                  hasUser: !!actualUser,
+                  userType: typeof actualUser,
+                  userKeys: actualUser ? Object.keys(actualUser) : 'null',
+                  hasUserId: !!actualUser?._id,
+                  hasDataUser: !!data.user,
+                  hasNestedUser: !!data.data?.user
+                });
+                console.warn("⚠️ [AuthContext] Cannot save biometric credentials - invalid user");
+                // Don't throw - just skip credential saving
+              } else {
+                // Save credentials securely using native biometric storage
+                // Store username and a JSON string containing token and user data
+                // This way we don't rely on localStorage for user data during biometric login
+                const credentialPayload = {
+                  token: actualToken.trim(), // Use validated token
+                  user: actualUser, // Use validated user
+                };
+
+                // Validate payload before stringifying to prevent "{}" issue
+                if (!credentialPayload.token || !credentialPayload.user || Object.keys(credentialPayload.user).length === 0) {
+                  console.error("❌ [AuthContext] Credential payload is invalid after creation");
+                  console.warn("⚠️ [AuthContext] Cannot save biometric credentials - invalid payload");
+                  // Don't throw - just skip credential saving
+                } else {
+                  // Stringify and validate the result
+                  passwordString = JSON.stringify(credentialPayload);
+                  if (!passwordString || passwordString === '{}' || passwordString === 'null') {
+                    console.error("❌ [AuthContext] Credential payload stringified to invalid value:", passwordString);
+                    console.warn("⚠️ [AuthContext] Cannot save biometric credentials - invalid stringified payload");
+                    passwordString = null; // Reset to null to prevent use
+                    // Don't throw - just skip credential saving
+                  } else {
+                    console.log("💾 [AuthContext] Credential payload validated successfully");
+                    console.log("💾 [AuthContext] Token length:", actualToken.length);
+                    console.log("💾 [AuthContext] User ID:", actualUser._id);
+                    console.log("💾 [AuthContext] Password string length:", passwordString.length);
+                    console.log("💾 [AuthContext] Password string preview:", passwordString.substring(0, 100) + '...');
+
+                    credentialResult = await setCredentials({
+                      username: emailOrMobile,
+                      password: passwordString, // Use validated stringified payload
+                    });
+                  }
+                }
+              }
+
+              if (credentialResult && credentialResult.success) {
                 // Enable biometric locally
                 enableBiometricLocally(availability.biometryTypeName);
                 // Clear any pending credentials flags since we successfully saved new ones
@@ -737,9 +1389,9 @@ export function AuthProvider({ children }) {
                 } catch (prefError) {
                   console.warn("⚠️ [AuthContext] Failed to update username in Preferences:", prefError);
                 }
-              } else {
+              } else if (credentialResult) {
                 console.warn(
-                  "⚠️ [AuthContext] Failed to save biometric credentials:",
+                  "⚠️ [AuthContext] Failed to save biometric credentials to Keystore:",
                   credentialResult.error
                 );
                 console.warn(
@@ -747,13 +1399,29 @@ export function AuthProvider({ children }) {
                   credentialResult.errorCode
                 );
                 
+                // IMPORTANT: Save username to Preferences even if Keystore save failed
+                // This is critical because credentials are saved to Preferences backup,
+                // and hasBiometricCredentials() checks for username in Preferences
+                // Without this, biometric login won't work even though credentials exist in backup
+                try {
+                  const { Preferences } = await import("@capacitor/preferences");
+                  await Preferences.set({
+                    key: "biometric_username",
+                    value: emailOrMobile
+                  });
+                  console.log("✅ [AuthContext] Saved biometric username to Preferences (Keystore save failed, but credentials exist in backup)");
+                } catch (prefError) {
+                  console.warn("⚠️ [AuthContext] Failed to update username in Preferences:", prefError);
+                }
+                
                 // If device authentication is required, store credentials for retry
-                if (credentialResult.requiresDeviceAuth) {
+                // Only store if we have a valid passwordString
+                if (credentialResult.requiresDeviceAuth && passwordString) {
                   console.warn("⚠️ [AuthContext] Device authentication required - credentials will be saved on next login");
                   localStorage.setItem("biometricCredentialsPending", "true");
                   localStorage.setItem("biometricCredentialsData", JSON.stringify({
                     username: emailOrMobile,
-                    password: JSON.stringify(credentialPayload),
+                    password: passwordString, // Use validated stringified payload
                   }));
                 }
               }
@@ -777,6 +1445,28 @@ export function AuthProvider({ children }) {
   const signUpAndSignIn = async (signupData) => {
     try {
       const data = await signup(signupData);
+      
+      // Check if signup returned an error response
+      if (!data || data.success === false || (!data.token && !data.data?.token)) {
+        // If it's an error response, return it directly
+        if (data && data.success === false) {
+          return { 
+            ok: false, 
+            error: data.body || { error: data.error || "Signup failed" }
+          };
+        }
+        
+        // Otherwise, it's an invalid response structure
+        console.error("❌ [AuthContext] Signup response missing token:", data);
+        return { 
+          ok: false, 
+          error: { 
+            error: "Invalid response from server. Please try again.",
+            message: "Server response missing authentication token"
+          } 
+        };
+      }
+
       useOnboardingStore.getState().resetOnboarding();
       setIsNewUserFlow(true);
 
@@ -792,8 +1482,22 @@ export function AuthProvider({ children }) {
       // Biometric credentials will be saved AFTER face verification is complete
       // This ensures proper onboarding flow
 
-      // return handleAuthSuccess(data);
+      // handleAuthSuccess saves token to localStorage synchronously before returning
       const result = await handleAuthSuccess(data);
+      
+      // Verify token was saved
+      const savedToken = localStorage.getItem("authToken");
+      if (!savedToken) {
+        console.error("❌ [AuthContext] Token not found in localStorage after handleAuthSuccess");
+        return { 
+          ok: false, 
+          error: { 
+            error: "Failed to save authentication token. Please try again.",
+            message: "Token persistence failed"
+          } 
+        };
+      }
+
       // 🔥 FETCH ONBOARDING OPTIONS ONCE (RIGHT HERE)
       await Promise.all([
         dispatch(fetchOnboardingOptions("age_range")),
@@ -807,6 +1511,7 @@ export function AuthProvider({ children }) {
 
       return result;
     } catch (error) {
+      console.error("❌ [AuthContext] Signup error:", error);
       return { ok: false, error: error.body || { error: error.message } };
     }
   };
@@ -814,6 +1519,22 @@ export function AuthProvider({ children }) {
   // MODIFIED: signOut clears the profile state in the Redux store but KEEPS biometric credentials
   // Biometric credentials are preserved so users can login with biometric after signout
   const signOut = async () => {
+    // End Verisoul fraud prevention session before clearing data
+    try {
+      const storedSessionId = localStorage.getItem("verisoul_session_id");
+      const currentToken = token || localStorage.getItem("authToken");
+      
+      if (storedSessionId && currentToken) {
+        await unauthenticateFraudSession(storedSessionId, currentToken);
+        console.log("✅ [AuthContext] Fraud session unauthenticated");
+      }
+    } catch (error) {
+      console.error("❌ [AuthContext] Error unauthenticating fraud session (non-blocking):", error);
+    }
+
+    // Clear Verisoul session ID
+    clearVerisoulSessionId();
+
     // Clear all Redux state first
     dispatch(clearProfile()); // Clear profile data
     dispatch(clearGames()); // Clear games data (includes userData, gamesBySection, imageCache, etc.)
@@ -821,6 +1542,7 @@ export function AuthProvider({ children }) {
     dispatch(clearAccountOverview()); // Clear account overview
     dispatch(clearSurveys()); // Clear surveys data
     dispatch(clearNonGameOffers()); // Clear non-game offers data
+    dispatch(resetDailyChallengeState()); // Clear daily challenge (today, calendar, etc.) so new account doesn't see previous user's "Claim reward" / completed state
     
     // Purge all Redux persist data to prevent QuotaExceededError
     // Use persistor.purge() which properly handles cleanup without serialization issues

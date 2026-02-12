@@ -117,20 +117,20 @@ export const useNotifications = (token) => {
   const currentNotification =
     notifications.length > 0 ? notifications[0] : null;
 
-  console.log("🔔 [Notifications] Current state:", {
-    notificationsCount: notifications.length,
-    currentNotification: currentNotification
-      ? {
-          id: currentNotification._id,
-          message: currentNotification.message,
-          type: currentNotification.type,
-        }
-      : null,
-    loading,
-    error,
-    notificationsEnabled,
-    hasProfile: !!profile,
-  });
+  // console.log("🔔 [Notifications] Current state:", {
+  //   notificationsCount: notifications.length,
+  //   currentNotification: currentNotification
+  //     ? {
+  //         id: currentNotification._id,
+  //         message: currentNotification.message,
+  //         type: currentNotification.type,
+  //       }
+  //     : null,
+  //   loading,
+  //   error,
+  //   notificationsEnabled,
+  //   hasProfile: !!profile,
+  // });
 
   return {
     notifications,

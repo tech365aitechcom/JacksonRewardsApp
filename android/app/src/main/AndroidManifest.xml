@@ -68,9 +68,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
-    </application>
-     <!-- Permissions -->
 
-    <uses-permission android:name="android.permission.INTERNET" />
+        <!-- Google AdMob App ID (Required for AppLovin MAX with AdMob mediation) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2800391972465887~5310386906"/>
+
+    </application>
 
 </manifest>

@@ -106,55 +106,29 @@ export const HighestEarningGame = () => {
         };
     }, [dispatch, sectionName, userProfile]);
 
-    // Map the new API data to component format - using besitosRawData
+    // Map the new API data to component format - using normalizer for both besitos and bitlab
     const processedGames = highestEarningGames?.slice(0, 2).map((game) => {
-        // Use besitosRawData if available
-        const rawData = game.besitosRawData || {};
+        // Use normalizer for both besitos and bitlab
+        const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
+        const images = normalizeGameImages(game);
+        const title = normalizeGameTitle(game);
+        const category = normalizeGameCategory(game);
+        const amount = normalizeGameAmount(game);
 
-        // Calculate coins - use rewards.coins first (from API), then fallback to amount
-        // Priority: rewards.coins > besitosRawData.amount > game.amount
-        const coinAmount = game.rewards?.coins || rawData.amount || game.amount || 0;
-        const earnings = typeof coinAmount === 'number' ? coinAmount.toString() : (typeof coinAmount === 'string' ? coinAmount.replace('$', '') : '0');
-
-        // Calculate total XP with progressive multiplier (same as game details page)
-        // Task 1: baseXP × multiplier^0
-        // Task 2: baseXP × multiplier^1
-        // Task 3: baseXP × multiplier^2
-        // ...
-        // Total = sum of all task XPs
-        let totalXP = 0;
-        if (game.rewards?.xp) {
-            // Use rewards.xp if available
-            totalXP = game.rewards.xp;
-        } else {
-            // Calculate from xpRewardConfig with progressive multiplier
-            const xpConfig = game.xpRewardConfig || { baseXP: 1, multiplier: 1 };
-            const baseXP = xpConfig.baseXP || 1;
-            const multiplier = xpConfig.multiplier || 1;
-
-            // Get total number of tasks/goals
-            const goals = rawData.goals || game.goals || [];
-            const totalTasks = goals.length || 0;
-
-            // Calculate total XP: sum of baseXP × multiplier^taskIndex for all tasks
-            // This is a geometric series: baseXP × (multiplier^totalTasks - 1) / (multiplier - 1) when multiplier ≠ 1
-            // When multiplier = 1, it's just baseXP × totalTasks
-            if (multiplier === 1) {
-                // Simple case: all tasks have same XP
-                totalXP = baseXP * totalTasks;
-            } else if (totalTasks > 0) {
-                // Geometric series: baseXP × (multiplier^totalTasks - 1) / (multiplier - 1)
-                totalXP = baseXP * (Math.pow(multiplier, totalTasks) - 1) / (multiplier - 1);
-            }
-        }
+        // Prefer API rewards.coins / rewards.gold everywhere
+        const coinAmount = game.rewards?.coins ?? game.rewards?.gold ?? amount ?? 0;
+        const raw = typeof coinAmount === 'number' ? coinAmount : (typeof coinAmount === 'string' ? parseFloat(String(coinAmount).replace('$', '')) || 0 : 0);
+        const earnings = Number.isFinite(raw) ? (raw === Math.round(raw) ? String(Math.round(raw)) : (Math.round(raw * 100) / 100).toString()) : '0';
+        const { totalXP } = getTotalPromisedPoints(game);
+        const totalXPDisplay = Number.isFinite(totalXP) ? Math.floor(totalXP) : 0;
 
         return {
-            id: game._id || game.id || game.gameId,
-            title: rawData.title || game.details?.name || game.name || game.title || 'Game',
-            category: rawData.categories?.[0]?.name || game.details?.category || (typeof game.categories?.[0] === 'string' ? game.categories[0] : 'Action'),
-            image: rawData.square_image || rawData.image || game.images?.banner || game.images?.large_image || game.image || game.square_image,
+            id: game.gameId || game.details?.id || game._id || game.id,
+            title: title,
+            category: category,
+            image: images.square_image || images.icon || game.images?.banner || game.images?.large_image || game.image || game.square_image,
             earnings: earnings, // Now shows coins without $ sign
-            totalXP: Math.floor(totalXP), // Total XP calculated with progressive multiplier
+            totalXP: totalXPDisplay, // Total XP from tasks (getTotalPromisedPoints)
             fullGameData: game // Store full game including besitosRawData
         };
     }) || [];
@@ -174,8 +148,8 @@ export const HighestEarningGame = () => {
             }
         }
 
-        // Use the id from the API response for navigation
-        const gameId = game.id || game._id || game.gameId;
+        // Use provider gameId (BitLabs/Besitos) for get-game-by-id API; fallback to id/_id
+        const gameId = fullGame?.gameId || fullGame?.details?.id || fullGame?.id || fullGame?._id;
         router.push(`/gamedetails?gameId=${gameId}&source=highestEarning`);
     };
 
@@ -214,7 +188,7 @@ export const HighestEarningGame = () => {
                                 <div className="relative w-full h-[180px] rounded-[20px] overflow-hidden bg-gray-800">
                                     <img
                                         className="w-full h-full object-cover rounded-[20px]"
-                                        src={game.image || game.square_image || '/placeholder-game.png'}
+                                        src={game.image || game.square_image || 'https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png'}
                                         alt={game.title || 'Game Image'}
                                         loading="eager"
                                         decoding="async"

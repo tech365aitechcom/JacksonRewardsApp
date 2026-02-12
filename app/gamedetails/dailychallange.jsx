@@ -1,8 +1,45 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchToday } from "@/lib/redux/slice/dailyChallengeSlice";
 
 export const DailyChallenge = ({ game }) => {
     const router = useRouter();
+    const dispatch = useDispatch();
+    const { token } = useAuth();
+    const [showAlreadyCompletedMessage, setShowAlreadyCompletedMessage] = useState(false);
+    const [isChecking, setIsChecking] = useState(false);
+
+    const getEffectiveToken = () => token || (typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null);
+
+    const handleBannerClick = async () => {
+        const effectiveToken = getEffectiveToken();
+        if (!effectiveToken) {
+            router.push("/dailychallenge");
+            return;
+        }
+        setIsChecking(true);
+        try {
+            const result = await dispatch(
+                fetchToday({ token: effectiveToken, force: true })
+            );
+            if (result?.type === fetchToday.fulfilled.type && result?.payload) {
+                const today = result.payload;
+                if (today?.progress?.isCompleted) {
+                    setShowAlreadyCompletedMessage(true);
+                } else {
+                    router.push("/dailychallenge");
+                }
+            } else {
+                router.push("/dailychallenge");
+            }
+        } catch {
+            router.push("/dailychallenge");
+        } finally {
+            setIsChecking(false);
+        }
+    };
 
     // Preload banner images for faster rendering
     useEffect(() => {
@@ -124,6 +161,36 @@ export const DailyChallenge = ({ game }) => {
                     ))}
                 </div>
             </div>
+
+            {/* Already completed today — show message instead of navigating */}
+            {showAlreadyCompletedMessage && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4"
+                    onClick={() => setShowAlreadyCompletedMessage(false)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="daily-completed-title"
+                >
+                    <div
+                        className="bg-gray-900 border border-gray-600 rounded-xl p-6 max-w-sm w-full shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 id="daily-completed-title" className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">
+                            Daily challenge completed
+                        </h2>
+                        <p className="[font-family:'Poppins',Helvetica] text-gray-300 text-sm mb-6">
+                            You&apos;ve already completed today&apos;s daily challenge. Come back tomorrow for a new one.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setShowAlreadyCompletedMessage(false)}
+                            className="w-full py-3 rounded-lg bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] text-white font-medium [font-family:'Poppins',Helvetica]"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };

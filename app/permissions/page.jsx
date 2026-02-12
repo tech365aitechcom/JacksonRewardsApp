@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -7,9 +7,25 @@ import { acceptDisclosure } from "@/lib/api";
 
 export default function PermissionsPage() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Check for token in localStorage and redirect if missing
+  useEffect(() => {
+    // Wait for AuthContext to finish loading
+    if (isLoading) return;
+
+    // Check both AuthContext state and localStorage as fallback
+    const storedToken = localStorage.getItem("authToken");
+    const hasToken = token || storedToken;
+
+    if (!hasToken) {
+      console.error("No auth token found. Redirecting to login.");
+      router.replace("/login");
+      return;
+    }
+  }, [token, isLoading, router]);
 
   const permissionItems = [
     {
@@ -37,9 +53,14 @@ export default function PermissionsPage() {
   const handleAgree = async () => {
     if (isSubmitting) return;
 
-    if (!token) {
+    // Check both AuthContext token and localStorage as fallback
+    const storedToken = localStorage.getItem("authToken");
+    const authToken = token || storedToken;
+
+    if (!authToken) {
       console.error("No auth token found. User must be logged in.");
       setError("Authentication error. Please log in again.");
+      router.replace("/login");
       return;
     }
 
@@ -47,7 +68,7 @@ export default function PermissionsPage() {
     setError(null);
 
     try {
-      await acceptDisclosure(token);
+      await acceptDisclosure(authToken);
       localStorage.setItem("permissionsAccepted", "true");
       router.push("/location");
 
@@ -58,6 +79,21 @@ export default function PermissionsPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen bg-[#272052] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if no token (will redirect in useEffect)
+  const storedToken = localStorage.getItem("authToken");
+  if (!token && !storedToken) {
+    return null;
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#272052] flex items-center justify-center ">
