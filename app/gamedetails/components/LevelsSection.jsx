@@ -205,12 +205,18 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                             }
                             return goal.progression.isLocked;
                         }
-                        // BitLab without API progression: unlock by event order (all prior events completed)
+                        // BitLab without per-goal progression: use batch rule if available, else sequential unlock
                         if (isBitLab) {
-                            const myNum = goal.event_number ?? goal.position ?? index + 1;
-                            const priorGoals = goalsToUse.filter(g => (g.event_number ?? g.position ?? 999) < myNum);
-                            const allPriorCompleted = priorGoals.length === 0 || priorGoals.every(p => p.completed === true || p.status === 'completed');
-                            return !allPriorCompleted;
+                            if (hasProgressionRule && firstBatchSize > 0) {
+                                // Use batch-based taskProgression rules (fall through to logic below)
+                                console.log('[Debug] BitLab: Using taskProgression batch rules (firstBatchSize, nextBatchSize).');
+                            } else {
+                                // No batch rule: unlock by event order (all prior events completed)
+                                const myNum = goal.event_number ?? goal.position ?? index + 1;
+                                const priorGoals = goalsToUse.filter(g => (g.event_number ?? g.position ?? 999) < myNum);
+                                const allPriorCompleted = priorGoals.length === 0 || priorGoals.every(p => p.completed === true || p.status === 'completed');
+                                return !allPriorCompleted;
+                            }
                         }
 
                         console.log('[Debug] Using fallback progression logic.');
