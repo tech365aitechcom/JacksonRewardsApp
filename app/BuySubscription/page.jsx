@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchVipTiers, initiatePurchase, resetPurchaseStatus, setPurchaseStatus, confirmPayment, } from "@/lib/redux/slice/vipSlice";
+import { fetchVipTiers, initiatePurchase, resetPurchaseStatus, setPurchaseStatus, confirmPayment, initiateGooglePlayPurchase, confirmGooglePlayPayment } from "@/lib/redux/slice/vipSlice";
 import { fetchVipStatus } from "@/lib/redux/slice/profileSlice";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import StripePaymentSheet from "@/components/StripePaymentSheet";
+import GooglePlayPaymentSheet from "@/components/GooglePlayPaymentSheet";
+import { isGooglePlayAvailable } from "@/lib/googlePlayBilling";
 const tierData = {
     gold: {
         name: 'Gold',
@@ -63,12 +65,20 @@ export default function BuySubscription() {
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [selectedTier, setSelectedTier] = useState("gold");
     const [purchaseResponse, setPurchaseResponse] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState("stripe"); // "stripe" | "google_play"
     const currentTierData = tierData[selectedTier];
 
     const dispatch = useDispatch();
-    const { tiers, status, symbol, purchaseStatus, purchaseError, paymentClientSecret, activeSubscriptionId, modalLocked } = useSelector((state) => state.vip);
+    const { tiers, status, symbol, purchaseStatus, purchaseError, paymentClientSecret, activeSubscriptionId, googlePlayProductId, modalLocked } = useSelector((state) => state.vip);
     const { token } = useAuth();
     const router = useRouter();
+
+    // Detect platform on mount — use Google Play on native Android
+    useEffect(() => {
+        isGooglePlayAvailable().then((available) => {
+            setPaymentMethod(available ? "google_play" : "stripe");
+        });
+    }, []);
 
     // VIP status will be refreshed directly via Redux dispatch after successful payment
 
@@ -137,6 +147,20 @@ export default function BuySubscription() {
         // Reset any previous payment response to ensure fresh payment intent
         setPurchaseResponse(null);
         dispatch(resetPurchaseStatus());
+
+        // Use Google Play Billing on native Android
+        // TEST MODE: bypass backend and product ID checks to verify native billing popup
+        if (paymentMethod === "google_play") {
+            dispatch(setPurchaseStatus({ status: "awaiting_payment" }));
+            // Manually set subscriptionId + productId in Redux state for the sheet to pick up
+            dispatch({ type: "vip/initiateGooglePlayPurchase/fulfilled", payload: {
+                subscriptionId: "test_subscription_id",
+                googlePlayProductId: `vip_${selectedTier}_${selectedPlan}`,
+                tierId: selectedTier,
+                plan: selectedPlan,
+            }});
+            return;
+        }
 
         try {
             const response = await dispatch(initiatePurchase({
@@ -302,6 +326,15 @@ export default function BuySubscription() {
                 error: errorMessage
             }));
         }
+    };
+
+    // Called by GooglePlayPaymentSheet after a successful Play purchase + backend confirmation
+    const handleGooglePlayPaymentSuccess = async () => {
+        dispatch(fetchVipStatus(token));
+        dispatch(setPurchaseStatus({
+            status: 'succeeded',
+            message: 'Payment completed successfully! VIP subscription activated.'
+        }));
     };
 
     // Set trending plan as default when tier data is available
@@ -611,8 +644,20 @@ export default function BuySubscription() {
                 </main>
             </div>
 
-            {/* Stripe Payment Sheet */}
-            {purchaseResponse && purchaseResponse.data?.clientSecret && (
+            {/* Google Play Payment Sheet — shown on native Android */}
+            {paymentMethod === "google_play" && purchaseStatus === "awaiting_payment" && googlePlayProductId && (
+                <GooglePlayPaymentSheet
+                    subscriptionId={activeSubscriptionId}
+                    googlePlayProductId={googlePlayProductId}
+                    token={token}
+                    onPaymentSuccess={handleGooglePlayPaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                    onPaymentCancel={handlePaymentCancel}
+                />
+            )}
+
+            {/* Stripe Payment Sheet — shown on web / non-Android */}
+            {paymentMethod === "stripe" && purchaseResponse && purchaseResponse.data?.clientSecret && (
                 <StripePaymentSheet
                     clientSecret={purchaseResponse.data.clientSecret}
                     paymentIntentId={purchaseResponse.data.paymentIntentId}
