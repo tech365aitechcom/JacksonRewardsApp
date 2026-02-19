@@ -19,13 +19,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Verisoul SDK - Official Browser Integration */}
-        {/* Docs: https://docs.verisoul.ai/integration/frontend/browser */}
-        {/* Using PRODUCTION environment with your Project ID */}
+        {/* Verisoul SDK - Use sandbox bundle when NEXT_PUBLIC_VERISOUL_BASE_URL contains "sandbox", else prod. Project ID must match that environment. */}
         {process.env.NEXT_PUBLIC_VERISOUL_PROJECT_ID && (
           <script
             async
-            src="https://js.verisoul.ai/prod/bundle.js"
+            src={
+              process.env.NEXT_PUBLIC_VERISOUL_BASE_URL?.includes("sandbox")
+                ? "https://js.verisoul.ai/sandbox/bundle.js"
+                : "https://js.verisoul.ai/prod/bundle.js"
+            }
             verisoul-project-id={process.env.NEXT_PUBLIC_VERISOUL_PROJECT_ID}
           />
         )}

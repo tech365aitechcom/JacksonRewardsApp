@@ -45,6 +45,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth'
     // AppLovin MAX SDK is included via cordova-plugin-applovin-max
     // No need to add it manually here
+    // Google User Messaging Platform (UMP) SDK for AdMob consent (GDPR/CCPA)
+    implementation "com.google.android.ump:user-messaging-platform:4.0.0"
 }
 
 apply from: 'capacitor.build.gradle'

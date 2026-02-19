@@ -197,13 +197,18 @@ export function AuthProvider({ children }) {
     };
   }, [router]);
 
-  // Initialize Verisoul SDK on app start
+  // Initialize Verisoul SDK on app start (delay so script has time to load)
   useEffect(() => {
     const initVerisoul = async () => {
       try {
         const result = await initializeVerisoulSDK();
         if (result.success) {
-          console.log("✅ [AuthContext] Verisoul SDK initialized with session:", result.sessionId);
+          const isFallback = result.sessionId && String(result.sessionId).startsWith("fallback_");
+          if (isFallback) {
+            console.log("ℹ️ [AuthContext] Verisoul SDK using fallback session (script may still be loading)");
+          } else {
+            console.log("✅ [AuthContext] Verisoul SDK initialized with session:", result.sessionId);
+          }
         } else {
           console.warn("⚠️ [AuthContext] Verisoul SDK initialization failed (non-blocking):", result.error);
         }
@@ -211,8 +216,9 @@ export function AuthProvider({ children }) {
         console.error("❌ [AuthContext] Failed to initialize Verisoul SDK (non-blocking):", error);
       }
     };
-    
-    initVerisoul();
+
+    const timer = setTimeout(initVerisoul, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   // MODIFIED: This effect now focuses only on loading the session from storage
@@ -232,7 +238,9 @@ export function AuthProvider({ children }) {
           // Check fraud session status when app opens
           try {
             const storedSessionId = localStorage.getItem("verisoul_session_id");
+            console.log("[FraudDebug] loadSession – stored backend sessionId:", storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none");
             if (storedSessionId) {
+              console.log("[FraudDebug] loadSession – GET status using backend sessionId");
               const statusResponse = await getFraudSessionStatus(storedSessionId, storedToken);
               if (statusResponse?.success) {
                 const status = statusResponse?.data?.status;
@@ -242,14 +250,17 @@ export function AuthProvider({ children }) {
                   status,
                   riskScore,
                 });
+                console.log("[FraudDebug] loadSession – status:", status, "risk_score:", riskScore);
 
                 // Re-authenticate if session is not active
                 if (status !== "active") {
                   console.log("🔄 [AuthContext] Session not active on app open, re-authenticating...");
                   const deviceMetadata = await getDeviceMetadata();
                   
-                  // Get Verisoul SDK session ID (required for full fraud detection)
-                  const verisoulSessionId = await getVerisoulSessionId();
+                  // Get Verisoul SDK session ID (required for full fraud detection); don't send fallback to backend
+                  let verisoulSessionId = await getVerisoulSessionId();
+                  if (verisoulSessionId && String(verisoulSessionId).startsWith("fallback_")) verisoulSessionId = null;
+                  console.log("[FraudDebug] loadSession re-auth – SDK session_id:", verisoulSessionId ? `${String(verisoulSessionId).slice(0, 24)}...` : "none");
                   
                   const sessionAuthData = {
                     accountId: parsedUser._id || parsedUser.id || String(parsedUser._id || parsedUser.id),
@@ -264,13 +275,11 @@ export function AuthProvider({ children }) {
                     group: parsedUser.group || parsedUser.userGroup || "regular_users", // Required by API
                   };
                   
-                  // Add Verisoul SDK session_id if available (enables full fraud detection)
-                  if (verisoulSessionId) {
-                    sessionAuthData.session_id = verisoulSessionId;
-                  }
+                  if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
 
                   const fraudResponse = await authenticateFraudSession(sessionAuthData, storedToken);
                   if (fraudResponse?.success && fraudResponse?.sessionId) {
+                    console.log("[FraudDebug] loadSession re-auth – storing backend sessionId:", fraudResponse.sessionId?.slice(0, 8) + "...");
                     localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
                   }
                 }
@@ -280,8 +289,10 @@ export function AuthProvider({ children }) {
               console.log("🔄 [AuthContext] No fraud session found, creating new session...");
               const deviceMetadata = await getDeviceMetadata();
               
-              // Get Verisoul SDK session ID (required for full fraud detection)
-              const verisoulSessionId = await getVerisoulSessionId();
+              // Get Verisoul SDK session ID; don't send fallback to backend
+              let verisoulSessionId = await getVerisoulSessionId();
+              if (verisoulSessionId && String(verisoulSessionId).startsWith("fallback_")) verisoulSessionId = null;
+              console.log("[FraudDebug] loadSession new session – SDK session_id:", verisoulSessionId ? `${String(verisoulSessionId).slice(0, 24)}...` : "none");
               
               const sessionAuthData = {
                 accountId: parsedUser._id || parsedUser.id || String(parsedUser._id || parsedUser.id),
@@ -296,13 +307,11 @@ export function AuthProvider({ children }) {
                 group: parsedUser.group || parsedUser.userGroup || "regular_users", // Required by API
               };
               
-              // Add Verisoul SDK session_id if available (enables full fraud detection)
-              if (verisoulSessionId) {
-                sessionAuthData.session_id = verisoulSessionId;
-              }
+              if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
 
               const fraudResponse = await authenticateFraudSession(sessionAuthData, storedToken);
               if (fraudResponse?.success && fraudResponse?.sessionId) {
+                console.log("[FraudDebug] loadSession new session – storing backend sessionId:", fraudResponse.sessionId?.slice(0, 8) + "...");
                 localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
               }
             }
@@ -457,7 +466,9 @@ export function AuthProvider({ children }) {
       // Check fraud session status
       try {
         const storedSessionId = localStorage.getItem("verisoul_session_id");
+        console.log("[FraudDebug] handleFocus – stored backend sessionId:", storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none");
         if (storedSessionId) {
+          console.log("[FraudDebug] handleFocus – GET status using backend sessionId");
           const statusResponse = await getFraudSessionStatus(storedSessionId, token);
           if (statusResponse?.success) {
             const riskScore = statusResponse?.data?.risk_score || 0;
@@ -467,6 +478,7 @@ export function AuthProvider({ children }) {
               status,
               riskScore,
             });
+            console.log("[FraudDebug] handleFocus – status:", status, "risk_score:", riskScore);
 
             // Handle high risk or inactive session
             if (riskScore > 0.7) {
@@ -479,8 +491,10 @@ export function AuthProvider({ children }) {
               if (user) {
                 const deviceMetadata = await getDeviceMetadata();
                 
-                // Get Verisoul SDK session ID (required for full fraud detection)
-                const verisoulSessionId = await getVerisoulSessionId();
+                // Get Verisoul SDK session ID; don't send fallback to backend
+                let verisoulSessionId = await getVerisoulSessionId();
+                if (verisoulSessionId && String(verisoulSessionId).startsWith("fallback_")) verisoulSessionId = null;
+                console.log("[FraudDebug] handleFocus re-auth – SDK session_id:", verisoulSessionId ? `${String(verisoulSessionId).slice(0, 24)}...` : "none");
                 
                 const sessionAuthData = {
                   accountId: user._id || user.id || String(user._id || user.id),
@@ -495,12 +509,10 @@ export function AuthProvider({ children }) {
                   group: user.group || user.userGroup || "regular_users", // Required by API
                 };
                 
-                // Add Verisoul SDK session_id if available (enables full fraud detection)
-                if (verisoulSessionId) {
-                  sessionAuthData.session_id = verisoulSessionId;
-                }
+                if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
                 
                 await authenticateFraudSession(sessionAuthData, token);
+                console.log("[FraudDebug] handleFocus re-auth – authenticate called (new backend sessionId in response if success)");
               }
             }
           }
@@ -754,15 +766,31 @@ export function AuthProvider({ children }) {
       // Get Verisoul session ID from SDK (required for full fraud detection)
       // Documentation: https://docs.verisoul.ai/integration/frontend/browser
       let verisoulSessionId = await getVerisoulSessionId();
-      
+      const isFallback = (id) => typeof id === "string" && id.startsWith("fallback_");
+
       // Reinitialize Verisoul session on login to ensure fresh signals
       if (verisoulSessionId) {
         const reinitResult = await reinitializeVerisoulSession();
         if (reinitResult?.sessionId) {
           verisoulSessionId = reinitResult.sessionId;
         }
+        // If reinit returned a fallback (SDK not ready yet), wait and retry for real SDK session
+        if (isFallback(verisoulSessionId)) {
+          await new Promise((r) => setTimeout(r, 500));
+          const retrySessionId = await getVerisoulSessionId();
+          if (retrySessionId && !isFallback(retrySessionId)) {
+            verisoulSessionId = retrySessionId;
+            console.log("✅ [AuthContext] Using real Verisoul session after retry:", retrySessionId?.slice?.(0, 12) + "...");
+          }
+        }
       }
-      
+
+      // Only send session_id to backend when it's a real Verisoul SDK session (not fallback)
+      if (verisoulSessionId && isFallback(verisoulSessionId)) {
+        console.warn("⚠️ [AuthContext] Only fallback session available - omitting session_id for this request (backend will get limited fraud detection)");
+        verisoulSessionId = null;
+      }
+
       const sessionAuthData = {
         accountId: user._id || user.id || String(user._id || user.id),
         email: user.email || "",
@@ -794,10 +822,12 @@ export function AuthProvider({ children }) {
         sessionAuthData.metadata.signupDate = user.createdAt || user.created_at;
       }
 
+      console.log("[FraudDebug] login – POST authenticate with SDK session_id in body");
       const fraudResponse = await authenticateFraudSession(sessionAuthData, token);
       
       if (fraudResponse?.success && fraudResponse?.sessionId) {
-        // Store Verisoul session ID
+        // Store backend session ID (returned from API)
+        console.log("[FraudDebug] login – backend returned sessionId:", fraudResponse.sessionId?.slice(0, 8) + "...", "storing in localStorage");
         localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
         
         // Check risk score and handle accordingly
@@ -809,6 +839,7 @@ export function AuthProvider({ children }) {
           riskScore,
           decision,
         });
+        console.log("[FraudDebug] login – risk_score:", riskScore, "decision:", decision);
 
         // Store risk information for later use
         if (riskScore > 0.7 || decision === "deny") {
@@ -817,6 +848,7 @@ export function AuthProvider({ children }) {
         }
       } else {
         console.warn("⚠️ [AuthContext] Fraud session authentication failed or incomplete:", fraudResponse);
+        console.log("[FraudDebug] login – authenticate failed or no sessionId:", fraudResponse?.success, !!fraudResponse?.sessionId);
       }
     } catch (error) {
       // Don't fail auth if fraud prevention fails - log and continue
@@ -1523,10 +1555,12 @@ export function AuthProvider({ children }) {
     try {
       const storedSessionId = localStorage.getItem("verisoul_session_id");
       const currentToken = token || localStorage.getItem("authToken");
+      console.log("[FraudDebug] signOut – backend sessionId to unauthenticate:", storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none");
       
       if (storedSessionId && currentToken) {
         await unauthenticateFraudSession(storedSessionId, currentToken);
         console.log("✅ [AuthContext] Fraud session unauthenticated");
+        console.log("[FraudDebug] signOut – POST unauthenticate sent with backend sessionId");
       }
     } catch (error) {
       console.error("❌ [AuthContext] Error unauthenticating fraud session (non-blocking):", error);
@@ -1534,6 +1568,7 @@ export function AuthProvider({ children }) {
 
     // Clear Verisoul session ID
     clearVerisoulSessionId();
+    console.log("[FraudDebug] signOut – cleared localStorage verisoul_session_id");
 
     // Clear all Redux state first
     dispatch(clearProfile()); // Clear profile data
@@ -1655,7 +1690,7 @@ export function AuthProvider({ children }) {
 
         try {
           const statusRes = await fetch(
-            "https://rewardsapi.hireagent.co/api/location/status",
+            "https://rewardsuatapi.hireagent.co/api/location/status",
             {
               method: "GET",
               headers: {

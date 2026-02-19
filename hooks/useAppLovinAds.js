@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { appLovinPlugin, APPLOVIN_CONFIG } from '@/lib/applovinPlugin';
+import { canRequestAds, showPrivacyOptionsForm } from '@/lib/umpConsent';
 import {
   getAppLovinHealth,
   getAppLovinConfig,
@@ -131,6 +132,21 @@ export const useAppLovinAds = () => {
     console.log('[useAppLovinAds] 📈 State updated: initializationAttempted=true, isLoading=true');
 
     try {
+      // Wait for UMP consent (AdMob) so we can request ads legally; give consent flow up to 5s
+      console.log('[AdMob/UMP] Checking consent before ad init (mob id / AdMob)...');
+      let consented = await canRequestAds();
+      console.log('[AdMob/UMP] Initial canRequestAds:', consented);
+      for (let i = 0; i < 10 && !consented; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        consented = await canRequestAds();
+        console.log('[AdMob/UMP] Retry', i + 1, 'canRequestAds:', consented);
+      }
+      console.log('[AdMob/UMP] Final consent for ads:', consented, '(AdMob app id used in AndroidManifest)');
+      if (!consented) {
+        console.warn('[useAppLovinAds] ⚠️ UMP consent not yet ready; initializing anyway (consent may complete later)');
+        console.log('[AdMob/UMP] If consent form never appeared: NOT app error – AdMob/Google (mob) side. AdMob console → Privacy & messaging → add message for app ID ca-app-pub-2800391972465887~5310386906');
+      }
+
       // Health route commented out so ad init is faster; SDK proceeds without waiting on backend health
       // console.log('[useAppLovinAds] 🔍 Step 1: Verifying backend connection...');
       // console.log('[useAppLovinAds] 🌐 Backend URL:', process.env.NEXT_PUBLIC_API_URL || 'https://rewardsapi.hireagent.co');
@@ -156,6 +172,7 @@ export const useAppLovinAds = () => {
         placement: 'rewarded',
       };
 
+      console.log('[AdMob/UMP] Google AdMob App ID (Android):', APPLOVIN_CONFIG.GOOGLE_ADMOB_APP_ID?.ANDROID || 'ca-app-pub-2800391972465887~5310386906');
       console.log('[useAppLovinAds] 🔍 Step 2: Fetching SDK configuration from backend...');
       if (token) {
         console.log('[useAppLovinAds] 🔑 Auth token available, fetching config...');
@@ -678,5 +695,8 @@ export const useAppLovinAds = () => {
     
     // Platform info
     platformInfo: appLovinPlugin.getPlatformInfo(),
+
+    // Ad consent (Google UMP) – use in Settings for "Manage ad choices" / "Privacy options"
+    showPrivacyOptionsForm,
   };
 };
