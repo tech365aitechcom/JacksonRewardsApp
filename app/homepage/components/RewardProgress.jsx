@@ -3,7 +3,7 @@ import React, { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
-// Coins from profile API (https://rewardsapi.hireagent.co/api/profile) -> wallet.balance
+// Coins from profile API (https://rewardsuatapi.hireagent.co/api/profile) -> wallet.balance
 const RewardProgress = ({ stats }) => {
     const router = useRouter();
     const rewardGoal = 10000;
@@ -12,14 +12,17 @@ const RewardProgress = ({ stats }) => {
     const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
     const balance = profile?.wallet?.balance ?? profile?.data?.wallet?.balance ?? walletScreen?.wallet?.balance ?? 0;
 
+    // Round to 2 decimal places to avoid floating-point display (e.g. 3266.9000000000015)
+    const round2 = (n) => (typeof n === "number" && !Number.isNaN(n) ? Math.round(n * 100) / 100 : n);
+
     // OPTIMIZED: Memoize expensive calculations to prevent re-computation
     const pointsData = useMemo(() => {
-        const totalCoins = balance; // Use balance as total coins
+        const totalCoins = Number(balance) || 0;
         const currentLevel = Math.floor(totalCoins / rewardGoal) + 1;
         const nextLevel = currentLevel + 1;
-        const progressTowardsNext = totalCoins % rewardGoal;
-        const pointsNeeded = Math.max(0, rewardGoal - progressTowardsNext);
-        const progressPercentage = Math.min((progressTowardsNext / rewardGoal) * 100, 100);
+        const progressTowardsNext = round2(totalCoins % rewardGoal);
+        const pointsNeeded = round2(Math.max(0, rewardGoal - progressTowardsNext));
+        const progressPercentage = Math.min(round2((progressTowardsNext / rewardGoal) * 100), 100);
 
         return {
             currentPoints: progressTowardsNext,
@@ -28,7 +31,7 @@ const RewardProgress = ({ stats }) => {
             currentLevel: currentLevel,
             nextLevel: nextLevel,
             progressPercentage,
-            totalCoins: totalCoins,
+            totalCoins: round2(totalCoins),
         };
     }, [balance]);
 
@@ -104,7 +107,7 @@ const RewardProgress = ({ stats }) => {
                                     >
                                         ⭐
                                     </span>{" "}
-                                    {pointsData.currentPoints}
+                                    {Number(pointsData.currentPoints).toFixed(2)}
                                 </span>
 
                                 <span className="text-gray-400">
@@ -123,7 +126,7 @@ const RewardProgress = ({ stats }) => {
 
                                 <p className="absolute w-full top-[27px] left-0 [font-family:'Poppins',Helvetica] font-semibold text-[#ffffff99] text-sm tracking-[0.02px] leading-[normal] truncate">
                                     {pointsData.pointsNeeded > 0
-                                        ? `${pointsData.pointsNeeded} Coins until level ${pointsData.nextLevel}`
+                                        ? `${Number(pointsData.pointsNeeded).toFixed(2)} Coins until level ${pointsData.nextLevel}`
                                         : `Level ${pointsData.currentLevel} completed!`
                                     }
                                 </p>

@@ -2091,7 +2091,7 @@ export function AuthProvider({ children }) {
 
         try {
           const statusRes = await fetch(
-            "https://rewardsapi.hireagent.co/api/location/status",
+            "https://rewardsuatapi.hireagent.co/api/location/status",
             {
               method: "GET",
               headers: {
@@ -2132,14 +2132,21 @@ export function AuthProvider({ children }) {
         const backendMessage =
           typeof payload === "string"
             ? payload
-            : payload?.message ?? payload?.error ?? (payload && typeof payload === "object" ? JSON.stringify(payload) : "Social auth profile fetch failed");
+            : (payload?.message ??
+              payload?.error ??
+              (payload && typeof payload === "object"
+                ? JSON.stringify(payload)
+                : "Social auth profile fetch failed"));
         throw new Error(backendMessage);
       }
     } catch (error) {
       const message =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
-        (error?.response?.data?.detail && (Array.isArray(error.response.data.detail) ? error.response.data.detail.join(". ") : error.response.data.detail)) ||
+        (error?.response?.data?.detail &&
+          (Array.isArray(error.response.data.detail)
+            ? error.response.data.detail.join(". ")
+            : error.response.data.detail)) ||
         error?.message ||
         "Login failed";
       return { ok: false, error: message };

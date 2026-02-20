@@ -21,7 +21,7 @@ const WatchAdCard = ({
     const [cooldownHours, setCooldownHours] = useState(4);
 
     // API Configuration
-    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://rewardsapi.hireagent.co";
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://rewardsuatapi.hireagent.co";
 
     // AppLovin MAX integration
     const {
@@ -78,7 +78,7 @@ const WatchAdCard = ({
     useEffect(() => {
         if (lastReward && !isWatchingAd) {
             console.log('[WatchAdCard] 💰 Processing lastReward from hook:', lastReward);
-            
+
             // Call the claim API to process the reward
             claimAdReward(lastReward);
         }
@@ -93,7 +93,7 @@ const WatchAdCard = ({
             // Get user data from localStorage to extract the correct userId
             const userData = localStorage.getItem('user');
             let userId = 'unknown_user';
-            
+
             if (userData) {
                 try {
                     const parsedUser = JSON.parse(userData);
@@ -102,7 +102,7 @@ const WatchAdCard = ({
                     console.warn('Failed to parse user data from localStorage:', e);
                 }
             }
-            
+
             // Fallback to direct userId if user object doesn't exist
             if (userId === 'unknown_user') {
                 userId = localStorage.getItem('userId') || 'unknown_user';
@@ -180,7 +180,7 @@ const WatchAdCard = ({
         } catch (error) {
             console.error('[WatchAdCard] ❌ Error claiming reward:', error);
             setError(error.message || 'Failed to claim reward. Please try again.');
-            
+
             // Clear error after 5 seconds
             setTimeout(() => {
                 setError(null);
@@ -194,7 +194,7 @@ const WatchAdCard = ({
     const checkAdAvailability = async () => {
         try {
             const token = localStorage.getItem('authToken') || localStorage.getItem('x-auth-token');
-            
+
             if (!token) {
                 // Fallback to localStorage if no token
                 checkLocalStorageAvailability();
@@ -213,11 +213,11 @@ const WatchAdCard = ({
             if (response.ok) {
                 const result = await response.json();
                 const { cooldownHours, rewardCoins, isAvailable, nextRewardAt } = result.data;
-                
+
                 // Update state with API data
                 setCooldownHours(cooldownHours);
                 setRewardCoins(rewardCoins);
-                
+
                 if (isAvailable) {
                     setIsAdAvailable(true);
                     setCooldownRemaining(0);
@@ -485,8 +485,8 @@ const WatchAdCard = ({
 
             <div className="relative w-full max-w-[335px] mx-auto mb-1">
                 <div
-                className={`relative w-full h-[100px] bg-[#360875] rounded-[10px] overflow-hidden ${isAdAvailable && !isWatchingAd ? 'cursor-pointer hover:shadow-lg hover:shadow-purple-500/50' : 'cursor-not-allowed'
-                    } transition-all duration-200 ${className}`}
+                    className={`relative w-full h-[100px] bg-[#360875] rounded-[10px] overflow-hidden ${isAdAvailable && !isWatchingAd ? 'cursor-pointer hover:shadow-lg hover:shadow-purple-500/50' : 'cursor-not-allowed'
+                        } transition-all duration-200 ${className}`}
                     onClick={handleAdClick}
                 >
                     <div className="relative h-[99px] top-px bg-[url(https://c.animaapp.com/3mn7waJw/img/clip-path-group-3@2x.png)] bg-[length:100%_100%] bg-no-repeat bg-center">
