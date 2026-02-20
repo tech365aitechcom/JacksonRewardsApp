@@ -68,9 +68,14 @@ export const WelcomeOffer = () => {
     autoReset: false // Don't auto reset when expired
   });
 
-  // Fetch welcome bonus timer and message from API
+  // Fetch welcome bonus timer and message from API (only when authenticated)
   useEffect(() => {
     let mounted = true;
+
+    if (!token) {
+      setFetchingWelcome(false);
+      return;
+    }
 
     const parseEndTimeFromResponse = (response) => {
       if (!response) return null;

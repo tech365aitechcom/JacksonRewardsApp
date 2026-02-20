@@ -127,7 +127,7 @@ const VpnTroubleshootingModal = ({ isVisible, onClose }) => {
                                 <button
                                     onClick={async () => {
                                         try {
-                                            const response = await fetch('https://rewardsuatapi.hireagent.co/api/health', {
+                                            const response = await fetch('https://rewardsapi.hireagent.co/api/health', {
                                                 method: 'GET',
                                                 timeout: 10000
                                             });
