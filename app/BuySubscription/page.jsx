@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchVipTiers, initiatePurchase, resetPurchaseStatus, setPurchaseStatus, confirmPayment, initiateGooglePlayPurchase, confirmGooglePlayPayment } from "@/lib/redux/slice/vipSlice";
+import { fetchVipTiers, initiatePurchase, resetPurchaseStatus, setPurchaseStatus, confirmPayment, confirmGooglePlayPayment } from "@/lib/redux/slice/vipSlice";
 import { fetchVipStatus } from "@/lib/redux/slice/profileSlice";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import StripePaymentSheet from "@/components/StripePaymentSheet";
 import GooglePlayPaymentSheet from "@/components/GooglePlayPaymentSheet";
-import { isGooglePlayAvailable } from "@/lib/googlePlayBilling";
+import { isGooglePlayAvailable, getProductId } from "@/lib/googlePlayBilling";
 const tierData = {
     gold: {
         name: 'Gold',
@@ -149,19 +149,20 @@ export default function BuySubscription() {
         dispatch(resetPurchaseStatus());
 
         // Use Google Play Billing on native Android
-        // TEST MODE: bypass backend and product ID checks to verify native billing popup
+        // TEST MODE: Skip backend API call and show Google Play UI directly
         if (paymentMethod === "google_play") {
             dispatch(setPurchaseStatus({ status: "awaiting_payment" }));
-            // Manually set subscriptionId + productId in Redux state for the sheet to pick up
+            // Manually set the product ID in Redux state for GooglePlayPaymentSheet
             dispatch({ type: "vip/initiateGooglePlayPurchase/fulfilled", payload: {
                 subscriptionId: "test_subscription_id",
-                googlePlayProductId: `vip_${selectedTier}_${selectedPlan}`,
+                googlePlayProductId: getProductId(selectedTier, selectedPlan),
                 tierId: selectedTier,
                 plan: selectedPlan,
             }});
             return;
         }
 
+        // Use Stripe for web/iOS
         try {
             const response = await dispatch(initiatePurchase({
                 tierId: selectedTier,
