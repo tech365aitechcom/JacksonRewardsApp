@@ -82,6 +82,11 @@ export default function RootLayout({ children }) {
               background-color: #000000 !important;
               touch-action: pan-y !important;
             }
+            /* Allow horizontal touch scroll in carousels (Android WebView often blocks it otherwise) */
+            .most-played-games-scroll,
+            .most-played-games-scroll * {
+              touch-action: pan-x !important;
+            }
             html::-webkit-scrollbar, body::-webkit-scrollbar {
               display: none !important;
               width: 0 !important;

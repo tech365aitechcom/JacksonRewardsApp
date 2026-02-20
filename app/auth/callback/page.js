@@ -57,13 +57,40 @@ function AuthCallbackContent() {
   const [errorMessage, setErrorMessage] = useState("");
   const [authCompleted, setAuthCompleted] = useState(false);
   const [userStatusFlags, setUserStatusFlags] = useState(null); // New state for flags
+  // Collect all backend message params into one display string (no duplicates, preserve order)
+  const collectBackendMessages = (params) => {
+    const messages = [];
+    const seen = new Set();
+    const keys = ["message", "error", "error_description", "error_message", "msg", "detail", "details"];
+    for (const key of keys) {
+      const raw = params.get(key);
+      if (raw == null || raw === "") continue;
+      let text = raw;
+      if (key === "details") {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) text = parsed.filter(Boolean).join(". ");
+          else if (typeof parsed === "string") text = parsed;
+        } catch (_) {
+          // use as-is
+        }
+      }
+      const normalized = String(text).trim();
+      if (normalized && !seen.has(normalized)) {
+        seen.add(normalized);
+        messages.push(normalized);
+      }
+    }
+    return messages.length ? messages.join(" ") : null;
+  };
+
   useEffect(() => {
     const processAuth = async () => {
       const token = searchParams.get("token");
-      const authError =
-        searchParams.get("message") || searchParams.get("error");
       const provider = searchParams.get("provider");
       const userId = searchParams.get("userId");
+      const allBackendMessages = collectBackendMessages(searchParams);
+      const hasError = allBackendMessages || searchParams.get("message") || searchParams.get("error");
 
       // 1. Handle Native Deep Link (Keep as is)
       if (Capacitor.isNativePlatform()) {
@@ -73,7 +100,7 @@ function AuthCallbackContent() {
           if (provider) deepLink += `&provider=${encodeURIComponent(provider)}`;
           if (userId) deepLink += `&userId=${encodeURIComponent(userId)}`;
         } else {
-          const message = authError || "Authentication token not found.";
+          const message = allBackendMessages || "Authentication token not found.";
           deepLink += `?message=${encodeURIComponent(message)}`;
         }
 
@@ -88,9 +115,9 @@ function AuthCallbackContent() {
         return;
       }
 
-      // 2. Handle Errors
-      if (authError) {
-        setErrorMessage(authError);
+      // 2. Handle Errors – show all messages from backend
+      if (hasError) {
+        setErrorMessage(allBackendMessages || searchParams.get("message") || searchParams.get("error") || "Authentication failed.");
         setStatus("error");
         setTimeout(() => router.replace("/login"), 4000);
         return;
@@ -117,12 +144,19 @@ function AuthCallbackContent() {
             setStatus("success");
             setAuthCompleted(true);
           } else {
-            setErrorMessage(result.error || "Authentication failed");
+            setErrorMessage(
+              typeof result.error === "string"
+                ? result.error
+                : result.error?.message || result.error?.error || JSON.stringify(result.error) || "Authentication failed"
+            );
             setStatus("error");
             setTimeout(() => router.replace("/login"), 4000);
           }
         } catch (error) {
-          setErrorMessage(error.message);
+          const msg = error?.response?.data
+            ? [error.response.data.message, error.response.data.error, error.response.data.detail, error.message].filter(Boolean).join(". ")
+            : error?.message || "Authentication failed";
+          setErrorMessage(msg);
           setStatus("error");
           setTimeout(() => router.replace("/login"), 4000);
         }

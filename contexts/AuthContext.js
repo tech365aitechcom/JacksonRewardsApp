@@ -2128,12 +2128,21 @@ export function AuthProvider({ children }) {
           statusData,
         };
       } else {
-        throw new Error(
-          resultAction.payload || "Social auth profile fetch failed",
-        );
+        const payload = resultAction.payload;
+        const backendMessage =
+          typeof payload === "string"
+            ? payload
+            : payload?.message ?? payload?.error ?? (payload && typeof payload === "object" ? JSON.stringify(payload) : "Social auth profile fetch failed");
+        throw new Error(backendMessage);
       }
     } catch (error) {
-      return { ok: false, error: error.message };
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (error?.response?.data?.detail && (Array.isArray(error.response.data.detail) ? error.response.data.detail.join(". ") : error.response.data.detail)) ||
+        error?.message ||
+        "Login failed";
+      return { ok: false, error: message };
     } finally {
       setIsLoading(false);
     }
