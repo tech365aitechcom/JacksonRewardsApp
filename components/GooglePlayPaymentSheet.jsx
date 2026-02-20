@@ -33,7 +33,7 @@ export default function GooglePlayPaymentSheet({
 
     try {
       // Launch the Google Play purchase flow
-      const { purchaseToken, productId, orderId } = await purchaseSubscription(
+      const { purchaseToken, productId, basePlanId, orderId } = await purchaseSubscription(
         googlePlayProductId
       );
 
