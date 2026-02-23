@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchVipStatus } from "@/lib/redux/slice/profileSlice";
+import { fetchActiveGooglePlaySubscription } from "@/lib/redux/slice/vipSlice";
 
 /**
  * Custom hook for managing VIP status across the application
@@ -10,12 +11,15 @@ export const useVipStatus = () => {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth || {});
   const { vipStatus, vipStatusState } = useSelector((state) => state.profile);
+  const { activeGooglePlaySubscription } = useSelector((state) => state.vip);
 
   // Auto-fetch VIP status when token is available and status is idle
   useEffect(() => {
     if (token && vipStatusState === "idle") {
       console.log("🔄 [useVipStatus] Auto-fetching VIP status...");
       dispatch(fetchVipStatus(token));
+      // Also check for active Google Play subscription on Android
+      dispatch(fetchActiveGooglePlaySubscription(token));
     }
   }, [dispatch, token, vipStatusState]);
 
@@ -24,6 +28,8 @@ export const useVipStatus = () => {
     if (token) {
       console.log("🔄 [useVipStatus] Manually refreshing VIP status...");
       dispatch(fetchVipStatus(token));
+      // Also refresh Google Play subscription status
+      dispatch(fetchActiveGooglePlaySubscription(token));
     }
   };
 
@@ -32,6 +38,8 @@ export const useVipStatus = () => {
     if (token) {
       console.log("🔄 [useVipStatus] Force refreshing VIP status...");
       dispatch(fetchVipStatus(token));
+      // Also refresh Google Play subscription status
+      dispatch(fetchActiveGooglePlaySubscription(token));
     }
   };
 
@@ -59,6 +67,7 @@ export const useVipStatus = () => {
     forceRefreshVipStatus,
     isLoading: vipStatusState === "loading",
     hasError: vipStatusState === "failed",
+    activeGooglePlaySubscription, // Include active Google Play subscription data
   };
 };
 

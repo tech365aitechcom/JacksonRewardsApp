@@ -51,9 +51,10 @@ export default function GooglePlayPaymentSheet({
 
       // Step 2: Verify purchase with backend
       console.log("🔍 [GooglePlayPaymentSheet] Step 2: Verifying purchase with backend...");
+      console.log("📋 [GooglePlayPaymentSheet] Using basePlanId as subscriptionId:", basePlanId);
       const result = await dispatch(
         confirmGooglePlayPayment({
-          subscriptionId,
+          subscriptionId: basePlanId, // Use basePlanId as subscriptionId
           purchaseToken,
           productId,
           orderId,
