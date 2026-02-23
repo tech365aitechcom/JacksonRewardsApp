@@ -34,7 +34,7 @@ export default function MyProfile() {
   } = useSelector((state) => state.profile)
 
   // VIP status using custom hook
-  const { vipStatus, isLoading: vipLoadingStatus } = useVipStatus()
+  const { vipStatus, isLoading: vipLoadingStatus, forceRefreshVipStatus } = useVipStatus()
   console.log({ vipStatus })
   // Get wallet screen data from Redux store
   const { walletScreen } = useSelector((state) => state.walletTransactions)
@@ -77,10 +77,12 @@ export default function MyProfile() {
       // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }))
       dispatch(fetchProfileStats({ token, force: true }))
+      // Also refresh Google Play subscription status (Android only)
+      forceRefreshVipStatus()
     }, 100) // Small delay to let cached data render first
 
     return () => clearTimeout(refreshTimer)
-  }, [token, dispatch])
+  }, [token, dispatch, forceRefreshVipStatus])
 
   // Refresh profile and wallet when app comes to foreground (admin might have updated)
   useEffect(() => {
@@ -92,6 +94,8 @@ export default function MyProfile() {
       // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }))
       dispatch(fetchProfileStats({ token, force: true }))
+      // Also refresh Google Play subscription status (Android only)
+      forceRefreshVipStatus()
     }
 
     // Listen for window focus (app comes to foreground)
@@ -100,7 +104,7 @@ export default function MyProfile() {
     return () => {
       window.removeEventListener('focus', handleFocus)
     }
-  }, [token, dispatch])
+  }, [token, dispatch, forceRefreshVipStatus])
 
   const handleToggleNotifications = async () => {
     if (!profile || !token) return
