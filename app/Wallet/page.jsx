@@ -27,7 +27,7 @@ export default function WalletPage() {
   } = useSelector((state) => state.profile);
 
   // VIP status using custom hook
-  const { vipStatus, isLoading: vipLoadingStatus } = useVipStatus();
+  const { vipStatus, isLoading: vipLoadingStatus, forceRefreshVipStatus } = useVipStatus();
 
 
   // Get wallet screen data from Redux store
@@ -70,9 +70,18 @@ export default function WalletPage() {
   // Fetch fresh wallet data on every visit to this page
   useEffect(() => {
     if (!token) return;
-    dispatch(fetchWalletScreen({ token, force: true }));
-    dispatch(fetchWalletTransactions({ token, limit: 5, force: true }));
-  }, [token, dispatch]);
+
+    // Use setTimeout to refresh in background after showing cached data
+    // This ensures smooth UX - cached data shows immediately, fresh data loads in background
+    const refreshTimer = setTimeout(() => {
+      dispatch(fetchWalletScreen({ token, force: true }));
+      dispatch(fetchProfileStats({ token, force: true }));
+      // Also refresh Google Play subscription status (Android only)
+      forceRefreshVipStatus();
+    }, 100); // Small delay to let cached data render first
+
+    return () => clearTimeout(refreshTimer);
+  }, [token, dispatch, forceRefreshVipStatus]);
 
   // Refresh when app comes to foreground
   useEffect(() => {
@@ -80,7 +89,9 @@ export default function WalletPage() {
 
     const handleFocus = () => {
       dispatch(fetchWalletScreen({ token, force: true }));
-      dispatch(fetchWalletTransactions({ token, limit: 5, force: true }));
+      dispatch(fetchProfileStats({ token, force: true }));
+      // Also refresh Google Play subscription status (Android only)
+      forceRefreshVipStatus();
     };
 
     window.addEventListener("focus", handleFocus);
@@ -88,7 +99,7 @@ export default function WalletPage() {
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [token, dispatch]);
+  }, [token, dispatch, forceRefreshVipStatus]);
 
   const handleVipUpgrade = () => {
     if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/Wallet");

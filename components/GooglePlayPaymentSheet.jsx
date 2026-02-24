@@ -32,15 +32,29 @@ export default function GooglePlayPaymentSheet({
     dispatch(lockModal());
 
     try {
-      // Launch the Google Play purchase flow
+      console.log("🔍 [GooglePlayPaymentSheet] Starting purchase flow:", {
+        googlePlayProductId,
+        subscriptionId,
+        hasToken: !!token
+      });
+
+      // Step 1: Launch the Google Play purchase flow
+      console.log("📱 [GooglePlayPaymentSheet] Step 1: Launching Google Play billing...");
       const { purchaseToken, productId, basePlanId, orderId } = await purchaseSubscription(
         googlePlayProductId
       );
 
-      // Confirm with backend
+      console.log("✅ [GooglePlayPaymentSheet] Step 1 Complete: Purchase successful from Google Play", {
+        orderId,
+        productId
+      });
+
+      // Step 2: Verify purchase with backend
+      console.log("🔍 [GooglePlayPaymentSheet] Step 2: Verifying purchase with backend...");
+      console.log("📋 [GooglePlayPaymentSheet] Using basePlanId as subscriptionId:", basePlanId);
       const result = await dispatch(
         confirmGooglePlayPayment({
-          subscriptionId,
+          subscriptionId: basePlanId, // Use basePlanId as subscriptionId
           purchaseToken,
           productId,
           orderId,
@@ -48,12 +62,29 @@ export default function GooglePlayPaymentSheet({
         })
       );
 
+      console.log("📥 [GooglePlayPaymentSheet] Backend verification result:", {
+        type: result.type,
+        hasPayload: !!result.payload
+      });
+
       if (result.type && result.type.endsWith("/rejected")) {
-        throw new Error(result.payload || "Payment confirmation failed");
+        const errorMessage = result.payload || "Payment verification failed with backend";
+        console.error("❌ [GooglePlayPaymentSheet] Backend verification failed:", errorMessage);
+        throw new Error(errorMessage);
       }
 
+      console.log("✅ [GooglePlayPaymentSheet] Step 2 Complete: Backend verification successful");
+
+      // Step 3: Success callback
       if (onPaymentSuccess) {
-        onPaymentSuccess({ purchaseToken, productId, orderId });
+        console.log("🎉 [GooglePlayPaymentSheet] Step 3: Calling success callback");
+        onPaymentSuccess({
+          purchaseToken,
+          productId,
+          orderId,
+          verified: true,
+          verificationData: result.payload
+        });
       }
     } catch (err) {
       console.error("[GooglePlayPaymentSheet] Purchase error:", JSON.stringify(err), "code:", err?.code, "message:", err?.message);
