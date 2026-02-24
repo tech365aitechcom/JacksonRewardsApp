@@ -17,19 +17,14 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000, // Show for 2 seconds minimum
-      launchAutoHide: true, // Auto hide after duration
+      launchShowDuration: 2000,
+      launchAutoHide: true,
       backgroundColor: "#000000",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
-      showSpinner: false, // No spinners
-      androidSpinnerStyle: "large",
-      iosSpinnerStyle: "small",
-      spinnerColor: "#af7de6",
+      showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
-      layoutName: "launch_screen",
-      useDialog: true,
     },
     Geolocation: {
       // Android-specific location configuration
