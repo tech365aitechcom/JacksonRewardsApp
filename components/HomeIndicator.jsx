@@ -178,11 +178,12 @@ export const HomeIndicator = ({ activeTab }) => {
   const currentActiveTab = getActiveTab();
 
   // Sync my-games when user navigates to any HomeIndicator tab (non-blocking)
-  const homeIndicatorPaths = ["/homepage", "/homepage/", "/games", "/games/", "/Wallet", "/Wallet/", "/cash-coach", "/cash-coach/"];
+  // Only sync my-games on screens that use it (Cash Coach does not)
+  const homeIndicatorPaths = ["/homepage", "/homepage/", "/games", "/games/", "/Wallet", "/Wallet/"];
   useEffect(() => {
     if (!pathname || !homeIndicatorPaths.includes(pathname)) return;
     const token = typeof window !== "undefined" ? localStorage.getItem("authToken") || localStorage.getItem("x-auth-token") : null;
-    if (token) syncMyGames(token).catch(() => {});
+    if (token) syncMyGames(token).catch(() => { });
   }, [pathname]);
 
   const getActiveIconStyle = (tabId) => {

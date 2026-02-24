@@ -15,58 +15,46 @@ const SurveysSection = () => {
     const MIN_SWIPE_DISTANCE = 50;
     const HORIZONTAL_SPREAD = 120;
 
-    // Get surveys from Redux store
-    const { surveys, status, error } = useSelector((state) => state.surveys);
+    // Get surveys from Redux store (same pattern as HighestEarningGame / TaskListSection)
+    const { surveys, status, error, cacheTimestamp } = useSelector((state) => state.surveys);
 
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    const CACHE_STALE_MS = 3 * 60 * 1000;       // 3 min - fresh cache (skip fetch on mount if newer)
+    const FOCUS_REFRESH_STALE_MS = 1 * 60 * 1000; // 1 min - refetch on focus when cache older than this
+
+    // One fetch only on mount / token change. Guard failed to prevent infinite loop.
     useEffect(() => {
         if (!token) return;
 
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 90 seconds old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        const hasFreshCache = surveys?.length && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_STALE_MS);
+        if (hasFreshCache || status === "loading" || status === "failed") return;
+
         dispatch(fetchSurveys({ token }));
-    }, [token, dispatch]);
+    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Refresh surveys in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): refresh only if cache older than 1 min
     useEffect(() => {
         if (!token) return;
 
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
-            dispatch(fetchSurveys({ token, force: true, background: true }));
-        }, 100); // Small delay to let cached data render first
-
-        return () => clearTimeout(refreshTimer);
-    }, [token, dispatch]);
-
-    // Refresh surveys in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!token) return;
-
-        const handleFocus = () => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.surveys.cacheTimestamp;
+            const existing = state.surveys.surveys;
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
             dispatch(fetchSurveys({ token, force: true, background: true }));
         };
 
-        // Listen for window focus (app comes to foreground)
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
+        };
+
         window.addEventListener("focus", handleFocus);
-
-        // Also listen for visibility change (tab/app visibility)
-        const handleVisibilityChange = () => {
-            if (!document.hidden && token) {
-                dispatch(fetchSurveys({ token, force: true, background: true }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        document.addEventListener("visibilitychange", handleVisibility);
 
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
     }, [token, dispatch]);
 

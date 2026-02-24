@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { handleGameDownload } from "@/lib/gameDownloadUtils";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
 // Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
+const EMPTY_ARRAY = [];
+
 const SCALE_CONFIG = [
     { minWidth: 0, scaleClass: "scale-90" },
     { minWidth: 320, scaleClass: "scale-90" },
@@ -22,89 +24,60 @@ export const HighestEarningGame = () => {
     const dispatch = useDispatch();
     const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
 
-    // Use new game discovery API for Highest Earning section
-    const { gamesBySection, gamesBySectionStatus } = useSelector((state) => state.games);
+    const sectionName = "Highest Earning";
+    const CACHE_STALE_MS = 5 * 60 * 1000;
+    const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
+
+    // FIX: select only this section's data so re-renders only happen when "Highest Earning" changes,
+    // not every time Swipe / MostPlayed / Leadership etc. update their Redux state
+    const highestEarningGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
+    const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
+    const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const { details: userProfile } = useSelector((state) => state.profile);
 
-    // Get data for "Highest Earning" section specifically
-    const sectionName = "Highest Earning";
-    const highestEarningGames = gamesBySection[sectionName] || [];
-    const highestEarningStatus = gamesBySectionStatus[sectionName] || "idle";
-
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    // FIX: deps are section-specific primitives — no loop when other sections update
     useEffect(() => {
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // Pass user object directly - API will extract age and gender dynamically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 5 min old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
+        if (hasFreshCache || sectionStatus === "loading") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
             user: userProfile,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, sectionName, userProfile]);
+    }, [dispatch, sectionName, sectionStatus, sectionTimestamp, userProfile]);
 
-    // Refresh games in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): one discover call only if cache older than 2 min. Same pattern as TaskListSection.
     useEffect(() => {
-        if (!userProfile) return;
-
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.games.gamesBySectionTimestamp[sectionName];
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
+            const user = state.profile.details;
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
-                user: userProfile,
+                user: user || null,
                 page: 1,
                 limit: 10,
                 force: true,
                 background: true
             }));
-        }, 100); // Small delay to let cached data render first
+        };
 
-        return () => clearTimeout(refreshTimer);
-    }, [dispatch, sectionName, userProfile]);
-
-    // Refresh games in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!userProfile) return;
-
-        const handleFocus = () => {
-            dispatch(fetchGamesBySection({
-                uiSection: sectionName,
-                user: userProfile,
-                page: 1,
-                limit: 10,
-                force: true,
-                background: true
-            }));
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
         };
 
         window.addEventListener("focus", handleFocus);
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && userProfile) {
-                dispatch(fetchGamesBySection({
-                    uiSection: sectionName,
-                    user: userProfile,
-                    page: 1,
-                    limit: 10,
-                    force: true,
-                    background: true
-                }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        document.addEventListener("visibilitychange", handleVisibility);
 
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [dispatch, sectionName, userProfile]);
+    }, [dispatch, sectionName]);
 
     // Map the new API data to component format - using normalizer for both besitos and bitlab
     const processedGames = highestEarningGames?.slice(0, 2).map((game) => {

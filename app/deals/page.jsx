@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -8,12 +8,12 @@ import {
     getShoppingOffers,
     getBitlabsSurveys,
 } from "@/lib/api";
-
-// Simple in-memory cache so the Deals page can show
-// previously loaded data instantly and refresh in background
-let dealsCache = null;
-let dealsCacheTimestamp = 0;
-const DEALS_CACHE_TTL = 90 * 1000; // 90 seconds
+import {
+    dealsCache,
+    dealsCacheTimestamp,
+    DEALS_CACHE_TTL,
+    setDealsCache,
+} from "@/lib/dealsCache";
 
 const TABS = ["All", "Shopping", "Cashback", "Surveys"];
 
@@ -28,21 +28,30 @@ const DealsPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Ref so fetchAllDeals can read latest "has data" without being recreated on every data change
+    const hasLocalDataRef = useRef(false);
+    // Prevent concurrent fetches (e.g. mount + focus firing simultaneously)
+    const isFetchingRef = useRef(false);
+
+    useEffect(() => {
+        hasLocalDataRef.current =
+            cashbackOffers.length > 0 ||
+            shoppingOffers.length > 0 ||
+            surveyOffers.length > 0;
+    }, [cashbackOffers, shoppingOffers, surveyOffers]);
+
     const handleBack = () => {
         router.back();
     };
-
-    const hasLocalData =
-        cashbackOffers.length > 0 ||
-        shoppingOffers.length > 0 ||
-        surveyOffers.length > 0;
 
     // Shared fetcher that can run with or without UI loading state
     const fetchAllDeals = useCallback(
         async ({ background = false } = {}) => {
             if (!token) return;
+            if (isFetchingRef.current) return; // prevent concurrent duplicate calls
+            isFetchingRef.current = true;
 
-            const shouldShowLoader = !background && !hasLocalData;
+            const shouldShowLoader = !background && !hasLocalDataRef.current;
 
             try {
                 if (shouldShowLoader) {
@@ -95,13 +104,12 @@ const DealsPage = () => {
                 setShoppingOffers(shOffers.slice(0, 6));
                 setSurveyOffers(svOffers);
 
-                // Update in-memory cache for future visits
-                dealsCache = {
+                // Update shared cache for future visits (also pre-warmed by AuthContext)
+                setDealsCache({
                     cashbackOffers: cbOffers,
                     shoppingOffers: shOffers.slice(0, 6),
                     surveyOffers: svOffers,
-                };
-                dealsCacheTimestamp = Date.now();
+                });
             } catch (err) {
                 console.error("Failed to load deals:", err);
                 if (!background) {
@@ -111,9 +119,10 @@ const DealsPage = () => {
                 if (shouldShowLoader) {
                     setLoading(false);
                 }
+                isFetchingRef.current = false;
             }
         },
-        [token, hasLocalData]
+        [token] // stable — hasLocalData read via ref, not as a dep
     );
 
     // Initial load with stale-while-revalidate: show cached data instantly if fresh,
@@ -138,7 +147,7 @@ const DealsPage = () => {
             // No fresh cache – show loader once
             fetchAllDeals({ background: false });
         }
-    }, [token, fetchAllDeals]);
+    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Background refresh when app gains focus / becomes visible
     useEffect(() => {
@@ -164,7 +173,7 @@ const DealsPage = () => {
                 handleVisibilityChange
             );
         };
-    }, [token, fetchAllDeals]);
+    }, [token, fetchAllDeals]); // fetchAllDeals is now stable (only changes when token changes)
 
     // Helpers to extract display data
     const getNonGameImage = (offer, fallback) => {

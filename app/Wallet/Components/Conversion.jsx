@@ -89,11 +89,11 @@ export const Conversion = () => {
     const [conversionAmount, setConversionAmount] = useState("?");
     const [coinAmount, setCoinAmount] = useState("0"); // Editable coin input
     const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
-    
+
     // Independent flow states
     const [timerFlowState, setTimerFlowState] = useState("idle"); // 'idle', 'running'
     const [adFlowState, setAdFlowState] = useState("idle"); // 'idle', 'loading', 'watching', 'completed'
-    
+
     const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutes in seconds
     const timerRef = useRef(null);
     const resetResultRef = useRef(null);
@@ -124,7 +124,7 @@ export const Conversion = () => {
         }
 
         setConversionAmount((userAmount * conversionRate).toFixed(2));
-        
+
         // Show result for at least 10 seconds, then reset everything
         if (resetResultRef.current) clearTimeout(resetResultRef.current);
         resetResultRef.current = setTimeout(() => {

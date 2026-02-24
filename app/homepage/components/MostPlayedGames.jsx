@@ -5,36 +5,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
-// Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
+
+const EMPTY_ARRAY = [];
 
 const MostPlayedGames = () => {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Touch handling state for Android WebView
-    const touchState = React.useRef({
-        startX: 0,
-        startY: 0,
-        hasMoved: false,
-        touchStartTime: 0,
-        game: null
-    });
+    // Horizontal scroll / drag (same pattern as WithdrawalOption)
     const scrollContainerRef = React.useRef(null);
-    const androidTrackRef = React.useRef(null);
+    const mostPlayedTrackRef = React.useRef(null);
     const [isAndroid, setIsAndroid] = useState(false);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
-    const androidDragHappened = React.useRef(false);
-    const {
-        gamesBySection,
-        gamesBySectionStatus,
-        error
-    } = useSelector((state) => state.games);
-
-    // Get data for "Most Played" section specifically
+    // Get data for "Most Played" section specifically. Same fetch pattern as HighestEarningGame; user from localStorage (no profile).
     const sectionName = "Most Played";
-    const mostPlayedGames = gamesBySection[sectionName] || [];
-    const mostPlayedStatus = gamesBySectionStatus[sectionName] || "idle";
-
+    const CACHE_STALE_MS = 5 * 60 * 1000;
+    const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
+    const mostPlayedGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
+    const mostPlayedStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] ?? "idle");
+    const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const { details: userProfile } = useSelector((state) => state.profile);
 
     // OPTIMIZED: Use section-specific games data
@@ -123,47 +112,7 @@ const MostPlayedGames = () => {
         router.push(`/gamedetails?gameId=${gameId}&source=mostPlayed`);
     }, [router, dispatch]);
 
-    // Passive touch listeners for tap vs scroll (web only; Android uses unified handler below)
-    useEffect(() => {
-        const isAndroid = typeof window !== "undefined" && (
-            (window.Capacitor && window.Capacitor.getPlatform?.() === "android") ||
-            /Android/i.test(navigator.userAgent || "")
-        );
-        if (isAndroid) return;
-        const el = scrollContainerRef.current;
-        if (!el) return;
-        const games = filteredGames;
-        const onStart = (e) => {
-            const card = e.target?.closest?.('[data-game-index]');
-            if (!card) return;
-            const index = parseInt(card.getAttribute('data-game-index'), 10);
-            if (Number.isNaN(index) || index < 0 || index >= games.length) return;
-            const t = e.touches[0];
-            touchState.current = { startX: t.clientX, startY: t.clientY, hasMoved: false, touchStartTime: Date.now(), game: games[index] };
-        };
-        const onMove = (e) => {
-            if (!touchState.current.game) return;
-            const t = e.touches[0];
-            const dx = Math.abs(t.clientX - touchState.current.startX);
-            const dy = Math.abs(t.clientY - touchState.current.startY);
-            if (dx > 10 || dy > 10) touchState.current.hasMoved = true;
-        };
-        const onEnd = () => {
-            const { game, hasMoved, touchStartTime } = touchState.current;
-            if (!hasMoved && Date.now() - touchStartTime < 200 && game) handleGameClick(game);
-            touchState.current = { startX: 0, startY: 0, hasMoved: false, touchStartTime: 0, game: null };
-        };
-        el.addEventListener('touchstart', onStart, { passive: true });
-        el.addEventListener('touchmove', onMove, { passive: true });
-        el.addEventListener('touchend', onEnd, { passive: true });
-        return () => {
-            el.removeEventListener('touchstart', onStart);
-            el.removeEventListener('touchmove', onMove);
-            el.removeEventListener('touchend', onEnd);
-        };
-    }, [filteredGames, handleGameClick]);
-
-    // Detect Android (for Framer Motion drag scroll)
+    // Detect Android (for Framer Motion drag scroll — same pattern as WithdrawalOption)
     useEffect(() => {
         const android =
             (typeof window !== "undefined" && window.Capacitor?.getPlatform?.() === "android") ||
@@ -171,91 +120,57 @@ const MostPlayedGames = () => {
         setIsAndroid(!!android);
     }, []);
 
-    // Measure drag bounds for Android Framer Motion track
+    // Measure drag bounds for Android Framer Motion track (same as WithdrawalOption)
     useLayoutEffect(() => {
-        if (!isAndroid || !scrollContainerRef.current || !androidTrackRef.current || filteredGames.length === 0) return;
+        if (!isAndroid || !scrollContainerRef.current || !mostPlayedTrackRef.current || filteredGames.length === 0) return;
         const container = scrollContainerRef.current;
-        const track = androidTrackRef.current;
+        const track = mostPlayedTrackRef.current;
         const contentWidth = track.scrollWidth;
         const containerWidth = container.clientWidth;
         const maxScroll = Math.max(0, contentWidth - containerWidth);
         setDragConstraints({ left: -maxScroll, right: 0 });
     }, [isAndroid, filteredGames]);
 
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    // One discover call only on mount. Guard loading/failed to prevent unnecessary calls.
     useEffect(() => {
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // Pass user object directly - API will extract age and gender dynamically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 5 min old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
+        if (hasFreshCache || mostPlayedStatus === "loading" || mostPlayedStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
             user: userProfile,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, sectionName, userProfile]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Refresh games in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): one discover call only if cache older than 2 min. User from localStorage.
     useEffect(() => {
-        if (!userProfile) return;
-
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.games.gamesBySectionTimestamp[sectionName];
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
+            const user = state.profile.details;
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
-                user: userProfile,
-                page: 1,
-                limit: 10,
-                force: true,
-                background: true
-            }));
-        }, 100); // Small delay to let cached data render first
-
-        return () => clearTimeout(refreshTimer);
-    }, [dispatch, sectionName, userProfile]);
-
-    // Refresh games in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!userProfile) return;
-
-        const handleFocus = () => {
-            dispatch(fetchGamesBySection({
-                uiSection: sectionName,
-                user: userProfile,
+                user: user || null,
                 page: 1,
                 limit: 10,
                 force: true,
                 background: true
             }));
         };
-
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
+        };
         window.addEventListener("focus", handleFocus);
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && userProfile) {
-                dispatch(fetchGamesBySection({
-                    uiSection: sectionName,
-                    user: userProfile,
-                    page: 1,
-                    limit: 10,
-                    force: true,
-                    background: true
-                }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
+        document.addEventListener("visibilitychange", handleVisibility);
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [dispatch, sectionName, userProfile]);
+    }, [dispatch, sectionName]);
 
     // OPTIMIZED: Memoize localStorage operations to prevent unnecessary writes
     const handleStoreGamesData = useCallback((games) => {
@@ -269,7 +184,7 @@ const MostPlayedGames = () => {
 
     return (
         <div className="flex flex-col items-start gap-4 relative w-full animate-fade-in">
-            {/* Scoped styles for smooth, fast horizontal scroll (web + Android WebView) */}
+            {/* Scoped styles: horizontal scroll (same pattern as WithdrawalOption - pan-x for reliable horizontal scroll) */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                     .most-played-games-scroll,
@@ -304,31 +219,20 @@ const MostPlayedGames = () => {
                     See All
                 </Link>
             </div>
-            {isAndroid ? (
-                filteredGames.length > 0 ? (
+            {filteredGames.length > 0 ? (
+                isAndroid ? (
                     <div
                         ref={scrollContainerRef}
                         className="most-played-games-scroll flex h-[110px] min-w-0 w-full overflow-x-hidden overflow-y-hidden touch-pan-x"
                         style={{ touchAction: 'pan-x' }}
                     >
                         <motion.div
-                            ref={androidTrackRef}
+                            ref={mostPlayedTrackRef}
                             drag="x"
                             dragConstraints={dragConstraints}
                             dragElastic={0.02}
                             dragMomentum={true}
                             dragTransition={{ power: 0.2, timeConstant: 250 }}
-                            onPointerDown={() => { androidDragHappened.current = false; }}
-                            onDragStart={() => { androidDragHappened.current = true; }}
-                            onPointerUp={(e) => {
-                                if (!androidDragHappened.current) {
-                                    const card = e.target?.closest?.('[data-game-index]');
-                                    if (card) {
-                                        const idx = parseInt(card.getAttribute('data-game-index'), 10);
-                                        if (!Number.isNaN(idx) && filteredGames[idx]) handleGameClick(filteredGames[idx]);
-                                    }
-                                }
-                            }}
                             className="flex h-[110px] items-start gap-1 justify-start flex-shrink-0"
                             style={{ cursor: 'grab' }}
                             whileTap={{ cursor: 'grabbing' }}
@@ -337,7 +241,8 @@ const MostPlayedGames = () => {
                                 <div
                                     key={game._id || game.id}
                                     data-game-index={index}
-                                    className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer active:scale-105 transition-transform duration-150 touch-pan-x"
+                                    className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer active:scale-[0.98] transition-transform duration-150 snap-center touch-pan-x"
+                                    onClick={() => handleGameClick(game)}
                                 >
                                     <div
                                         className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
@@ -375,78 +280,64 @@ const MostPlayedGames = () => {
                         </motion.div>
                     </div>
                 ) : (
-                    <div className="flex h-[110px] min-w-0 w-full items-center justify-center py-4">
-                        <div className="flex flex-col items-center justify-center">
-                            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">Gaming - Most Played</h3>
-                            <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">No games available</p>
-                        </div>
+                    <div
+                        ref={scrollContainerRef}
+                        className="most-played-games-scroll flex h-[110px] min-w-0 items-start gap-1 w-full justify-start scrollbar-hide overscroll-x-contain"
+                        style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                            scrollBehavior: 'auto',
+                        }}
+                    >
+                        {filteredGames.map((game, index) => (
+                            <div
+                                key={game._id || game.id}
+                                data-game-index={index}
+                                className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer hover:opacity-90 transition-opacity duration-200 snap-center touch-pan-x"
+                                onClick={() => handleGameClick(game)}
+                            >
+                                <div
+                                    className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
+                                    style={{
+                                        boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px #983EFF40`,
+                                    }}
+                                >
+                                    <div className="w-full h-full rounded-full bg-black p-[1.8px]">
+                                        <img
+                                            className="w-full h-full object-cover rounded-full"
+                                            alt={game.displayTitle || game.details?.name}
+                                            src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
+                                            loading="eager"
+                                            decoding="async"
+                                            width="72"
+                                            height="72"
+                                            onError={(e) => {
+                                                if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
+                                                    e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
+                                    {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
+                                </div>
+                                <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
+                                    <span>{game.displayAmount ?? '$0'}</span>
+                                    <span>·</span>
+                                    <span>{game.displayXP ?? 0} XP</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )
             ) : (
-                <div
-                    ref={scrollContainerRef}
-                    className="most-played-games-scroll flex h-[110px] min-w-0 items-start gap-1 w-full justify-start scrollbar-hide overscroll-x-contain"
-                    style={{
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none',
-                        WebkitOverflowScrolling: 'touch',
-                        scrollBehavior: 'auto',
-                    }}
-                >
-                    {filteredGames.length > 0 ? (
-                        filteredGames.map((game, index) => {
-                            return (
-                                <div
-                                    key={game._id || game.id}
-                                    data-game-index={index}
-                                    className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer hover:scale-105 transition-all duration-200 snap-center touch-pan-x"
-                                    onClick={() => handleGameClick(game)}
-                                >
-                                    <div
-                                        className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
-                                        style={{
-                                            boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px #983EFF40`,
-                                        }}
-                                    >
-                                        <div className="w-full h-full rounded-full bg-black p-[1.8px]">
-                                            <img
-                                                className="w-full h-full object-cover rounded-full"
-                                                alt={game.displayTitle || game.details?.name}
-                                                src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
-                                                loading="eager"
-                                                decoding="async"
-                                                width="72"
-                                                height="72"
-                                                onError={(e) => {
-                                                    // Fallback to a valid placeholder image
-                                                    if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
-                                                        e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-                                        {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
-                                    </div>
-                                    <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
-                                        <span>{game.displayAmount ?? '$0'}</span>
-                                        <span>·</span>
-                                        <span>{game.displayXP ?? 0} XP</span>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    ) : (
-                        <div className="flex flex-col items-center justify-center w-full py-4">
-                            <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">
-                                Gaming - Most Played
-                            </h3>
-                            <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">
-                                No games available
-                            </p>
-                        </div>
-                    )}
+                <div className="flex h-[110px] min-w-0 w-full items-center justify-center py-4">
+                    <div className="flex flex-col items-center justify-center">
+                        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">Gaming - Most Played</h3>
+                        <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">No games available</p>
+                    </div>
                 </div>
             )}
         </div>

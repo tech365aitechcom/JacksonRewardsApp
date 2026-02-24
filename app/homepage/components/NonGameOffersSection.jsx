@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNonGameOffers } from "@/lib/redux/slice/surveysSlice";
 
-const NonGameOffersSection = () => {
+const NonGameOffersSection = ({ skipFetch = false }) => {
     const { token } = useAuth();
     const dispatch = useDispatch();
     const [activesIndex, setActivesIndex] = useState(0);
@@ -15,56 +15,52 @@ const NonGameOffersSection = () => {
     const MIN_SWIPE_DISTANCE = 50;
     const HORIZONTAL_SPREAD = 120;
 
-    // Get non-game offers from Redux store
-    const { nonGameOffers, nonGameOffersStatus, nonGameOffersError } = useSelector((state) => state.surveys);
+    // Get non-game offers from Redux store (same pattern as SurveysSection)
+    const { nonGameOffers, nonGameOffersStatus, nonGameOffersError, nonGameOffersCacheTimestamp } = useSelector((state) => state.surveys);
 
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    const CACHE_STALE_MS = 3 * 60 * 1000;       // 3 min - fresh cache (skip fetch on mount if newer)
+    const FOCUS_REFRESH_STALE_MS = 1 * 60 * 1000; // 1 min - refetch on focus when cache older than this
+
+    // One fetch only on mount / token change.
+    // Reads state directly from store (not render closure) to avoid the race condition
+    // where AuthContext dispatches at the same time this component mounts — both would
+    // read status="idle" from their render snapshots and double-dispatch.
     useEffect(() => {
-        if (!token) return;
+        if (!token || skipFetch) return;
 
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 90 seconds old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        // Read CURRENT store state (not stale render closure) to see if AuthContext already dispatched
+        const currentState = require("@/lib/redux/store").store.getState().surveys;
+        const { nonGameOffers: currentOffers, nonGameOffersCacheTimestamp: currentTs, nonGameOffersStatus: currentStatus } = currentState;
+
+        const hasFreshCache = currentOffers?.length && currentTs && (Date.now() - currentTs < CACHE_STALE_MS);
+        if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") return;
+
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
-    }, [token, dispatch]);
+    }, [token, skipFetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Refresh offers in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): refresh only if cache older than 1 min
     useEffect(() => {
         if (!token) return;
 
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.surveys.nonGameOffersCacheTimestamp;
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
             dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
-        }, 100); // Small delay to let cached data render first
+        };
 
-        return () => clearTimeout(refreshTimer);
-    }, [token, dispatch]);
-
-    // Refresh offers in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!token) return;
-
-        const handleFocus = () => {
-            dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
         };
 
         window.addEventListener("focus", handleFocus);
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && token) {
-                dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        document.addEventListener("visibilitychange", handleVisibility);
 
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
     }, [token, dispatch]);
 
@@ -308,7 +304,7 @@ const NonGameOffersSection = () => {
                             {/* Card content - decreased height to fit image and footer: w-[168px] h-[238px] */}
                             <div className="relative h-[234px] w-[168px]">
                                 {/* Background container */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[15px] overflow-hidden">
+                                <div className="absolute  flex justify-center items-center inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[15px] overflow-hidden">
                                     {/* Offer Image Section - full width to contain image */}
                                     <div className="relative w-full h-[174px] overflow-hidden">
                                         {isCashback(offer) ? (

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Full-bleed bitmap background for the adaptive icon.
+    Uses jacksonicon.jpg (placed in every mipmap-* folder as ic_launcher_foreground.jpg).
+    android:gravity="fill" stretches the image to cover the entire 108dp × 108dp icon canvas
+    including the bleed area, so the full image is always visible regardless of the
+    launcher's icon shape (circle, square, squircle, etc.).
+-->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@mipmap/ic_launcher_foreground"
+    android:gravity="fill" />

@@ -32,15 +32,12 @@ export default function MyProfile() {
   // VIP status using custom hook
   const { vipStatus, isLoading: vipLoadingStatus } = useVipStatus();
 
-  // Get wallet screen data from Redux store
-  const { walletScreen } = useSelector((state) => state.walletTransactions);
+  // Get wallet screen data from Redux store (same as Wallet page)
+  const { walletScreen, walletScreenStatus } = useSelector((state) => state.walletTransactions);
   const coinBalance = walletScreen?.wallet?.balance || 0;
   const xpCurrent = walletScreen?.xp?.current || 0;
   const xpLevel = walletScreen?.xp?.level || 1;
   const balance = coinBalance || 0;
-
-
-
 
   const themeLabel = useMemo(() => {
     return "Dark Mode";
@@ -52,6 +49,7 @@ export default function MyProfile() {
   const handleEditProfile = () => router.push("/edit-profile");
 
   const handleVipUpgrade = () => {
+    if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/myprofile");
     router.prefetch("/BuySubscription");
     router.push("/BuySubscription", { scroll: false });
   };
@@ -63,42 +61,40 @@ export default function MyProfile() {
     router.prefetch("/spin-wheel");
   }, [router]);
 
-  // Refresh profile and wallet data when page is visited (to get admin updates)
-  // Do this in background without blocking UI - show cached data immediately
+  // Same pattern as Wallet: fetch on mount when no cache, then optional delayed refresh
   useEffect(() => {
     if (!token) return;
 
-    // Use setTimeout to refresh in background after showing cached data
-    // This ensures smooth UX - cached data shows immediately, fresh data loads in background
+    const hasAny = profile || stats || walletScreen || detailsStatus === "succeeded";
+    if (!hasAny) {
+      dispatch(fetchUserProfile({ token }));
+      dispatch(fetchWalletScreen({ token }));
+      dispatch(fetchProfileStats({ token }));
+    }
+
     const refreshTimer = setTimeout(() => {
       dispatch(fetchUserProfile({ token, force: true }));
-      dispatch(fetchVipStatus(token));
-      // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
-    }, 100); // Small delay to let cached data render first
+    }, 1500);
 
     return () => clearTimeout(refreshTimer);
   }, [token, dispatch]);
 
-  // Refresh profile and wallet when app comes to foreground (admin might have updated)
+  // Refresh when app comes to foreground (same as Wallet - refetch on focus)
   useEffect(() => {
     if (!token) return;
 
     const handleFocus = () => {
       dispatch(fetchUserProfile({ token, force: true }));
       dispatch(fetchVipStatus(token));
-      // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
     };
 
-    // Listen for window focus (app comes to foreground)
     window.addEventListener("focus", handleFocus);
 
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
+    return () => window.removeEventListener("focus", handleFocus);
   }, [token, dispatch]);
 
   const handleToggleNotifications = async () => {
@@ -119,11 +115,10 @@ export default function MyProfile() {
 
 
 
-  // Only show loading if we have NO cached data at all
-  // This allows showing cached data immediately while refreshing in background
-  const hasCachedData = profile || stats || vipStatus;
-  const isLoading = !hasCachedData && (detailsStatus === 'loading' || statsStatus === 'loading' || vipLoadingStatus === 'loading');
-  const hasFailed = detailsStatus === 'failed' || statsStatus === 'failed' || vipLoadingStatus === 'failed';
+  // Only show loading if we have NO cached data (same pattern as Wallet page)
+  const hasCachedData = profile || stats || vipStatus || walletScreen || detailsStatus === "succeeded";
+  const isLoading = !hasCachedData && (detailsStatus === "loading" || statsStatus === "loading" || walletScreenStatus === "loading" || vipLoadingStatus === "loading");
+  const hasFailed = detailsStatus === "failed" || statsStatus === "failed" || walletScreenStatus === "failed" || vipLoadingStatus === "failed";
 
   // Only show loading screen if we have absolutely no data
   // Otherwise, show cached data immediately and refresh in background

@@ -1,99 +1,69 @@
-import React, { useMemo, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useRouter } from 'next/navigation'
-import { handleGameDownload } from '@/lib/gameDownloadUtils'
 import { fetchGamesBySection } from '@/lib/redux/slice/gameSlice'
-// Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
+const EMPTY_ARRAY = [];
 
 const Leadership = () => {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Use new game discovery API for Leadership section
-    const gamesBySection = useSelector((state) => state.games.gamesBySection)
-    const gamesBySectionStatus = useSelector((state) => state.games.gamesBySectionStatus)
-    const { details: userProfile } = useSelector((state) => state.profile)
+    const sectionName = "Leadership";
+    const CACHE_STALE_MS = 5 * 60 * 1000;
+    const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
 
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    // FIX: select only this section's data so re-renders only happen when "Leadership" changes,
+    // not every time Swipe / MostPlayed / Highest Earning etc. update their Redux state
+    const sectionGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
+    const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
+    const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
+    const { details: userProfile } = useSelector((state) => state.profile);
+
+    // FIX: deps are section-specific primitives — no loop when other sections update
     useEffect(() => {
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // Pass user object directly - API will extract age and gender dynamically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 5 min old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
+        if (hasFreshCache || sectionStatus === "loading") return;
         dispatch(fetchGamesBySection({
-            uiSection: "Leadership",
+            uiSection: sectionName,
             user: userProfile,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, userProfile]);
+    }, [dispatch, sectionName, sectionStatus, sectionTimestamp, userProfile]);
 
-    // Refresh games in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): one discover call only if cache older than 2 min.
     useEffect(() => {
-        if (!userProfile) return;
-
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.games.gamesBySectionTimestamp[sectionName];
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
+            const user = state.profile.details;
             dispatch(fetchGamesBySection({
-                uiSection: "Leadership",
-                user: userProfile,
+                uiSection: sectionName,
+                user: user || null,
                 page: 1,
                 limit: 10,
                 force: true,
                 background: true
             }));
-        }, 100); // Small delay to let cached data render first
+        };
 
-        return () => clearTimeout(refreshTimer);
-    }, [dispatch, userProfile]);
-
-    // Refresh games in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!userProfile) return;
-
-        const handleFocus = () => {
-            dispatch(fetchGamesBySection({
-                uiSection: "Leadership",
-                user: userProfile,
-                page: 1,
-                limit: 10,
-                force: true,
-                background: true
-            }));
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
         };
 
         window.addEventListener("focus", handleFocus);
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && userProfile) {
-                dispatch(fetchGamesBySection({
-                    uiSection: "Leadership",
-                    user: userProfile,
-                    page: 1,
-                    limit: 10,
-                    force: true,
-                    background: true
-                }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        document.addEventListener("visibilitychange", handleVisibility);
 
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [dispatch, userProfile]);
+    }, [dispatch, sectionName]);
 
-    // Memoize the leadership games from the new API
-    const leadershipGames = useMemo(() => {
-        const allGames = gamesBySection?.["Leadership"] || [];
-        return allGames.slice(0, 2);
-    }, [gamesBySection]);
+    const leadershipGames = sectionGames.slice(0, 2);
 
     // Handle game click - navigate to game details
     const handleGameClick = (game) => {
@@ -112,8 +82,9 @@ const Leadership = () => {
         router.push(`/gamedetails?gameId=${gameId}&source=leadership`);
     };
 
-    // Show loading state if games are still loading
-    if (gamesBySectionStatus?.["Leadership"] === 'loading') {
+    // Show loading skeleton only when loading AND no cached data (show cache first when present)
+    const hasCachedData = leadershipGames.length > 0;
+    if (sectionStatus === "loading" && !hasCachedData) {
         return (
             <section className="flex flex-col w-full max-w-[332px] items-start gap-2.5 mx-auto px-2 sm:px-0">
                 <h3 className="font-semibold text-white text-base w-full mb-2">Leadership</h3>

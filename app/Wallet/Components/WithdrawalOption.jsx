@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { motion } from 'framer-motion';
 import ServiceCard from './ServiceCard';
 import { MoneyTransfer } from './MoneyTransfer';
 import { Charity } from './Charity';
@@ -63,12 +64,17 @@ export const WithdrawalOption = () => {
     const [isCardModalOpen, setIsCardModalOpen] = useState(false);
     const [isInsufficientBalanceModalOpen, setIsInsufficientBalanceModalOpen] = useState(false);
 
-
     const [allPayoutMethods, setAllPayoutMethods] = useState([]);
     const [allFundingSources, setAllFundingSources] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [token, setToken] = useState(null);
+
+    // Horizontal scroll / drag (same pattern as MostPlayedGames)
+    const scrollContainerRef = useRef(null);
+    const withdrawalTrackRef = useRef(null);
+    const [isAndroid, setIsAndroid] = useState(false);
+    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
     // Redux state
     const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {}, (left, right) => {
@@ -97,6 +103,25 @@ export const WithdrawalOption = () => {
         window.addEventListener('resize', updateScale);
         return () => window.removeEventListener('resize', updateScale);
     }, [getScaleClass]);
+
+    // Detect Android for Framer Motion drag scroll (same as MostPlayedGames)
+    useEffect(() => {
+        const android =
+            (typeof window !== "undefined" && window.Capacitor?.getPlatform?.() === "android") ||
+            (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || ""));
+        setIsAndroid(!!android);
+    }, []);
+
+    // Measure drag bounds for Android Framer Motion track
+    useLayoutEffect(() => {
+        if (!isAndroid || !scrollContainerRef.current || !withdrawalTrackRef.current || SERVICE_CARDS.length === 0) return;
+        const container = scrollContainerRef.current;
+        const track = withdrawalTrackRef.current;
+        const contentWidth = track.scrollWidth;
+        const containerWidth = container.clientWidth;
+        const maxScroll = Math.max(0, contentWidth - containerWidth);
+        setDragConstraints({ left: -maxScroll, right: 0 });
+    }, [isAndroid]);
 
     // Load authentication token
     useEffect(() => {
@@ -259,42 +284,93 @@ export const WithdrawalOption = () => {
                             </div>
                         </div>
                     </div>
-                    <div
-                        className={`
-                        w-full max-w-[335px]
-                        flex 
-                        overflow-x-auto 
-                        snap-x snap-mandatory
-                        gap-3
-                        pb-2
-                        ${currentScaleClass} 
-                        transition-transform duration-200 ease-in-out 
-                        scrollbar-hide
-                        scroll-smooth
-                    `}
-                        style={{
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                            WebkitOverflowScrolling: 'touch',
-                            scrollBehavior: 'smooth'
-                        }}
-                    >
-                        {error ? (
-                            <div className="flex flex-col items-center justify-center w-full h-20 text-red-400 text-sm px-4">
-                                <p className="text-center">{error}</p>
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
-                                >
-                                    Retry
-                                </button>
-                            </div>
-                        ) : (
-                            SERVICE_CARDS.map((card) => (
+                    {/* Scoped styles for horizontal scroll (same pattern as MostPlayedGames) */}
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                            .withdrawal-options-scroll,
+                            .withdrawal-options-scroll * {
+                                touch-action: pan-x !important;
+                            }
+                            .withdrawal-options-scroll {
+                                min-width: 0;
+                                -webkit-overflow-scrolling: touch !important;
+                                overflow-x: scroll !important;
+                                overflow-y: hidden;
+                                scroll-behavior: auto;
+                                scroll-snap-type: x proximity;
+                                scroll-padding-inline: 0;
+                                will-change: scroll-position;
+                            }
+                            .withdrawal-options-scroll > * {
+                                scroll-snap-align: center;
+                                scroll-snap-stop: normal;
+                            }
+                        `
+                    }} />
+                    {error ? (
+                        <div className="flex flex-col items-center justify-center w-full h-20 text-red-400 text-sm px-4">
+                            <p className="text-center">{error}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
+                            >
+                                Retry
+                            </button>
+                        </div>
+                    ) : isAndroid ? (
+                        <div
+                            ref={scrollContainerRef}
+                            className={`withdrawal-options-scroll flex min-h-[120px] min-w-0 w-full max-w-[335px] overflow-x-hidden overflow-y-hidden touch-pan-x ${currentScaleClass}`}
+                            style={{ touchAction: 'pan-x' }}
+                        >
+                            <motion.div
+                                ref={withdrawalTrackRef}
+                                drag="x"
+                                dragConstraints={dragConstraints}
+                                dragElastic={0.02}
+                                dragMomentum={true}
+                                dragTransition={{ power: 0.2, timeConstant: 250 }}
+                                className="flex items-stretch gap-3 pb-2 justify-start flex-shrink-0"
+                                style={{ cursor: 'grab' }}
+                                whileTap={{ cursor: 'grabbing' }}
+                            >
+                                {SERVICE_CARDS.map((card) => (
+                                    <div
+                                        key={card.id}
+                                        onClick={() => handleWithdrawOption(card)}
+                                        className="flex-shrink-0 cursor-pointer active:scale-[0.98] transition-transform duration-150 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg touch-pan-x"
+                                        style={{ minWidth: '90px', maxWidth: '90px' }}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`Select ${card.title} withdrawal option`}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleWithdrawOption(card);
+                                            }
+                                        }}
+                                    >
+                                        <ServiceCard card={card} />
+                                    </div>
+                                ))}
+                            </motion.div>
+                        </div>
+                    ) : (
+                        <div
+                            ref={scrollContainerRef}
+                            className={`withdrawal-options-scroll flex min-h-[120px] min-w-0 w-full max-w-[335px] items-stretch gap-3 pb-2 justify-start scrollbar-hide overscroll-x-contain ${currentScaleClass}`}
+                            style={{
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none',
+                                WebkitOverflowScrolling: 'touch',
+                                scrollBehavior: 'auto',
+                            }}
+                        >
+                            {SERVICE_CARDS.map((card) => (
                                 <div
                                     key={card.id}
                                     onClick={() => handleWithdrawOption(card)}
-                                    className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg"
+                                    className="flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity duration-200 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg touch-pan-x"
                                     style={{ minWidth: '90px', maxWidth: '90px' }}
                                     role="button"
                                     tabIndex={0}
@@ -308,9 +384,9 @@ export const WithdrawalOption = () => {
                                 >
                                     <ServiceCard card={card} />
                                 </div>
-                            ))
-                        )}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Money Transfer Modal */}

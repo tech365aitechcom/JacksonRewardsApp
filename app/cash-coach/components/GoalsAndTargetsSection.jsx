@@ -79,15 +79,20 @@ export const GoalsAndTargetsSection = () => {
                                     >
                                         {goal.label}
                                     </label>
-                                    <div className="relative w-16 h-8 flex items-center justify-center text-center rounded-md bg-[#1C1C1E]">
+                                    <div className="relative min-w-0 h-8 flex items-center justify-center gap-1.5 rounded-md bg-[#1C1C1E] px-2">
                                         <input
                                             id={`goal-${goal.key}`}
                                             type="number"
                                             value={currentValue}
                                             onChange={(e) => handleValueChange(goal.key, e.target.value)}
-                                            className="w-full [font-family:'Poppins',Helvetica] font-bold text-[#d9d9d9] text-sm text-center bg-transparent border-none outline-none p-1"
+                                            className="w-10 min-w-0 [font-family:'Poppins',Helvetica] font-bold text-[#d9d9d9] text-sm text-center bg-transparent border-none outline-none p-0"
                                             min="0"
                                             max={goal.max}
+                                        />
+                                        <img
+                                            className="w-[18px] h-5 flex-shrink-0"
+                                            alt="Coin"
+                                            src="/dollor.png"
                                         />
                                     </div>
                                 </div>

@@ -8,11 +8,16 @@ import {
   getDailyRewardsWeek,
   getXPTierProgressBar,
   getWelcomeBonusTasks,
+  getWelcomeBonusTimer,
   authenticateFraudSession,
   getFraudSessionStatus,
   unauthenticateFraudSession,
   syncMyGames,
+  getCashbackOffers,
+  getShoppingOffers,
+  getBitlabsSurveys,
 } from "@/lib/api";
+import { setDealsCache, clearDealsCache } from "@/lib/dealsCache";
 import { getDeviceMetadata, clearVerisoulSessionId } from "@/lib/deviceUtils";
 import {
   initializeVerisoulSDK,
@@ -47,6 +52,7 @@ import {
   fetchUserData,
   clearGames,
   fetchGamesBySection,
+  fetchMostPlayedScreenGames,
 } from "@/lib/redux/slice/gameSlice";
 import { clearWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
 import { store, persistor } from "@/lib/redux/store";
@@ -62,6 +68,7 @@ import {
   clearSurveys,
   clearNonGameOffers,
 } from "@/lib/redux/slice/surveysSlice";
+import { getUserFromLocalStorage } from "@/lib/utils";
 
 const AuthContext = createContext({});
 
@@ -150,6 +157,16 @@ export function AuthProvider({ children }) {
                     router.replace(result.ok ? "/location" : "/login");
                   });
                 }
+              } else if (path === "/auth/callback" && parsableUrl) {
+                // No token → backend sent an error message back via deep link
+                const message =
+                  parsableUrl.searchParams.get("message") ||
+                  parsableUrl.searchParams.get("error") ||
+                  parsableUrl.searchParams.get("error_description") ||
+                  "Google sign-in failed. Please try again.";
+                router.replace(
+                  `/login?googleError=${encodeURIComponent(message)}`,
+                );
               }
             });
 
@@ -241,51 +258,117 @@ export function AuthProvider({ children }) {
           setToken(storedToken);
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
+          setIsLoading(false); // INDUSTRIAL: Unblock first paint immediately; run fraud after
 
           // Sync my-games in background (non-blocking)
           syncMyGames(storedToken).catch(() => {});
 
-          // Check fraud session status when app opens
-          try {
-            const storedSessionId = localStorage.getItem("verisoul_session_id");
-            console.log(
-              "[FraudDebug] loadSession – stored backend sessionId:",
-              storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none",
-            );
-            if (storedSessionId) {
-              console.log(
-                "[FraudDebug] loadSession – GET status using backend sessionId",
-              );
-              const statusResponse = await getFraudSessionStatus(
-                storedSessionId,
-                storedToken,
-              );
-              if (statusResponse?.success) {
-                const status = statusResponse?.data?.status;
-                const riskScore = statusResponse?.data?.risk_score || 0;
-
-                console.log(
-                  "🔍 [AuthContext] Fraud session status on app open:",
-                  {
-                    status,
-                    riskScore,
-                  },
+          // INDUSTRIAL: Fraud session check runs AFTER first paint (non-blocking)
+          setTimeout(() => {
+            (async () => {
+              try {
+                const storedSessionId = localStorage.getItem(
+                  "verisoul_session_id",
                 );
                 console.log(
-                  "[FraudDebug] loadSession – status:",
-                  status,
-                  "risk_score:",
-                  riskScore,
+                  "[FraudDebug] loadSession – stored backend sessionId:",
+                  storedSessionId
+                    ? `${storedSessionId.slice(0, 8)}...`
+                    : "none",
                 );
-
-                // Re-authenticate if session is not active
-                if (status !== "active") {
+                if (storedSessionId) {
                   console.log(
-                    "🔄 [AuthContext] Session not active on app open, re-authenticating...",
+                    "[FraudDebug] loadSession – GET status using backend sessionId",
+                  );
+                  const statusResponse = await getFraudSessionStatus(
+                    storedSessionId,
+                    storedToken,
+                  );
+                  if (statusResponse?.success) {
+                    const status = statusResponse?.data?.status;
+                    const riskScore = statusResponse?.data?.risk_score || 0;
+
+                    console.log(
+                      "🔍 [AuthContext] Fraud session status on app open:",
+                      {
+                        status,
+                        riskScore,
+                      },
+                    );
+                    console.log(
+                      "[FraudDebug] loadSession – status:",
+                      status,
+                      "risk_score:",
+                      riskScore,
+                    );
+
+                    // Re-authenticate if session is not active
+                    if (status !== "active") {
+                      console.log(
+                        "🔄 [AuthContext] Session not active on app open, re-authenticating...",
+                      );
+                      const deviceMetadata = await getDeviceMetadata();
+
+                      // Get Verisoul SDK session ID (required for full fraud detection); don't send fallback to backend
+                      let verisoulSessionId = await getVerisoulSessionId();
+                      if (
+                        verisoulSessionId &&
+                        String(verisoulSessionId).startsWith("fallback_")
+                      )
+                        verisoulSessionId = null;
+                      console.log(
+                        "[FraudDebug] loadSession re-auth – SDK session_id:",
+                        verisoulSessionId
+                          ? `${String(verisoulSessionId).slice(0, 24)}...`
+                          : "none",
+                      );
+
+                      const sessionAuthData = {
+                        accountId:
+                          parsedUser._id ||
+                          parsedUser.id ||
+                          String(parsedUser._id || parsedUser.id),
+                        email: parsedUser.email || "",
+                        metadata: {
+                          deviceId: deviceMetadata.deviceId,
+                          appVersion: deviceMetadata.appVersion,
+                          deviceModel: deviceMetadata.deviceModel,
+                          osVersion: deviceMetadata.osVersion,
+                          platform: deviceMetadata.platform,
+                        },
+                        group:
+                          parsedUser.group ||
+                          parsedUser.userGroup ||
+                          "regular_users", // Required by API
+                      };
+
+                      if (verisoulSessionId)
+                        sessionAuthData.session_id = verisoulSessionId;
+
+                      const fraudResponse = await authenticateFraudSession(
+                        sessionAuthData,
+                        storedToken,
+                      );
+                      if (fraudResponse?.success && fraudResponse?.sessionId) {
+                        console.log(
+                          "[FraudDebug] loadSession re-auth – storing backend sessionId:",
+                          fraudResponse.sessionId?.slice(0, 8) + "...",
+                        );
+                        localStorage.setItem(
+                          "verisoul_session_id",
+                          fraudResponse.sessionId,
+                        );
+                      }
+                    }
+                  }
+                } else {
+                  // No session ID found, authenticate new session
+                  console.log(
+                    "🔄 [AuthContext] No fraud session found, creating new session...",
                   );
                   const deviceMetadata = await getDeviceMetadata();
 
-                  // Get Verisoul SDK session ID (required for full fraud detection); don't send fallback to backend
+                  // Get Verisoul SDK session ID; don't send fallback to backend
                   let verisoulSessionId = await getVerisoulSessionId();
                   if (
                     verisoulSessionId &&
@@ -293,7 +376,7 @@ export function AuthProvider({ children }) {
                   )
                     verisoulSessionId = null;
                   console.log(
-                    "[FraudDebug] loadSession re-auth – SDK session_id:",
+                    "[FraudDebug] loadSession new session – SDK session_id:",
                     verisoulSessionId
                       ? `${String(verisoulSessionId).slice(0, 24)}...`
                       : "none",
@@ -327,7 +410,7 @@ export function AuthProvider({ children }) {
                   );
                   if (fraudResponse?.success && fraudResponse?.sessionId) {
                     console.log(
-                      "[FraudDebug] loadSession re-auth – storing backend sessionId:",
+                      "[FraudDebug] loadSession new session – storing backend sessionId:",
                       fraudResponse.sessionId?.slice(0, 8) + "...",
                     );
                     localStorage.setItem(
@@ -336,69 +419,14 @@ export function AuthProvider({ children }) {
                     );
                   }
                 }
-              }
-            } else {
-              // No session ID found, authenticate new session
-              console.log(
-                "🔄 [AuthContext] No fraud session found, creating new session...",
-              );
-              const deviceMetadata = await getDeviceMetadata();
-
-              // Get Verisoul SDK session ID; don't send fallback to backend
-              let verisoulSessionId = await getVerisoulSessionId();
-              if (
-                verisoulSessionId &&
-                String(verisoulSessionId).startsWith("fallback_")
-              )
-                verisoulSessionId = null;
-              console.log(
-                "[FraudDebug] loadSession new session – SDK session_id:",
-                verisoulSessionId
-                  ? `${String(verisoulSessionId).slice(0, 24)}...`
-                  : "none",
-              );
-
-              const sessionAuthData = {
-                accountId:
-                  parsedUser._id ||
-                  parsedUser.id ||
-                  String(parsedUser._id || parsedUser.id),
-                email: parsedUser.email || "",
-                metadata: {
-                  deviceId: deviceMetadata.deviceId,
-                  appVersion: deviceMetadata.appVersion,
-                  deviceModel: deviceMetadata.deviceModel,
-                  osVersion: deviceMetadata.osVersion,
-                  platform: deviceMetadata.platform,
-                },
-                group:
-                  parsedUser.group || parsedUser.userGroup || "regular_users", // Required by API
-              };
-
-              if (verisoulSessionId)
-                sessionAuthData.session_id = verisoulSessionId;
-
-              const fraudResponse = await authenticateFraudSession(
-                sessionAuthData,
-                storedToken,
-              );
-              if (fraudResponse?.success && fraudResponse?.sessionId) {
-                console.log(
-                  "[FraudDebug] loadSession new session – storing backend sessionId:",
-                  fraudResponse.sessionId?.slice(0, 8) + "...",
-                );
-                localStorage.setItem(
-                  "verisoul_session_id",
-                  fraudResponse.sessionId,
+              } catch (error) {
+                console.error(
+                  "❌ [AuthContext] Error checking/creating fraud session on app open (non-blocking):",
+                  error,
                 );
               }
-            }
-          } catch (error) {
-            console.error(
-              "❌ [AuthContext] Error checking/creating fraud session on app open (non-blocking):",
-              error,
-            );
-          }
+            })();
+          }, 0);
         }
       } catch (error) {
         console.error("❌ Failed to load session from storage", error);
@@ -411,29 +439,43 @@ export function AuthProvider({ children }) {
     loadSession();
   }, []);
 
-  // OPTIMIZED: Smart data fetching with persistence awareness
+  // REMOVED: This useEffect has been consolidated into the "Smart data fetching" effect below
+  // Keeping all initial fetches in one place prevents duplicate API calls
+
+  // REMOVED: Deferred one-time fetches have been consolidated into the "Smart data fetching" effect
+  // This prevents duplicate API calls and unnecessary timers
+
+  // OPTIMIZED: Consolidated smart data fetching with persistence awareness
+  // This single effect handles all data initialization to prevent duplicate API calls
   useEffect(() => {
     if (!token) return;
 
     // Get current state to check what data is already available
     const currentState = store.getState();
     const {
+      details,
       detailsStatus,
       statsStatus,
       dashboardStatus,
-      details,
       stats,
       dashboardData,
+      vipStatusState,
     } = currentState.profile;
     const { userDataStatus, userData, gamesBySection } = currentState.games;
-    const { walletScreenStatus, walletScreen } =
-      currentState.walletTransactions;
+    const { walletScreen, walletScreenStatus } =
+      currentState.walletTransactions || {};
     const {
       calendarStatus: dailyCalendarStatus,
       todayStatus: dailyTodayStatus,
       bonusDaysStatus,
       bonusDays: bonusDaysData,
     } = currentState.dailyChallenge || {};
+    const {
+      status: surveysStatus,
+      nonGameOffersStatus,
+      cacheTimestamp: surveysCacheTimestamp,
+      nonGameOffersCacheTimestamp,
+    } = currentState.surveys || {};
 
     // OPTIMIZED: Check if data exists and is valid before fetching
     // IMPORTANT: Check for data existence first, then status (persisted data may have status "idle")
@@ -441,206 +483,282 @@ export function AuthProvider({ children }) {
     const hasStatsData =
       (stats || dashboardData?.stats) && statsStatus === "succeeded";
     const hasUserData = userData && userDataStatus === "succeeded";
-    // Check for walletScreen data existence (persisted data is available even if status is "idle")
     const hasWalletData =
       walletScreen &&
       (walletScreenStatus === "succeeded" || walletScreenStatus === "idle");
-    const hasGamesData = gamesBySection && gamesBySection.length > 0;
+    // gamesBySection is an object {sectionName: []}, not an array — use Object.keys
+    const hasGamesData = gamesBySection && Object.keys(gamesBySection).length > 0;
     const hasBonusDaysData = bonusDaysData && bonusDaysStatus === "succeeded";
+    const hasVipData = vipStatusState === "succeeded";
+    const SURVEY_CACHE_TTL = 90 * 1000;
+    const hasFreshSurveys = surveysStatus === "succeeded" && surveysCacheTimestamp && Date.now() - surveysCacheTimestamp < SURVEY_CACHE_TTL;
+    const hasFreshNonGameOffers = nonGameOffersStatus === "succeeded" && nonGameOffersCacheTimestamp && Date.now() - nonGameOffersCacheTimestamp < SURVEY_CACHE_TTL;
 
-    // PRIORITY 1: Only fetch essential data if not already loaded and valid
+    // Get user for game fetching
+    const getUser = () =>
+      typeof window !== "undefined" ? getUserFromLocalStorage() : null;
+    const userForGames = getUser() || user;
+
+    // ── STAGE 1 (immediate): All homepage APIs ─────────────────────────────
+    // Everything the home screen needs: profile, vip, progress bar, surveys,
+    // non-game offers, stats, user data, and game cards.
+    // Fires after login, signup, and app resume.
     if (!hasProfileData && detailsStatus === "idle") {
-      dispatch(fetchUserProfile(token));
+      dispatch(fetchUserProfile({ token }));
     }
-
-    // REMOVED: Wallet screen fetch - handled in handleAuthSuccess to avoid duplicate fetches
-    // This prevents multiple simultaneous wallet fetches during login which causes UI delays
-
+    if (!hasVipData && vipStatusState === "idle") {
+      dispatch(fetchVipStatus(token));
+    }
+    if (!hasWalletData) {
+      dispatch(fetchWalletScreen({ token }));
+    }
+    if (!hasFreshNonGameOffers && nonGameOffersStatus !== "loading") {
+      dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
+    }
+    if (!hasFreshSurveys && surveysStatus !== "loading") {
+      dispatch(fetchSurveys({ token }));
+    }
+    if (!hasStatsData && statsStatus === "idle") {
+      dispatch(fetchProfileStats({ token }));
+    }
     if (user && user._id && !hasUserData && userDataStatus === "idle") {
-      dispatch(
-        fetchUserData({
-          userId: user._id,
-          token: token,
-        }),
-      );
+      dispatch(fetchUserData({ userId: user._id, token }));
+    }
+    if (userForGames && !hasGamesData) {
+      dispatch(fetchGamesBySection({ uiSection: "Swipe", user: userForGames, page: 1, limit: 10 }));
+      dispatch(fetchGamesBySection({ uiSection: "Most Played", user: userForGames, page: 1, limit: 10 }));
     }
 
-    // NEW: Prefetch Daily Challenge data early for instant page load
-    // Only trigger if not already loading/succeeded to avoid duplicate requests
+    // ── STAGE 2 (400 ms): Daily challenge ──────────────────────────────────
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    if (dailyCalendarStatus === "idle") {
-      dispatch(
-        fetchDailyCalendar({
-          year,
-          month,
-          token,
-        }),
-      );
-    }
-    if (dailyTodayStatus === "idle") {
-      dispatch(
-        fetchDailyToday({
-          token,
-        }),
-      );
-    }
-    if (bonusDaysStatus === "idle") {
-      dispatch(fetchBonusDays({ token }));
-    }
+    const dailyTimer = setTimeout(() => {
+      if (typeof window !== "undefined" && window.location.pathname === "/dailychallenge") return;
+      const state = store.getState();
+      const dc = state.dailyChallenge || {};
+      const CACHE_TTL = 5 * 60 * 1000;
+      const hasFreshCalendar = dc.calendar && dc.calendarCacheTimestamp && Date.now() - dc.calendarCacheTimestamp < CACHE_TTL;
+      const hasFreshToday = dc.today && dc.todayCacheTimestamp && Date.now() - dc.todayCacheTimestamp < CACHE_TTL;
+      const hasFreshBonus = dc.bonusDays && dc.bonusDaysCacheTimestamp && Date.now() - dc.bonusDaysCacheTimestamp < CACHE_TTL;
+      if ((dc.calendarStatus || "idle") === "idle" && !hasFreshCalendar) dispatch(fetchDailyCalendar({ year, month, token }));
+      if ((dc.todayStatus || "idle") === "idle" && !hasFreshToday) dispatch(fetchDailyToday({ token }));
+      if ((dc.bonusDaysStatus || "idle") === "idle" && !hasFreshBonus) dispatch(fetchBonusDays({ token }));
+    }, 400);
 
-    // PRIORITY 2: Defer heavy data fetching to prevent app slowdown
-    // Only fetch if not already loaded or loading
-    if (!hasStatsData && statsStatus === "idle") {
-      setTimeout(() => {
-        dispatch(fetchProfileStats(token));
-      }, 100);
-    }
-
-    if (!hasStatsData && dashboardStatus === "idle") {
-      setTimeout(() => {
-        dispatch(fetchHomeDashboard(token));
-      }, 100);
-    }
-
-    // PRIORITY 3: Load other heavy data after a longer delay - only if not already loaded
-    setTimeout(() => {
-      // Only fetch other heavy data if not already loaded
-      dispatch(fetchAccountOverview()); // Account overview for games page
-      dispatch(fetchVipStatus(token));
+    // ── STAGE 3 (5 s): Wallet transactions + account / financial data ──────
+    const walletTxTimer = setTimeout(() => {
+      const path = typeof window !== "undefined" ? window.location.pathname : "";
+      const skipRoutes = ["/Ticket", "/AchieveGoals", "/cash-coach", "/contact-us", "/privacy-policy", "/reset-password"];
+      if (skipRoutes.some((r) => path === r || path.startsWith(r + "/"))) return;
+      dispatch(fetchWalletTransactions({ token, limit: 5 }));
+      dispatch(fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }));
+      dispatch(fetchAccountOverview());
       dispatch(fetchFinancialGoals(token));
       dispatch(fetchVipTiers("US"));
-      dispatch(fetchWalletTransactions({ token, limit: 5 }));
-      dispatch(
-        fetchFullWalletTransactions({
-          token,
-          page: 1,
-          limit: 20,
-          type: "all",
-        }),
-      );
       dispatch(fetchLocationHistory(token));
-      dispatch(
-        fetchUserAchievements({
-          token,
-          category: "games",
-          status: "completed",
-        }),
-      );
-    }, 500);
+      dispatch(fetchUserAchievements({ token, category: "games", status: "completed" }));
+    }, 5000);
+
+    // ── STAGE 4 (6 s): Most Played screen (full list for /DownloadGame page) ─
+    const mostPlayedScreenTimer = setTimeout(() => {
+      if (userForGames) {
+        dispatch(fetchMostPlayedScreenGames({ user: userForGames, page: 1, limit: 50 }));
+      }
+    }, 6000);
+
+    // ── STAGE 5 (7 s): Leadership + Highest Earning (Wallet / Profile screens) ─
+    const secondaryGamesTimer = setTimeout(() => {
+      if (userForGames) {
+        dispatch(fetchGamesBySection({ uiSection: "Leadership", user: userForGames, page: 1, limit: 10 }));
+        dispatch(fetchGamesBySection({ uiSection: "Highest Earning", user: userForGames, page: 1, limit: 10 }));
+      }
+    }, 7000);
+
+    // ── STAGE 6 (9 s): Cash Coach Recommendation (TaskListSection / AchieveGoals) ─
+    const taskListTimer = setTimeout(() => {
+      if (userForGames) {
+        dispatch(fetchGamesBySection({ uiSection: "Cash Coach Recommendation", user: userForGames, page: 1, limit: 10 }));
+      }
+    }, 9000);
+
+    // ── STAGE 7 (30 s): Deals page pre-warm (Cashback + Shopping + Surveys) ────
+    const dealsPrewarmTimer = setTimeout(async () => {
+      try {
+        const defaultParams = { category: "all", page: 1, limit: 6, useAdminConfig: "true" };
+        const [cashbackRes, shoppingRes, surveysRes] = await Promise.all([
+          getCashbackOffers(defaultParams, token),
+          getShoppingOffers(defaultParams, token),
+          getBitlabsSurveys(defaultParams, token),
+        ]);
+
+        let cbOffers = [];
+        if (cashbackRes?.success && cashbackRes.data) {
+          cbOffers = Array.isArray(cashbackRes.data.offers)
+            ? cashbackRes.data.offers
+            : cashbackRes.data.categorized?.cashback || [];
+        }
+
+        let shOffers = [];
+        if (shoppingRes?.success && shoppingRes.data) {
+          shOffers = Array.isArray(shoppingRes.data.offers)
+            ? shoppingRes.data.offers
+            : shoppingRes.data.categorized?.shopping || [];
+        }
+
+        let svOffers = [];
+        if (surveysRes?.success && Array.isArray(surveysRes.data?.surveys)) {
+          svOffers = surveysRes.data.surveys;
+        }
+
+        setDealsCache({
+          cashbackOffers: cbOffers,
+          shoppingOffers: shOffers.slice(0, 6),
+          surveyOffers: svOffers,
+        });
+      } catch (_e) {
+        // Silent — deals pre-warm is best-effort
+      }
+    }, 30000);
+
+    return () => {
+      clearTimeout(dailyTimer);
+      clearTimeout(walletTxTimer);
+      clearTimeout(mostPlayedScreenTimer);
+      clearTimeout(secondaryGamesTimer);
+      clearTimeout(taskListTimer);
+      clearTimeout(dealsPrewarmTimer);
+    };
   }, [token, dispatch, user]);
 
   // Refresh profile and wallet when app comes to foreground (to get admin updates)
-  // Also check fraud session status
+  // Also check fraud session status. Skip when on routes that don't use this data (e.g. AchieveGoals).
+  // Uses debouncing to prevent duplicate calls from simultaneous focus events
   useEffect(() => {
     if (!token) return;
 
+    let focusTimeoutId = null;
+
     const handleFocus = async () => {
-      dispatch(fetchUserProfile({ token, force: true, background: true }));
-      dispatch(fetchVipStatus(token));
-      // Also refresh wallet/balance/XP when app comes to foreground
-      dispatch(fetchWalletScreen({ token, force: true }));
-      dispatch(fetchProfileStats({ token, force: true }));
-      // Refresh account overview in background (real data like rest of project)
-      dispatch(fetchAccountOverview({ force: true, background: true }));
+      // Clear any pending refresh to prevent duplicates
+      if (focusTimeoutId) {
+        clearTimeout(focusTimeoutId);
+      }
 
-      // Check fraud session status
-      try {
-        const storedSessionId = localStorage.getItem("verisoul_session_id");
-        console.log(
-          "[FraudDebug] handleFocus – stored backend sessionId:",
-          storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none",
-        );
-        if (storedSessionId) {
+      // Debounce: only refresh once after 500ms of focus event
+      focusTimeoutId = setTimeout(async () => {
+        const path = typeof window !== "undefined" ? window.location.pathname : "";
+        const skipRefreshRoutes = ["/AchieveGoals", "/Ticket", "/cash-coach", "/contact-us", "/privacy-policy"];
+        if (skipRefreshRoutes.some((r) => path === r || path.startsWith(r + "/"))) return;
+
+        dispatch(fetchUserProfile({ token, force: true, background: true }));
+        dispatch(fetchVipStatus(token));
+        // Also refresh wallet/balance/XP when app comes to foreground
+        dispatch(fetchWalletScreen({ token, force: true }));
+        dispatch(fetchProfileStats({ token, force: true }));
+        // Refresh account overview in background (real data like rest of project)
+        dispatch(fetchAccountOverview({ force: true, background: true }));
+
+        // Check fraud session status
+        try {
+          const storedSessionId = localStorage.getItem("verisoul_session_id");
           console.log(
-            "[FraudDebug] handleFocus – GET status using backend sessionId",
+            "[FraudDebug] handleFocus – stored backend sessionId:",
+            storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none",
           );
-          const statusResponse = await getFraudSessionStatus(
-            storedSessionId,
-            token,
-          );
-          if (statusResponse?.success) {
-            const riskScore = statusResponse?.data?.risk_score || 0;
-            const status = statusResponse?.data?.status;
-
-            console.log("🔍 [AuthContext] Fraud session status checked:", {
-              status,
-              riskScore,
-            });
+          if (storedSessionId) {
             console.log(
-              "[FraudDebug] handleFocus – status:",
-              status,
-              "risk_score:",
-              riskScore,
+              "[FraudDebug] handleFocus – GET status using backend sessionId",
             );
+            const statusResponse = await getFraudSessionStatus(
+              storedSessionId,
+              token,
+            );
+            if (statusResponse?.success) {
+              const riskScore = statusResponse?.data?.risk_score || 0;
+              const status = statusResponse?.data?.status;
 
-            // Handle high risk or inactive session
-            if (riskScore > 0.7) {
-              console.warn(
-                "⚠️ [AuthContext] High risk detected on app resume:",
+              console.log("🔍 [AuthContext] Fraud session status checked:", {
+                status,
+                riskScore,
+              });
+              console.log(
+                "[FraudDebug] handleFocus – status:",
+                status,
+                "risk_score:",
                 riskScore,
               );
-            }
 
-            if (status !== "active") {
-              // Re-authenticate if session is not active
-              console.log(
-                "🔄 [AuthContext] Session not active, re-authenticating...",
-              );
-              if (user) {
-                const deviceMetadata = await getDeviceMetadata();
-
-                // Get Verisoul SDK session ID; don't send fallback to backend
-                let verisoulSessionId = await getVerisoulSessionId();
-                if (
-                  verisoulSessionId &&
-                  String(verisoulSessionId).startsWith("fallback_")
-                )
-                  verisoulSessionId = null;
-                console.log(
-                  "[FraudDebug] handleFocus re-auth – SDK session_id:",
-                  verisoulSessionId
-                    ? `${String(verisoulSessionId).slice(0, 24)}...`
-                    : "none",
+              // Handle high risk or inactive session
+              if (riskScore > 0.7) {
+                console.warn(
+                  "⚠️ [AuthContext] High risk detected on app resume:",
+                  riskScore,
                 );
+              }
 
-                const sessionAuthData = {
-                  accountId: user._id || user.id || String(user._id || user.id),
-                  email: user.email || "",
-                  metadata: {
-                    deviceId: deviceMetadata.deviceId,
-                    appVersion: deviceMetadata.appVersion,
-                    deviceModel: deviceMetadata.deviceModel,
-                    osVersion: deviceMetadata.osVersion,
-                    platform: deviceMetadata.platform,
-                  },
-                  group: user.group || user.userGroup || "regular_users", // Required by API
-                };
-
-                if (verisoulSessionId)
-                  sessionAuthData.session_id = verisoulSessionId;
-
-                await authenticateFraudSession(sessionAuthData, token);
+              if (status !== "active") {
+                // Re-authenticate if session is not active
                 console.log(
-                  "[FraudDebug] handleFocus re-auth – authenticate called (new backend sessionId in response if success)",
+                  "🔄 [AuthContext] Session not active, re-authenticating...",
                 );
+                if (user) {
+                  const deviceMetadata = await getDeviceMetadata();
+
+                  // Get Verisoul SDK session ID; don't send fallback to backend
+                  let verisoulSessionId = await getVerisoulSessionId();
+                  if (
+                    verisoulSessionId &&
+                    String(verisoulSessionId).startsWith("fallback_")
+                  )
+                    verisoulSessionId = null;
+                  console.log(
+                    "[FraudDebug] handleFocus re-auth – SDK session_id:",
+                    verisoulSessionId
+                      ? `${String(verisoulSessionId).slice(0, 24)}...`
+                      : "none",
+                  );
+
+                  const sessionAuthData = {
+                    accountId: user._id || user.id || String(user._id || user.id),
+                    email: user.email || "",
+                    metadata: {
+                      deviceId: deviceMetadata.deviceId,
+                      appVersion: deviceMetadata.appVersion,
+                      deviceModel: deviceMetadata.deviceModel,
+                      osVersion: deviceMetadata.osVersion,
+                      platform: deviceMetadata.platform,
+                    },
+                    group: user.group || user.userGroup || "regular_users", // Required by API
+                  };
+
+                  if (verisoulSessionId)
+                    sessionAuthData.session_id = verisoulSessionId;
+
+                  await authenticateFraudSession(sessionAuthData, token);
+                  console.log(
+                    "[FraudDebug] handleFocus re-auth – authenticate called (new backend sessionId in response if success)",
+                  );
+                }
               }
             }
           }
+        } catch (error) {
+          console.error(
+            "❌ [AuthContext] Error checking fraud session status (non-blocking):",
+            error,
+          );
         }
-      } catch (error) {
-        console.error(
-          "❌ [AuthContext] Error checking fraud session status (non-blocking):",
-          error,
-        );
-      }
+      }, 500); // Debounce delay
     };
 
     window.addEventListener("focus", handleFocus);
 
     return () => {
       window.removeEventListener("focus", handleFocus);
+      if (focusTimeoutId) {
+        clearTimeout(focusTimeoutId);
+      }
     };
   }, [token, dispatch, user]);
 
@@ -677,7 +795,7 @@ export function AuthProvider({ children }) {
 
     // SIMPLE FLOW FOR ANDROID APP:
     // If user is logged in and visits any public-only route (login, signup, welcome, etc.),
-    // always send them straight to the homepage, regardless of permissions/location/biometric flags.
+    // send them to the homepage (login page navigates immediately on success; this handles other cases).
     if (isAuthenticated && isPublicOnlyRoute) {
       router.replace("/homepage");
       return;
@@ -781,8 +899,8 @@ export function AuthProvider({ children }) {
           } catch (_) {}
         }
 
-        // Use centralized API function instead of hardcoded URL
-        const data = await getDailyRewardsWeek(null, token);
+        // Use centralized API function; silent so 5xx prefetch errors don't log to console
+        const data = await getDailyRewardsWeek(null, token, { silent: true });
         if (data?.success && data?.data) {
           const cacheData = { data: data.data, cacheTime: Date.now() };
           localStorage.setItem(
@@ -883,150 +1001,64 @@ export function AuthProvider({ children }) {
     // Sync my-games in background after login/signup (non-blocking)
     syncMyGames(token).catch(() => {});
 
-    // Authenticate session with Verisoul Fraud Prevention API
-    try {
-      const deviceMetadata = await getDeviceMetadata();
-
-      // Get Verisoul session ID from SDK (required for full fraud detection)
-      // Documentation: https://docs.verisoul.ai/integration/frontend/browser
-      let verisoulSessionId = await getVerisoulSessionId();
-      const isFallback = (id) =>
-        typeof id === "string" && id.startsWith("fallback_");
-
-      // Reinitialize Verisoul session on login to ensure fresh signals
-      if (verisoulSessionId) {
-        const reinitResult = await reinitializeVerisoulSession();
-        if (reinitResult?.sessionId) {
-          verisoulSessionId = reinitResult.sessionId;
-        }
-        // If reinit returned a fallback (SDK not ready yet), wait and retry for real SDK session
-        if (isFallback(verisoulSessionId)) {
-          await new Promise((r) => setTimeout(r, 500));
-          const retrySessionId = await getVerisoulSessionId();
-          if (retrySessionId && !isFallback(retrySessionId)) {
-            verisoulSessionId = retrySessionId;
-            console.log(
-              "✅ [AuthContext] Using real Verisoul session after retry:",
-              retrySessionId?.slice?.(0, 12) + "...",
-            );
+    // INDUSTRIAL: Run Verisoul fraud auth AFTER first paint (non-blocking)
+    (async () => {
+      try {
+        const deviceMetadata = await getDeviceMetadata();
+        let verisoulSessionId = await getVerisoulSessionId();
+        const isFallback = (id) =>
+          typeof id === "string" && id.startsWith("fallback_");
+        if (verisoulSessionId) {
+          const reinitResult = await reinitializeVerisoulSession();
+          if (reinitResult?.sessionId)
+            verisoulSessionId = reinitResult.sessionId;
+          if (isFallback(verisoulSessionId)) {
+            await new Promise((r) => setTimeout(r, 500));
+            const retrySessionId = await getVerisoulSessionId();
+            if (retrySessionId && !isFallback(retrySessionId))
+              verisoulSessionId = retrySessionId;
           }
         }
-      }
-
-      // Only send session_id to backend when it's a real Verisoul SDK session (not fallback)
-      if (verisoulSessionId && isFallback(verisoulSessionId)) {
-        console.warn(
-          "⚠️ [AuthContext] Only fallback session available - omitting session_id for this request (backend will get limited fraud detection)",
-        );
-        verisoulSessionId = null;
-      }
-
-      const sessionAuthData = {
-        accountId: user._id || user.id || String(user._id || user.id),
-        email: user.email || "",
-        metadata: {
-          deviceId: deviceMetadata.deviceId,
-          appVersion: deviceMetadata.appVersion,
-          deviceModel: deviceMetadata.deviceModel,
-          osVersion: deviceMetadata.osVersion,
-          platform: deviceMetadata.platform,
-          userAgent: deviceMetadata.userAgent,
-          language: deviceMetadata.language,
-          timezone: deviceMetadata.timezone,
-          loginTime: new Date().toISOString(),
-        },
-        group: user.group || user.userGroup || "regular_users", // Required by API
-      };
-
-      // Add Verisoul SDK session_id (enables full fraud detection)
-      // This is the session_id from the frontend SDK, NOT a custom session ID
-      if (verisoulSessionId) {
-        sessionAuthData.session_id = verisoulSessionId;
-        console.log(
-          "✅ [AuthContext] Using Verisoul SDK session_id:",
-          verisoulSessionId,
-        );
-      } else {
-        console.warn(
-          "⚠️ [AuthContext] Verisoul SDK session_id not available - limited fraud detection",
-        );
-      }
-
-      // Add signup date if this is a new user
-      if (user.createdAt || user.created_at) {
-        sessionAuthData.metadata.signupDate = user.createdAt || user.created_at;
-      }
-
-      console.log(
-        "[FraudDebug] login – POST authenticate with SDK session_id in body",
-      );
-      const fraudResponse = await authenticateFraudSession(
-        sessionAuthData,
-        token,
-      );
-
-      if (fraudResponse?.success && fraudResponse?.sessionId) {
-        // Store backend session ID (returned from API)
-        console.log(
-          "[FraudDebug] login – backend returned sessionId:",
-          fraudResponse.sessionId?.slice(0, 8) + "...",
-          "storing in localStorage",
-        );
-        localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
-
-        // Check risk score and handle accordingly
-        const riskScore = fraudResponse?.data?.risk_score || 0;
-        const decision = fraudResponse?.data?.decision || "allow";
-
-        console.log("✅ [AuthContext] Fraud session authenticated:", {
-          sessionId: fraudResponse.sessionId,
-          riskScore,
-          decision,
-        });
-        console.log(
-          "[FraudDebug] login – risk_score:",
-          riskScore,
-          "decision:",
-          decision,
-        );
-
-        // Store risk information for later use
-        if (riskScore > 0.7 || decision === "deny") {
-          console.warn("⚠️ [AuthContext] High risk detected:", {
-            riskScore,
-            decision,
-          });
-          // You can add additional verification steps here if needed
+        if (verisoulSessionId && isFallback(verisoulSessionId))
+          verisoulSessionId = null;
+        const sessionAuthData = {
+          accountId: user._id || user.id || String(user._id || user.id),
+          email: user.email || "",
+          metadata: {
+            deviceId: deviceMetadata.deviceId,
+            appVersion: deviceMetadata.appVersion,
+            deviceModel: deviceMetadata.deviceModel,
+            osVersion: deviceMetadata.osVersion,
+            platform: deviceMetadata.platform,
+            userAgent: deviceMetadata.userAgent,
+            language: deviceMetadata.language,
+            timezone: deviceMetadata.timezone,
+            loginTime: new Date().toISOString(),
+          },
+          group: user.group || user.userGroup || "regular_users",
+        };
+        if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
+        if (user.createdAt || user.created_at) {
+          sessionAuthData.metadata.signupDate =
+            user.createdAt || user.created_at;
         }
-      } else {
-        console.warn(
-          "⚠️ [AuthContext] Fraud session authentication failed or incomplete:",
-          fraudResponse,
+        const fraudResponse = await authenticateFraudSession(
+          sessionAuthData,
+          token,
         );
-        console.log(
-          "[FraudDebug] login – authenticate failed or no sessionId:",
-          fraudResponse?.success,
-          !!fraudResponse?.sessionId,
+        if (fraudResponse?.success && fraudResponse?.sessionId) {
+          localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
+        }
+      } catch (error) {
+        console.error(
+          "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
+          error,
         );
       }
-    } catch (error) {
-      // Don't fail auth if fraud prevention fails - log and continue
-      console.error(
-        "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
-        error,
-      );
-    }
-
-    // PRIORITY 1: Fetch wallet screen data FIRST (needed for RewardProgress and XPTierTracker)
-    // This must happen before other dispatches to ensure data is available immediately
-    // Dispatch synchronously to ensure it's the first in the Redux queue
-    if (token) {
-      dispatch(fetchWalletScreen({ token }));
-    }
+    })();
 
     // IMPORTANT: Store user data in Redux profile immediately after login
     // This ensures age and gender are available immediately for game fetching
-    // without waiting for the profile API call
     if (user && (user.age || user.ageRange || user.gender || user._id)) {
       dispatch({
         type: "profile/setUserFromLogin",
@@ -1034,116 +1066,127 @@ export function AuthProvider({ children }) {
       });
     }
 
-    // Preload games data immediately after successful login
-    if (user && user._id) {
-      // Fetch userData immediately (needed for downloaded games section)
-      dispatch(
-        fetchUserData({
-          userId: user._id,
-          token: token,
-        }),
-      );
-
-      // DEFERRED: Preload game sections AFTER first paint to prevent blocking
-      // Components will show cached data if available, or fetch their own if needed
-      // This prevents multiple heavy API calls from blocking the login -> homepage transition
-      setTimeout(() => {
-        // Preload "Most Played" section - used by MostPlayedGames component
-        dispatch(
-          fetchGamesBySection({
-            uiSection: "Most Played",
-            user: user, // Pass user object directly for age/gender extraction
-            page: 1,
-            limit: 10,
-            token: token,
-          }),
-        );
-
-        // Preload "Swipe" section - used by GameCard component
-        dispatch(
-          fetchGamesBySection({
-            uiSection: "Swipe",
-            user: user, // Pass user object directly for age/gender extraction
-            page: 1,
-            limit: 10,
-            token: token,
-          }),
-        );
-      }, 200); // Defer by 200ms to allow homepage to render first
-    }
-
-    // Preload XP tier progress bar data immediately after successful login/signup
-    // This pre-populates the cache so the homepage shows data instantly
-    // OPTIMIZED: Wait for this to complete before allowing navigation for better UX
+    // PREFETCH: Load every API used on the home screen before navigating.
+    // Navigation only happens after all responses are received — no loading states on home screen.
     if (token) {
-      try {
-        const response = await getXPTierProgressBar(token);
-        if (response.success && response.data) {
-          // Cache the data immediately
-          const CACHE_KEY = "xpTierProgressBar";
-          const cacheData = {
-            data: response.data,
-            timestamp: Date.now(),
-          };
-          try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-          } catch (err) {
-            console.warn("⚠️ [AuthContext] Failed to cache XP tier data:", err);
+      // TIER 1 — Profile first: user data (age/gender) is required by game section fetches
+      await dispatch(fetchUserProfile({ token }));
+
+      // TIER 2 — Progress bar data: wallet balance + profile stats + XP tier in parallel
+      await Promise.allSettled([
+        dispatch(fetchWalletScreen({ token })),
+        dispatch(fetchProfileStats({ token })),
+        getXPTierProgressBar(token).then((response) => {
+          if (
+            response?.success &&
+            response?.data &&
+            typeof window !== "undefined"
+          ) {
+            try {
+              localStorage.setItem(
+                "xpTierProgressBar",
+                JSON.stringify({ data: response.data, timestamp: Date.now() }),
+              );
+            } catch (_) {}
           }
-        }
-      } catch (err) {
-        console.error(
-          "❌ [AuthContext] Failed to preload XP tier data (non-blocking):",
-          err,
-        );
-        // Don't fail auth if this fails - it's just a preload
-      }
+          return response;
+        }),
+      ]);
+
+      // TIER 3 — All remaining homepage sections in parallel
+      await Promise.allSettled([
+        // Non-gaming offers (NonGameOffersSection)
+        dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" })),
+        // Surveys (SurveysSection)
+        dispatch(fetchSurveys({ token })),
+        // VIP status (VipBanner)
+        dispatch(fetchVipStatus(token)),
+        // User game data (useHomepageData / inProgressGames)
+        ...(user && user._id
+          ? [
+              dispatch(fetchUserData({ userId: user._id, token })),
+              // Swipe games (GameCard)
+              dispatch(
+                fetchGamesBySection({
+                  uiSection: "Swipe",
+                  user,
+                  page: 1,
+                  limit: 10,
+                  token,
+                }),
+              ),
+              // Most Played games (MostPlayedGames)
+              dispatch(
+                fetchGamesBySection({
+                  uiSection: "Most Played",
+                  user,
+                  page: 1,
+                  limit: 10,
+                  token,
+                }),
+              ),
+            ]
+          : []),
+      ]);
     }
 
-    // DEFERRED: Preload surveys and non-game offers AFTER first paint
-    // This prevents blocking the critical login -> homepage transition
-    // Components will fetch their own data if not available, but this preloads in background
+    // Welcome bonus tasks/timer in background (don't block navigation)
     if (token) {
-      setTimeout(() => {
-        // Preload surveys - used by SurveysSection component
-        dispatch(fetchSurveys({ token }));
-
-        // Preload non-game offers (cashback_shopping) - used by NonGameOffersSection component
-        dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
-
-        // Preload welcome bonus tasks - used by WelcomeOfferSection component
-        // Cache in background without blocking UI
-        getWelcomeBonusTasks(token)
-          .then((response) => {
-            if (response.success && response.data) {
-              const CACHE_KEY = "welcomeBonusTasks";
-              const cacheData = {
-                data: response.data,
-                timestamp: Date.now(),
-              };
-              try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-                console.log("✅ [AuthContext] Welcome bonus tasks cached");
-              } catch (err) {
-                console.warn(
-                  "⚠️ [AuthContext] Failed to cache welcome bonus tasks:",
-                  err,
-                );
-              }
+      getWelcomeBonusTasks(token)
+        .then((response) => {
+          if (
+            response?.success &&
+            response?.data &&
+            typeof window !== "undefined"
+          ) {
+            try {
+              localStorage.setItem(
+                "welcomeBonusTasks",
+                JSON.stringify({ data: response.data, timestamp: Date.now() }),
+              );
+            } catch (_) {}
+          }
+        })
+        .catch(() => {});
+      getWelcomeBonusTimer(token)
+        .then((data) => {
+          if (!data || data.success === false) return;
+          const inner = data?.data;
+          const timer = inner?.timer || data?.timer;
+          const msg = inner?.message ?? data?.message ?? data?.msg ?? "";
+          const isActive = inner?.isActive;
+          let end = null;
+          if (inner && typeof inner === "object" && inner.isActive === false)
+            end = Date.now() - 1000;
+          else if (timer && typeof timer === "object") {
+            if (timer.isExpired === true) end = Date.now() - 1000;
+            else if (
+              typeof timer.timeUntilExpiry === "number" &&
+              timer.timeUntilExpiry > 0
+            )
+              end = Date.now() + timer.timeUntilExpiry;
+            else if (timer.completionDeadline) {
+              const t = new Date(timer.completionDeadline).getTime();
+              if (!isNaN(t) && t > Date.now()) end = t;
             }
-          })
-          .catch((err) => {
-            console.error(
-              "❌ [AuthContext] Failed to preload welcome bonus tasks (non-blocking):",
-              err,
-            );
-            // Don't fail auth if this fails - it's just a preload
-          });
-      }, 300); // Defer by 300ms to allow homepage to render first
+          }
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem(
+                "welcomeBonusTimer",
+                JSON.stringify({
+                  message: msg,
+                  endTime: end,
+                  isActive,
+                  timestamp: Date.now(),
+                }),
+              );
+            } catch (_) {}
+          }
+        })
+        .catch(() => {});
     }
 
-    // Token and user already saved to localStorage above (before state update)
-    // This ensures they're available immediately for navigation
     return { ok: true, user };
   };
 
@@ -1979,6 +2022,7 @@ export function AuthProvider({ children }) {
     dispatch(clearSurveys()); // Clear surveys data
     dispatch(clearNonGameOffers()); // Clear non-game offers data
     dispatch(resetDailyChallengeState()); // Clear daily challenge (today, calendar, etc.) so new account doesn't see previous user's "Claim reward" / completed state
+    clearDealsCache(); // Clear in-memory deals page cache (not in localStorage, must be cleared explicitly)
 
     // Purge all Redux persist data to prevent QuotaExceededError
     // Use persistor.purge() which properly handles cleanup without serialization issues
@@ -2059,6 +2103,9 @@ export function AuthProvider({ children }) {
           localStorage.removeItem(key);
         }
       });
+
+      // Clear account overview cache so next login gets fresh API data
+      localStorage.removeItem("accountOverviewCache");
 
       // Clear session manager data
       localStorage.removeItem("jackson_rewards_sessions");

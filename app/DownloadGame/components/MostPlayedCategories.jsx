@@ -5,49 +5,59 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { fetchMostPlayedScreenGames } from "@/lib/redux/slice/gameSlice";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserFromLocalStorage } from "@/lib/utils";
 import GameItemCard from "./GameItemCard";
 import WatchAdCard from "./WatchAdCard";
 
+const CACHE_STALE_MS = 5 * 60 * 1000;
+const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
+
 export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) => {
-    // Redux state management
     const dispatch = useDispatch();
     const router = useRouter();
     const { token } = useAuth();
 
-    // Get data from Redux store - using dedicated Most Played Screen state
-    const { mostPlayedScreenGames, mostPlayedScreenStatus, mostPlayedScreenError } = useSelector((state) => state.games);
-    const { details: userProfile } = useSelector((state) => state.profile);
+    const { mostPlayedScreenGames, mostPlayedScreenStatus, mostPlayedScreenError, mostPlayedScreenCacheTimestamp } = useSelector((state) => state.games);
 
-    // Fetch games from API for "Most Played Screen" section
+    // One fetch only if no fresh cache (or not loading). No 100ms refetch. User from localStorage (no profile).
     React.useEffect(() => {
-        if (!userProfile) return;
-
-
-        // Always dispatch - stale-while-revalidate will handle cache logic automatically
-        // Pass user object directly - API will extract age and gender dynamically
+        const user = typeof window !== "undefined" ? getUserFromLocalStorage() : null;
+        const hasFreshCache = mostPlayedScreenGames?.length && mostPlayedScreenCacheTimestamp && (Date.now() - mostPlayedScreenCacheTimestamp < CACHE_STALE_MS);
+        if (hasFreshCache || mostPlayedScreenStatus === "loading") return;
         dispatch(fetchMostPlayedScreenGames({
-            user: userProfile,
+            user: user || null,
             page: 1,
             limit: 50
         }));
-    }, [dispatch, userProfile]);
+    }, [dispatch, mostPlayedScreenGames?.length, mostPlayedScreenStatus, mostPlayedScreenCacheTimestamp]);
 
-    // Refresh games in background after showing cached data (to get admin updates)
+    // Return to app (focus): refetch only if cache older than 2 min. User from localStorage.
     React.useEffect(() => {
-        if (!userProfile) return;
-
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.games.mostPlayedScreenCacheTimestamp;
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
+            const user = typeof window !== "undefined" ? getUserFromLocalStorage() : null;
             dispatch(fetchMostPlayedScreenGames({
-                user: userProfile,
+                user: user || null,
                 page: 1,
                 limit: 50,
                 force: true,
                 background: true
             }));
-        }, 100);
-
-        return () => clearTimeout(refreshTimer);
-    }, [dispatch, userProfile]);
+        };
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
+        };
+        window.addEventListener("focus", handleFocus);
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibility);
+        };
+    }, [dispatch]);
 
 
 
@@ -194,7 +204,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
                             <button
                                 onClick={() => {
                                     dispatch(fetchMostPlayedScreenGames({
-                                        user: userProfile,
+                                        user: getUserFromLocalStorage() || null,
                                         page: 1,
                                         limit: 50
                                     }));
@@ -245,7 +255,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
                             <button
                                 onClick={() => {
                                     dispatch(fetchMostPlayedScreenGames({
-                                        user: userProfile,
+                                        user: getUserFromLocalStorage() || null,
                                         page: 1,
                                         limit: 50
                                     }));
@@ -293,7 +303,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
                             <button
                                 onClick={() => {
                                     dispatch(fetchMostPlayedScreenGames({
-                                        user: userProfile,
+                                        user: getUserFromLocalStorage() || null,
                                         page: 1,
                                         limit: 50
                                     }));

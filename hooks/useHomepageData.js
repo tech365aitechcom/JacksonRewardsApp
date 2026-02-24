@@ -65,19 +65,17 @@ export const useHomepageData = (token, user) => {
     dashboardStatus,
   ]);
 
-  // STALE-WHILE-REVALIDATE: Always fetch stats - will use cache if available and fresh
-  // OPTIMIZED: Removed walletScreen fetch - handled in handleAuthSuccess to avoid duplicate fetches
+  // INDUSTRIAL: Only fetch if we don't have data (avoid duplicate fetches; AuthContext already fetches)
   useEffect(() => {
     if (!token || !user?._id) return;
-    
-    // Always dispatch - stale-while-revalidate will handle cache logic automatically
-    // This ensures:
-    // 1. Shows cached data immediately if available (< 5 min old)
-    // 2. Refreshes in background if cache is stale or 80% expired
-    // 3. Fetches fresh if no cache exists
-    dispatch(fetchProfileStats({ token }));
 
-    // Only fetch user data if not already loaded
+    const hasStats =
+      (stats || dashboardData?.stats) &&
+      (statsStatus === "succeeded" || dashboardStatus === "succeeded");
+    if (!hasStats && statsStatus === "idle") {
+      dispatch(fetchProfileStats({ token }));
+    }
+
     if (userDataStatus === "idle" && !userData) {
       dispatch(
         fetchUserData({
@@ -86,7 +84,7 @@ export const useHomepageData = (token, user) => {
         })
       );
     }
-  }, [token, user, userDataStatus, userData, dispatch]);
+  }, [token, user, userDataStatus, userData, statsStatus, dashboardStatus, stats, dashboardData, dispatch]);
 
   // Refresh balance/XP when app comes to foreground (admin changes)
   useEffect(() => {

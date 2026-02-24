@@ -25,6 +25,19 @@ export default function LoginPage() {
   const turnstileRef = useRef(null);
   const turnstileWidgetId = useRef(null);
 
+  // Show Google login error passed via query param (from native deep link error flow)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const googleError = params.get("googleError");
+      if (googleError) {
+        setError({ form: decodeURIComponent(googleError) });
+        // Clean the URL so error doesn't persist on refresh
+        window.history.replaceState({}, "", "/login");
+      }
+    }
+  }, []);
+
   // Prevent overscroll behavior on mobile and hide scrollbars
   useEffect(() => {
     // Prevent body overscroll
@@ -256,7 +269,7 @@ export default function LoginPage() {
           } else {
             router.push("/homepage");
           }
-        }, 50);
+        }, 24);
       }
       else {
         const backendError = result?.error;
@@ -709,11 +722,6 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              {error.form && (
-                <div className="absolute top-[360px] left-1/2 transform -translate-x-1/2 w-[316px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
-                  {error.form}
-                </div>
-              )}
 
               <div className="absolute w-[216px] h-[65px] top-[289px] left-1/2 transform -translate-x-1/2">
                 <p className="absolute top-10 left-0 [font-family:'Poppins',Helvetica]  text-center font-medium text-neutral-400 text-sm tracking-[0] leading-[normal]">
@@ -823,6 +831,14 @@ export default function LoginPage() {
                         </div>
                       </button>
                     </div>
+                    {error.form && (
+                      <div className="w-full max-w-[305px] flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                        <span className="text-red-400 text-base leading-none">⚠</span>
+                        <p className="text-red-400 text-xs [font-family:'Poppins',Helvetica] text-center break-words flex-1">
+                          {error.form}
+                        </p>
+                      </div>
+                    )}
                     {biometricMessage && (
                       <div className="w-full max-w-[305px] flex flex-col items-center gap-2">
                         <p className="text-red-400 text-xs text-center break-words">

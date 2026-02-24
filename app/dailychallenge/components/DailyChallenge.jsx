@@ -33,6 +33,7 @@ export const DailyChallenge = () => {
 
     const [isMonthLoading, setIsMonthLoading] = useState(false);
     const [pendingCalendar, setPendingCalendar] = useState(null);
+    const [showCompletedModal, setShowCompletedModal] = useState(false);
     const calendarCacheRef = useRef({});
     const isLoading = calendarStatus === "loading" || todayStatus === "loading" || isMonthLoading;
 
@@ -115,7 +116,7 @@ export const DailyChallenge = () => {
             console.log("📱 [DAILY CHALLENGE COMPONENT] Dispatching fetchToday");
             dispatch(fetchToday({ token }));
         }
-    }, [dispatch, token, calendarStatus, todayStatus]);
+    }, [dispatch, token]); // Fixed: Only depend on dispatch and token to prevent infinite loops
 
     // Listen for global challenge update events
     useEffect(() => {
@@ -175,7 +176,7 @@ export const DailyChallenge = () => {
                     calendarCacheRef.current[cacheKey] = resp.data;
                 }
             } catch (_e) {
-                // Ignore prefetch errors silently
+                // ignore prefetch errors
             }
         });
     }, [token, calendar?.year, calendar?.month]);
@@ -381,7 +382,12 @@ export const DailyChallenge = () => {
             // Already on current month, open today's challenge modal
             console.log("📅 [DAILY CHALLENGE COMPONENT] Already on current month, opening today's challenge");
             if (today?.hasChallenge) {
-                dispatch(setModalOpen(true));
+                const isCompleted = today?.progress?.status === "completed" || today?.completed === true;
+                if (isCompleted) {
+                    setShowCompletedModal(true);
+                } else {
+                    dispatch(setModalOpen(true));
+                }
             } else {
                 // Show message that no challenge is available today
                 alert("No challenge available for today. Check back tomorrow!");
@@ -588,9 +594,13 @@ export const DailyChallenge = () => {
                         onDayClick={(dayData) => {
                             if (dayData.isToday) {
                                 if (today?.hasChallenge) {
-                                    dispatch(setModalOpen(true));
+                                    const isCompleted = today?.progress?.status === "completed" || today?.completed === true;
+                                    if (isCompleted) {
+                                        setShowCompletedModal(true);
+                                    } else {
+                                        dispatch(setModalOpen(true));
+                                    }
                                 } else {
-                                    // Show message that no challenge is available today
                                     alert("No challenge available for today. Check back tomorrow!");
                                 }
                             }
@@ -687,6 +697,40 @@ export const DailyChallenge = () => {
 
 
 
+
+            {/* Already Completed Modal */}
+            {showCompletedModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 rounded-lg p-6 w-full max-w-sm border border-gray-700">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-white">
+                                {today?.challenge?.title || today?.challenge?.gameName || "Spin the Wheel"}
+                            </h2>
+                            <button
+                                onClick={() => setShowCompletedModal(false)}
+                                className="text-gray-400 hover:text-white text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="flex flex-col items-center gap-3 py-4">
+                            <span className="text-4xl">✅</span>
+                            <p className="text-white text-base font-semibold text-center">
+                                {today?.challenge?.type === "spin" ? "Spin Completed!" : "Challenge Completed!"}
+                            </p>
+                            <p className="text-gray-400 text-sm text-center">
+                                You've already completed today's challenge. Come back tomorrow!
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowCompletedModal(false)}
+                            className="w-full mt-2 py-3 rounded-lg bg-gradient-to-b from-[#9EADF7] to-[#716AE7] text-white font-semibold text-sm"
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Challenge Modal */}
             <ChallengeModal

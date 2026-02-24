@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Capacitor SplashScreen layout.
+    Used when layoutName="launch_screen" and useDialog=true in capacitor.config.ts.
+    This layout is shown as a dialog overlay while the WebView initializes.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/splash"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+</FrameLayout>

@@ -8,25 +8,27 @@ export const ChallengeGroupSection = ({ streak }) => {
     const dispatch = useDispatch();
     const { token } = useAuth() || {};
 
-    // Get bonus days data from Redux store
+    // Get bonus days data from Redux store (same cache format as Leadership / DailyChallenge)
     const {
         bonusDays: bonusDaysData,
         bonusDaysStatus,
+        bonusDaysCacheTimestamp,
     } = useSelector((state) => state.dailyChallenge || {});
 
     // Extract bonus days array and current streak from Redux state
     const bonusDays = bonusDaysData?.bonusDays || [];
     const apiCurrentStreak = bonusDaysData?.currentStreak || null;
 
-    // Fetch bonus days data once when needed.
-    // Caching + background refresh is handled inside dailyChallengeSlice (stale-while-revalidate).
+    // Same cache format as DailyChallenge: only fetch when no fresh cache (or not already loading)
+    const CACHE_STALE_MS = 5 * 60 * 1000; // 5 min - match slice TTL
     useEffect(() => {
         if (!token) return;
 
-        if (bonusDaysStatus === "idle") {
-            dispatch(fetchBonusDays({ token }));
-        }
-    }, [token, bonusDaysStatus, dispatch]);
+        const hasFreshBonus = bonusDaysData && bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
+        if (hasFreshBonus || bonusDaysStatus === "loading") return;
+
+        dispatch(fetchBonusDays({ token }));
+    }, [token, bonusDaysStatus, bonusDaysData, bonusDaysCacheTimestamp, dispatch]);
 
     // Generate milestones dynamically from bonus days - only use API data, no fallbacks
     const generateMilestones = () => {

@@ -4,18 +4,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
 import { useRouter } from "next/navigation";
 import { handleGameDownload } from "@/lib/gameDownloadUtils";
-// Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
+
+const EMPTY_ARRAY = [];
 
 const GameCard = ({ onClose: onCloseProp }) => {
     const dispatch = useDispatch();
     const router = useRouter();
-    const { gamesBySection, gamesBySectionStatus, error, inProgressGames } = useSelector((state) => state.games);
-    const { details: userProfile } = useSelector((state) => state.profile);
 
-    // Get data for "Swipe" section specifically
+    // Get data for "Swipe" section. Same fetch pattern as HighestEarningGame; user from localStorage (no profile).
     const sectionName = "Swipe";
-    const swipeGames = gamesBySection[sectionName] || [];
-    const swipeStatus = gamesBySectionStatus[sectionName] || "idle";
+    const CACHE_STALE_MS = 5 * 60 * 1000;
+    const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
+    const swipeGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
+    const swipeStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] ?? "idle");
+    const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
+    const inProgressGames = useSelector((state) => state.games.inProgressGames ?? EMPTY_ARRAY);
+    const { details: userProfile } = useSelector((state) => state.profile);
     const [showTooltip, setShowTooltip] = useState(false);
     const [currentGameIndex, setCurrentGameIndex] = useState(0);
     const [undoCount, setUndoCount] = useState(0);
@@ -91,11 +95,9 @@ const GameCard = ({ onClose: onCloseProp }) => {
         }
     }, [undoCount, isFirstTimeUser]);
 
-    // FIXED: Save swipe history to localStorage to persist across navigation
+    // Save swipe history to localStorage (always — including empty so cleared state persists)
     useEffect(() => {
-        if (swipeHistory.length > 0) {
-            localStorage.setItem('gameCard_swipeHistory', JSON.stringify(swipeHistory));
-        }
+        localStorage.setItem('gameCard_swipeHistory', JSON.stringify(swipeHistory));
     }, [swipeHistory]);
 
     // SIMPLE LOGIC: No need for complex state synchronization
@@ -292,6 +294,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
 
     const handleVIPUpgrade = () => {
         setShowVIPModal(false);
+        if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/homepage");
         router.push('/BuySubscription');
     };
 
@@ -332,80 +335,46 @@ const GameCard = ({ onClose: onCloseProp }) => {
         }
     };
 
-    // STALE-WHILE-REVALIDATE: Always fetch - will use cache if available and fresh
+    // One discover call only on mount. Guard loading/failed to prevent unnecessary calls.
     useEffect(() => {
-        // Always dispatch - stale-while-revalidate will handle cache logic
-        // Pass user object directly - API will extract age and gender dynamically
-        // This ensures:
-        // 1. Shows cached data immediately if available (< 5 min old)
-        // 2. Refreshes in background if cache is stale or 80% expired
-        // 3. Fetches fresh if no cache exists
+        const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
+        if (hasFreshCache || swipeStatus === "loading" || swipeStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
             user: userProfile,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, sectionName, userProfile]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Refresh games in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Return to app (focus): one discover call only if cache older than 2 min. User from localStorage.
     useEffect(() => {
-        if (!userProfile) return;
-
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-        const refreshTimer = setTimeout(() => {
+        const handleRefreshIfStale = () => {
+            const state = require("@/lib/redux/store").store.getState();
+            const ts = state.games.gamesBySectionTimestamp[sectionName];
+            const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            if (!isStale) return;
+            const user = state.profile.details;
             dispatch(fetchGamesBySection({
                 uiSection: sectionName,
-                user: userProfile,
-                page: 1,
-                limit: 10,
-                force: true,
-                background: true
-            }));
-        }, 100); // Small delay to let cached data render first
-
-        return () => clearTimeout(refreshTimer);
-    }, [dispatch, sectionName, userProfile]);
-
-    // Refresh games in background when app comes to foreground (admin might have updated)
-    useEffect(() => {
-        if (!userProfile) return;
-
-        const handleFocus = () => {
-            dispatch(fetchGamesBySection({
-                uiSection: sectionName,
-                user: userProfile,
+                user: user || null,
                 page: 1,
                 limit: 10,
                 force: true,
                 background: true
             }));
         };
-
+        const handleFocus = () => handleRefreshIfStale();
+        const handleVisibility = () => {
+            if (!document.hidden) handleRefreshIfStale();
+        };
         window.addEventListener("focus", handleFocus);
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && userProfile) {
-                dispatch(fetchGamesBySection({
-                    uiSection: sectionName,
-                    user: userProfile,
-                    page: 1,
-                    limit: 10,
-                    force: true,
-                    background: true
-                }));
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
+        document.addEventListener("visibilitychange", handleVisibility);
         return () => {
             window.removeEventListener("focus", handleFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [dispatch, sectionName, userProfile]);
+    }, [dispatch, sectionName]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -842,107 +811,107 @@ const GameCard = ({ onClose: onCloseProp }) => {
             </article>
             <>
                 <div className="flex flex-col flex-shrink-0 w-full max-w-[335px] items-center" style={{ flex: '0 0 auto' }}>
-                <footer className="relative w-full max-w-[335px] min-h-[80px] rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px', flex: '0 0 auto' }}>
-                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
-                        {/* Line 1: Game Name */}
-                        <div className="flex items-start gap-2 w-full min-w-0">
-                            <h3
-                                className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
-                                style={{
-                                    wordBreak: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    display: '-webkit-box',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    lineHeight: '1.3',
-                                    letterSpacing: '0.01em',
-                                    textAlign: 'left',
-                                    width: '100%',
-                                    maxWidth: '100%'
-                                }}
-                            >
-                                {(() => {
-                                    const gameName = currentGame?.details?.name || currentGame?.title || gameData?.title || "Game";
-                                    const cleanGameName = gameName.split(' - ')[0].split(':')[0].trim();
-                                    return cleanGameName;
-                                })()}
-                            </h3>
-                        </div>
-                        {/* Line 2: Complete task and earn */}
-                        <div className="flex items-center text-sm sm:text-base leading-[1.4]">
-                            <span className="text-white/90 font-normal">Complete task and earn</span>
-                        </div>
-                        {/* Line 3: Coins and XP points */}
-                        <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
-                                <img
-                                    className="w-5 h-5 flex-shrink-0"
-                                    alt="Coin icon"
-                                    src="/dollor.png"
-                                    loading="eager"
-                                    decoding="async"
-                                    width="20"
-                                    height="20"
-                                />
+                    <footer className="relative w-full max-w-[335px] min-h-[80px] rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px', flex: '0 0 auto' }}>
+                        <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
+                            {/* Line 1: Game Name */}
+                            <div className="flex items-start gap-2 w-full min-w-0">
+                                <h3
+                                    className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
+                                    style={{
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        display: '-webkit-box',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        lineHeight: '1.3',
+                                        letterSpacing: '0.01em',
+                                        textAlign: 'left',
+                                        width: '100%',
+                                        maxWidth: '100%'
+                                    }}
+                                >
+                                    {(() => {
+                                        const gameName = currentGame?.details?.name || currentGame?.title || gameData?.title || "Game";
+                                        const cleanGameName = gameName.split(' - ')[0].split(':')[0].trim();
+                                        return cleanGameName;
+                                    })()}
+                                </h3>
                             </div>
-                            <span className="text-white/70 font-medium flex-shrink-0">&</span>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="font-semibold text-white whitespace-nowrap">{formatXP(currentGameRewards.totalXP)}</span>
-                                <img
-                                    className="w-5 h-5 flex-shrink-0"
-                                    alt="XP icon"
-                                    src="/xp.svg"
-                                    loading="eager"
-                                    decoding="async"
-                                    width="20"
-                                    height="20"
-                                />
+                            {/* Line 2: Complete task and earn */}
+                            <div className="flex items-center text-sm sm:text-base leading-[1.4]">
+                                <span className="text-white/90 font-normal">Complete task and earn</span>
                             </div>
-                            <span className="text-white/90 font-medium">points</span>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={toggleTooltip}
-                        className="absolute w-8 h-8 top-[9px] right-[-2px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
-                        aria-label="More information"
-                    >
-                        <svg width="24" height="24" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0 0L25 0C29.4183 0 33 3.58172 33 8V34H8C3.58172 34 0 30.4183 0 26L0 0Z" fill="#6E6069" />
-                            <path fillRule="evenodd" clipRule="evenodd" d="M26.8949 16.8292C26.8949 19.7148 25.7823 22.4821 23.802 24.5225C21.8216 26.5629 19.1356 27.7092 16.3349 27.7092C13.5342 27.7092 10.8482 26.5629 8.86786 24.5225C6.88747 22.4821 5.7749 19.7148 5.7749 16.8292C5.7749 13.9437 6.88747 11.1763 8.86786 9.1359C10.8482 7.0955 13.5342 5.94922 16.3349 5.94922C19.1356 5.94922 21.8216 7.0955 23.802 9.1359C25.7823 11.1763 26.8949 13.9437 26.8949 16.8292ZM17.6549 11.3892C17.6549 11.7499 17.5158 12.0958 17.2683 12.3509C17.0207 12.6059 16.685 12.7492 16.3349 12.7492C15.9848 12.7492 15.6491 12.6059 15.4015 12.3509C15.154 12.0958 15.0149 11.7499 15.0149 11.3892C15.0149 11.0285 15.154 10.6826 15.4015 10.4276C15.6491 10.1725 15.9848 10.0292 16.3349 10.0292C16.685 10.0292 17.0207 10.1725 17.2683 10.4276C17.5158 10.6826 17.6549 11.0285 17.6549 11.3892ZM15.0149 15.4692C14.6648 15.4692 14.3291 15.6125 14.0815 15.8676C13.834 16.1226 13.6949 16.4685 13.6949 16.8292C13.6949 17.1899 13.834 17.5358 14.0815 17.7909C14.3291 18.0459 14.6648 18.1892 15.0149 18.1892V22.2692C15.0149 22.6299 15.154 22.9758 15.4015 23.2309C15.6491 23.4859 15.9848 23.6292 16.3349 23.6292H17.6549C18.005 23.6292 18.3407 23.4859 18.5883 23.2309C18.8358 22.9758 18.9749 22.6299 18.9749 22.2692C18.9749 21.9085 18.8358 21.5626 18.5883 21.3076C18.3407 21.0525 18.005 20.9092 17.6549 20.9092V16.8292C17.6549 16.4685 17.5158 16.1226 17.2683 15.8676C17.0207 15.6125 16.685 15.4692 16.3349 15.4692H15.0149Z" fill="white" fillOpacity="0.6" />
-                        </svg>
-                    </button>
-                </footer>
-
-                {/* Action buttons section - flex row, min-height so Android doesn't collapse */}
-                <section
-                    className="flex flex-row justify-center items-center gap-6 w-full py-4 flex-shrink-0 min-h-[90px]"
-                    aria-label="Action buttons"
-                    style={{ flex: '0 0 auto' }}
-                >
-                    {actionButtons.map((button) => (
-                        <button
-                            key={button.id}
-                            className="relative w-[62px] h-[62px] flex-shrink-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
-                            aria-label={button.alt}
-                            onClick={button.onClick}
-                        >
-                            <img className="w-full h-full" alt={button.alt} src={button.src} loading="eager" decoding="async" width="62" height="62" />
-
-                            {/* Conditionally render the label if `hasLabel` is true */}
-                            {button.label && (
-                                <div className="absolute bottom-[-18px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
-                                    <UndoActionLabel
-                                        current={button.label.current}
-                                        total={button.label.total} />
+                            {/* Line 3: Coins and XP points */}
+                            <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
+                                    <img
+                                        className="w-5 h-5 flex-shrink-0"
+                                        alt="Coin icon"
+                                        src="/dollor.png"
+                                        loading="eager"
+                                        decoding="async"
+                                        width="20"
+                                        height="20"
+                                    />
                                 </div>
-                            )}
+                                <span className="text-white/70 font-medium flex-shrink-0">&</span>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    <span className="font-semibold text-white whitespace-nowrap">{formatXP(currentGameRewards.totalXP)}</span>
+                                    <img
+                                        className="w-5 h-5 flex-shrink-0"
+                                        alt="XP icon"
+                                        src="/xp.svg"
+                                        loading="eager"
+                                        decoding="async"
+                                        width="20"
+                                        height="20"
+                                    />
+                                </div>
+                                <span className="text-white/90 font-medium">points</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={toggleTooltip}
+                            className="absolute w-8 h-8 top-[9px] right-[-2px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
+                            aria-label="More information"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 0L25 0C29.4183 0 33 3.58172 33 8V34H8C3.58172 34 0 30.4183 0 26L0 0Z" fill="#6E6069" />
+                                <path fillRule="evenodd" clipRule="evenodd" d="M26.8949 16.8292C26.8949 19.7148 25.7823 22.4821 23.802 24.5225C21.8216 26.5629 19.1356 27.7092 16.3349 27.7092C13.5342 27.7092 10.8482 26.5629 8.86786 24.5225C6.88747 22.4821 5.7749 19.7148 5.7749 16.8292C5.7749 13.9437 6.88747 11.1763 8.86786 9.1359C10.8482 7.0955 13.5342 5.94922 16.3349 5.94922C19.1356 5.94922 21.8216 7.0955 23.802 9.1359C25.7823 11.1763 26.8949 13.9437 26.8949 16.8292ZM17.6549 11.3892C17.6549 11.7499 17.5158 12.0958 17.2683 12.3509C17.0207 12.6059 16.685 12.7492 16.3349 12.7492C15.9848 12.7492 15.6491 12.6059 15.4015 12.3509C15.154 12.0958 15.0149 11.7499 15.0149 11.3892C15.0149 11.0285 15.154 10.6826 15.4015 10.4276C15.6491 10.1725 15.9848 10.0292 16.3349 10.0292C16.685 10.0292 17.0207 10.1725 17.2683 10.4276C17.5158 10.6826 17.6549 11.0285 17.6549 11.3892ZM15.0149 15.4692C14.6648 15.4692 14.3291 15.6125 14.0815 15.8676C13.834 16.1226 13.6949 16.4685 13.6949 16.8292C13.6949 17.1899 13.834 17.5358 14.0815 17.7909C14.3291 18.0459 14.6648 18.1892 15.0149 18.1892V22.2692C15.0149 22.6299 15.154 22.9758 15.4015 23.2309C15.6491 23.4859 15.9848 23.6292 16.3349 23.6292H17.6549C18.005 23.6292 18.3407 23.4859 18.5883 23.2309C18.8358 22.9758 18.9749 22.6299 18.9749 22.2692C18.9749 21.9085 18.8358 21.5626 18.5883 21.3076C18.3407 21.0525 18.005 20.9092 17.6549 20.9092V16.8292C17.6549 16.4685 17.5158 16.1226 17.2683 15.8676C17.0207 15.6125 16.685 15.4692 16.3349 15.4692H15.0149Z" fill="white" fillOpacity="0.6" />
+                            </svg>
                         </button>
-                    ))}
-                </section>
+                    </footer>
+
+                    {/* Action buttons section - flex row, min-height so Android doesn't collapse */}
+                    <section
+                        className="flex flex-row justify-center items-center gap-6 w-full py-4 flex-shrink-0 min-h-[90px]"
+                        aria-label="Action buttons"
+                        style={{ flex: '0 0 auto' }}
+                    >
+                        {actionButtons.map((button) => (
+                            <button
+                                key={button.id}
+                                className="relative w-[62px] h-[62px] flex-shrink-0 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
+                                aria-label={button.alt}
+                                onClick={button.onClick}
+                            >
+                                <img className="w-full h-full" alt={button.alt} src={button.src} loading="eager" decoding="async" width="62" height="62" />
+
+                                {/* Conditionally render the label if `hasLabel` is true */}
+                                {button.label && (
+                                    <div className="absolute bottom-[-18px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
+                                        <UndoActionLabel
+                                            current={button.label.current}
+                                            total={button.label.total} />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </section>
                 </div>
 
                 {showTooltip && (

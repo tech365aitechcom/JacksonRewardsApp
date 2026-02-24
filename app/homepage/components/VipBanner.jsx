@@ -23,11 +23,13 @@ const VipBanner = () => {
 
     // OPTIMIZED: Memoize event handler
     const handleVipClick = useCallback(() => {
+        if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/homepage");
         router.push("/BuySubscription");
     }, [router]);
 
     // OPTIMIZED: Memoize VIP upgrade handler
     const handleVipUpgrade = useCallback(() => {
+        if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/homepage");
         router.push("/BuySubscription");
     }, [router]);
 

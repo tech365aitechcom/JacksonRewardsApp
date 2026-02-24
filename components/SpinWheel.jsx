@@ -9,6 +9,28 @@ import { useAppLovinAds } from "@/hooks/useAppLovinAds";
 import { Capacitor } from "@capacitor/core";
 import MockAdOverlay from "@/app/games/components/MockAdOverlay";
 
+// Dedupe spin config/status requests (e.g. React Strict Mode double-mount, rapid navigation)
+const SPIN_DATA_CACHE_MS = 2500;
+let cachedSpinDataPromise = null;
+let cachedSpinDataTime = 0;
+
+function fetchSpinDataOnce(token, forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && cachedSpinDataPromise && (now - cachedSpinDataTime) < SPIN_DATA_CACHE_MS) {
+        return cachedSpinDataPromise;
+    }
+    if (forceRefresh) cachedSpinDataPromise = null;
+    cachedSpinDataPromise = Promise.all([
+        getSpinConfig(token),
+        getSpinStatus(token),
+    ]).then(([configResponse, statusResponse]) => ({ configResponse, statusResponse }));
+    cachedSpinDataTime = now;
+    cachedSpinDataPromise.then(() => {
+        setTimeout(() => { cachedSpinDataPromise = null; }, SPIN_DATA_CACHE_MS);
+    });
+    return cachedSpinDataPromise;
+}
+
 export default function SpinWheel() {
     const { token } = useAuth();
     const dispatch = useDispatch();
@@ -61,6 +83,15 @@ export default function SpinWheel() {
     const isWeb = !Capacitor.isNativePlatform();
     const [showMockAd, setShowMockAd] = useState(false);
 
+    // Normalize reward type values from backend (various possible values)
+    const normalizeRewardType = (type) => {
+        if (!type) return 'coins';
+        const t = String(type).toLowerCase();
+        if (t.includes('xp') || t.includes('exp') || t.includes('experience')) return 'xp';
+        if (t.includes('coin') || t.includes('coins') || t.includes('dollar') || t.includes('cash')) return 'coins';
+        return t === 'xp' ? 'xp' : 'coins';
+    };
+
     // AppLovin MAX rewarded ads hook (shared with WatchAdCard)
     const {
         isInitialized,
@@ -102,7 +133,7 @@ export default function SpinWheel() {
         }
     }, [vipData.isVipActive, token, isInitialized, pendingReward, pendingSpinId, isAdReady, isAdLoading, isShowingAd, loadAd]);
 
-    // Countdown timer for cooldown
+    // Countdown timer for cooldown — ticks every 60 s (minute-based display)
     useEffect(() => {
         if (cooldownRemaining > 0) {
             const interval = setInterval(() => {
@@ -110,13 +141,13 @@ export default function SpinWheel() {
                     if (prev <= 1) {
                         // Cooldown finished, reload status
                         if (token) {
-                            loadSpinData();
+                            loadSpinData(true);
                         }
                         return 0;
                     }
-                    return prev - 1;
+                    return prev - 1; // Decrement by 1 minute
                 });
-            }, 60000); // Update every minute
+            }, 60000); // Update every 60 seconds
 
             return () => clearInterval(interval);
         }
@@ -215,7 +246,7 @@ export default function SpinWheel() {
         setTimeout(() => setError(null), 5000);
     };
 
-    const loadSpinData = async () => {
+    const loadSpinData = async (forceRefresh = false) => {
         if (!token) return;
 
         setIsLoading(true);
@@ -237,11 +268,8 @@ export default function SpinWheel() {
         }
 
         try {
-            // Load config and status in parallel
-            const [configResponse, statusResponse] = await Promise.all([
-                getSpinConfig(token),
-                getSpinStatus(token)
-            ]);
+            // Load config and status (deduped on mount; forceRefresh after spin/redeem)
+            const { configResponse, statusResponse } = await fetchSpinDataOnce(token, forceRefresh);
 
             if (configResponse.success && configResponse.data) {
                 const config = configResponse.data;
@@ -255,7 +283,8 @@ export default function SpinWheel() {
                 setCanSpin(status.canSpin || false);
                 setSpins(status.remainingSpins || 0);
                 setDailySpinsUsed((status.dailyLimit || 5) - (status.remainingSpins || 0));
-                setCooldownRemaining(status.cooldownRemaining || 0);
+                // cooldownRemaining is in milliseconds — convert to whole minutes
+                setCooldownRemaining(Math.floor((status.cooldownRemaining || 0) / 60000));
             }
         } catch (err) {
             setError(err.message || "Failed to load spin data");
@@ -345,10 +374,10 @@ export default function SpinWheel() {
                         // Store reward details for display in modal - use same amount as pendingReward
                         setSpinReward({
                             amount: finalReward,
-                            type: rewardType,
+                            type: normalizeRewardType(rewardType),
                             coinsEarned: spinData.coinsEarned || 0,
                             xpEarned: spinData.xpEarned || 0,
-                            rewardName: spinData.reward.name || `${finalReward} ${rewardType === "coins" ? "Coins" : "XP"}`
+                            rewardName: spinData.reward.name || `${finalReward} ${normalizeRewardType(rewardType) === "coins" ? "Coins" : "XP"}`
                         });
 
                         if (isPending && spinData.spinId) {
@@ -363,7 +392,10 @@ export default function SpinWheel() {
                             setPendingSpinId(spinData.spinId);
                         } else if (isCompleted) {
                             // Free spin: Reward already credited, no redemption needed
-                            clearPendingReward();
+                            // Only clear pending ad state, keep spinReward for modal display
+                            setPendingReward(0);
+                            setPendingSpinId(null);
+                            setIsAdWatched(false);
 
                             // Refresh wallet and XP balance from response
                             if (spinData.newBalance !== undefined) {
@@ -390,7 +422,7 @@ export default function SpinWheel() {
                     setShowResult(true);
 
                     // Reload status to update remaining spins
-                    loadSpinData();
+                    loadSpinData(true);
 
                     // Hide result after 5 seconds
                     setTimeout(() => {
@@ -408,7 +440,7 @@ export default function SpinWheel() {
                 setShowResult(true);
 
                 // Reload status to update remaining spins
-                loadSpinData();
+                loadSpinData(true);
 
                 // Hide result after 5 seconds
                 setTimeout(() => {
@@ -435,7 +467,7 @@ export default function SpinWheel() {
             setShowResult(true);
 
             // Reload status
-            loadSpinData();
+            loadSpinData(true);
 
             // Hide result after 5 seconds
             setTimeout(() => {
@@ -489,12 +521,13 @@ export default function SpinWheel() {
 
                     // Update spinReward with the actual credited amount from redemption
                     if (spinReward && redeemData.reward) {
-                        setSpinReward({
-                            ...spinReward,
-                            coinsEarned: redeemData.coinsEarned || spinReward.coinsEarned,
-                            xpEarned: redeemData.xpEarned || spinReward.xpEarned,
+                        setSpinReward(prev => ({
+                            ...prev,
+                            type: normalizeRewardType(prev?.type),
+                            coinsEarned: redeemData.coinsEarned || prev.coinsEarned,
+                            xpEarned: redeemData.xpEarned || prev.xpEarned,
                             amount: redeemData.reward || pendingReward
-                        });
+                        }));
                     }
 
                     // Update coins with new balance
@@ -519,7 +552,7 @@ export default function SpinWheel() {
                     clearPendingReward();
 
                     // Reload status to update balance
-                    loadSpinData();
+                    loadSpinData(true);
 
                     // Hide result after 3 seconds
                     setTimeout(() => {
@@ -648,7 +681,7 @@ export default function SpinWheel() {
                             setPendingReward(0);
                             setPendingSpinId(null);
                             setIsAdWatched(true);
-                            loadSpinData();
+                            loadSpinData(true);
 
                             setTimeout(() => setShowResult(false), 5000);
                             setIsRedeeming(false);
@@ -723,7 +756,7 @@ export default function SpinWheel() {
                                 setPendingReward(0);
                                 setPendingSpinId(null);
                                 setIsAdWatched(true);
-                                loadSpinData();
+                                loadSpinData(true);
 
                                 setTimeout(() => setShowResult(false), 5000);
                             }
@@ -767,12 +800,13 @@ export default function SpinWheel() {
 
                 // Update spinReward with the actual credited amount from redemption
                 if (spinReward && redeemData.reward) {
-                    setSpinReward({
-                        ...spinReward,
-                        coinsEarned: redeemData.coinsEarned || spinReward.coinsEarned,
-                        xpEarned: redeemData.xpEarned || spinReward.xpEarned,
+                    setSpinReward(prev => ({
+                        ...prev,
+                        type: normalizeRewardType(prev?.type),
+                        coinsEarned: redeemData.coinsEarned || prev.coinsEarned,
+                        xpEarned: redeemData.xpEarned || prev.xpEarned,
                         amount: redeemData.reward || pendingReward
-                    });
+                    }));
                 }
 
                 if (redeemData.newBalance !== undefined) {
@@ -791,7 +825,7 @@ export default function SpinWheel() {
                     dispatch(fetchWalletScreen({ token, force: true }));
                     dispatch(fetchProfileStats({ token, force: true }));
                 }
-                loadSpinData();
+                loadSpinData(true);
 
                 // Hide result after 3 seconds
                 setTimeout(() => {
@@ -856,6 +890,9 @@ export default function SpinWheel() {
     const handleBackNavigation = () => {
         // Back navigation handler
     };
+
+    // Human-friendly unit to show in small loading / pending messages
+    const pendingUnit = spinReward ? (normalizeRewardType(spinReward.type) === 'xp' ? 'XP' : 'coins') : 'coins';
 
     return (
         <div
@@ -1334,23 +1371,23 @@ export default function SpinWheel() {
                     </div>
                 </div>
 
-                {/* PUSH TO SPIN Button Overlay - cooldown disabled for testing */}
+                {/* PUSH TO SPIN Button Overlay */}
                 <div className="absolute top-[67%] left-1/2  mr-2 transform -translate-x-1/2 -translate-y-1/2 z-20">
                     <motion.button
                         onClick={handleSpin}
-                        disabled={(isSpinning && !showResult) || /* cooldownRemaining > 0 || */ isLoading}
-                        className={`w-[200px] h-12 text-white text-lg font-bold px-8 rounded-lg border-2 whitespace-nowrap ${(isSpinning && !showResult) || /* cooldownRemaining > 0 || */ isLoading
+                        disabled={(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading}
+                        className={`w-[200px] h-12 text-white text-lg font-bold px-8 rounded-lg border-2 whitespace-nowrap ${(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading
                             ? 'bg-gradient-to-b from-red-600 to-red-800 border-red-900 shadow-[0_8px_0px_#8f1a1a,inset_0_2px_4px_rgba(255,255,255,0.4)] cursor-not-allowed pointer-events-none'
                             : 'bg-gradient-to-b from-red-600 to-red-800 border-red-900 shadow-[0_8px_0px_#8f1a1a,inset_0_2px_4px_rgba(255,255,255,0.4)]'
                             }`}
-                        whileHover={(isSpinning && !showResult) || /* cooldownRemaining > 0 || */ isLoading ? {} : { scale: 1.02 }}
-                        whileTap={(isSpinning && !showResult) || /* cooldownRemaining > 0 || */ isLoading ? {} : {
+                        whileHover={(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading ? {} : { scale: 1.02 }}
+                        whileTap={(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading ? {} : {
                             scale: 0.98,
                             y: 4,
                             boxShadow: '0 4px 0px #8f1a1a, inset 0 2px 4px rgba(255,255,255,0.4)'
                         }}
                     >
-                        {isSpinning ? "SPINNING..." : isLoading ? "LOADING..." : /* cooldownRemaining > 0 ? `Wait ${cooldownRemaining} minutes` : */ "PUSH TO SPIN"}
+                        {isSpinning ? "SPINNING..." : isLoading ? "LOADING..." : cooldownRemaining > 0 ? `Wait ${Math.floor(cooldownRemaining)} minute${Math.floor(cooldownRemaining) !== 1 ? 's' : ''}` : !canSpin ? "No Spins Available" : "PUSH TO SPIN"}
                     </motion.button>
                 </div>
             </div>
@@ -1384,7 +1421,7 @@ export default function SpinWheel() {
                     <span className="text-xs font-medium text-yellow-100 [font-family:'Poppins',Helvetica]">
                         {error && error.includes('retrying')
                             ? `Retrying ad connection...`
-                            : `Loading ad to redeem ${pendingReward} coins…`
+                            : `Loading ad to redeem ${pendingReward} ${pendingUnit}…`
                         }
                     </span>
                 </div>
@@ -1492,7 +1529,7 @@ export default function SpinWheel() {
                                                 ease: "easeInOut"
                                             }}
                                         >
-                                            {spinReward && spinReward.type === "xp" ? (
+                                            {spinReward && normalizeRewardType(spinReward.type) === "xp" ? (
                                                 <span className="text-4xl">⭐</span>
                                             ) : (
                                                 <img
@@ -1510,45 +1547,41 @@ export default function SpinWheel() {
                                 )}
                             </motion.div>
 
-                            {/* Display coinsEarned or xpEarned based on reward type */}
-                            {spinReward && (
-                                (spinReward.type === "coins" && spinReward.coinsEarned > 0) ||
-                                (spinReward.type === "xp" && spinReward.xpEarned > 0)
-                            ) && (
-                                    <motion.div
-                                        className="mb-4"
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.1, duration: 0.3 }}
-                                    >
-                                        <div className="flex flex-col items-center justify-center gap-2">
-                                            <div className="flex items-center justify-center gap-2">
-                                                {spinReward.type === "coins" ? (
-                                                    <>
-                                                        <img
-                                                            src="/dollor.png"
-                                                            alt="Coin"
-                                                            className="w-8 h-8"
-                                                        />
-                                                        <span className="text-3xl font-bold text-white">
-                                                            {spinReward.coinsEarned}
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span className="text-3xl">⭐</span>
-                                                        <span className="text-3xl font-bold text-white">
-                                                            {spinReward.xpEarned}
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </div>
-                                            <span className="text-xl font-semibold text-gray-300 uppercase tracking-wide">
-                                                {spinReward.type === "coins" ? "Coins" : "XP"} Earned
+                            {/* Display reward breakdown: XP and Coins earned - Icon + Value only */}
+                            {spinReward && spinReward.amount > 0 && (
+                                <motion.div
+                                    className="mb-4"
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.1, duration: 0.3 }}
+                                >
+                                    <div className="flex items-center justify-center gap-6">
+                                        {/* XP Earned */}
+                                        <div className="flex items-center gap-2">
+                                            <img
+                                                src="/xp.svg"
+                                                alt="XP"
+                                                className="w-6 h-6 drop-shadow-[0_0_4px_rgba(255,215,0,0.6)]"
+                                            />
+                                            <span className="text-lg font-bold text-yellow-300">
+                                                {spinReward.xpEarned}
                                             </span>
                                         </div>
-                                    </motion.div>
-                                )}
+
+                                        {/* Coins Earned */}
+                                        <div className="flex items-center gap-2">
+                                            <img
+                                                src="/dollor.png"
+                                                alt="Coin"
+                                                className="w-6 h-6 drop-shadow-[0_0_4px_rgba(255,215,0,0.6)]"
+                                            />
+                                            <span className="text-lg font-bold text-yellow-300">
+                                                {spinReward.coinsEarned}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* Display ONLY the backend message - no hardcoded status info */}
                             <motion.div
@@ -1581,13 +1614,17 @@ export default function SpinWheel() {
                                     }}
                                 >
                                     <div className="flex items-center justify-center gap-2">
-                                        <img
-                                            src="/dollor.png"
-                                            alt="Coin"
-                                            className="w-4 h-4"
-                                        />
+                                        {spinReward && normalizeRewardType(spinReward.type) === 'xp' ? (
+                                            <span className="text-yellow-300">⭐</span>
+                                        ) : (
+                                            <img
+                                                src="/dollor.png"
+                                                alt="Coin"
+                                                className="w-4 h-4"
+                                            />
+                                        )}
                                         <span className="text-yellow-400 font-bold text-xs">
-                                            {pendingReward} coins pending
+                                            {pendingReward} {pendingUnit} pending
                                         </span>
                                     </div>
                                     <p className="text-gray-400 text-[10px] mt-0.5">

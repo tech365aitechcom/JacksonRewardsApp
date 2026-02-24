@@ -408,7 +408,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       <WatchAdCard xpAmount={5} />
 
       <div className="-mt-6">
-        <NonGameOffersSection />
+        <NonGameOffersSection skipFetch />
       </div>
 
 

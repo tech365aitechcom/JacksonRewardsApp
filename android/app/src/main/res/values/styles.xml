@@ -19,14 +19,16 @@
     </style>
 
 
+    <!--
+        Pre-Android 12 launch theme.
+        android:background = the splash drawable shown as the Activity window background
+        while the WebView initializes. On API 31+ this style is overridden by values-v31/styles.xml.
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">false</item>
         <item name="android:background">@drawable/splash</item>
-        <item name="android:windowSplashScreenBackground">@drawable/splash</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash</item>
-        <item name="android:windowSplashScreenAnimationDuration">1000</item>
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightStatusBar">false</item>

@@ -13,8 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchProfileStats } from "@/lib/redux/slice/profileSlice";
-import { fetchWalletScreen } from "@/lib/redux/slice/walletTransactionsSlice";
+import { fetchWalletScreen, fetchWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
 
 
 export default function WalletPage() {
@@ -24,7 +23,6 @@ export default function WalletPage() {
 
   const {
     detailsStatus,
-    statsStatus,
     error,
   } = useSelector((state) => state.profile);
 
@@ -65,19 +63,15 @@ export default function WalletPage() {
     };
   }, []);
 
-  // Refresh wallet and balance data when page is visited (to get admin updates)
-  // Do this in background without blocking UI - show cached data immediately
+  // REMOVED: Duplicate fetchWalletScreen calls
+  // AuthContext's consolidated effect already handles initial fetch at 300ms
+  // AuthContext's focus handler already handles refresh on app resume with debouncing
+  // This page just reads from Redux store // Do this in background without blocking UI - show cached data immediately
+  // Fetch fresh wallet data on every visit to this page
   useEffect(() => {
     if (!token) return;
-
-    // Use setTimeout to refresh in background after showing cached data
-    // This ensures smooth UX - cached data shows immediately, fresh data loads in background
-    const refreshTimer = setTimeout(() => {
-      dispatch(fetchWalletScreen({ token, force: true }));
-      dispatch(fetchProfileStats({ token, force: true }));
-    }, 100); // Small delay to let cached data render first
-
-    return () => clearTimeout(refreshTimer);
+    dispatch(fetchWalletScreen({ token, force: true }));
+    dispatch(fetchWalletTransactions({ token, limit: 5, force: true }));
   }, [token, dispatch]);
 
   // Refresh when app comes to foreground
@@ -86,7 +80,7 @@ export default function WalletPage() {
 
     const handleFocus = () => {
       dispatch(fetchWalletScreen({ token, force: true }));
-      dispatch(fetchProfileStats({ token, force: true }));
+      dispatch(fetchWalletTransactions({ token, limit: 5, force: true }));
     };
 
     window.addEventListener("focus", handleFocus);
@@ -97,15 +91,16 @@ export default function WalletPage() {
   }, [token, dispatch]);
 
   const handleVipUpgrade = () => {
+    if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/Wallet");
     router.prefetch("/BuySubscription");
     router.push("/BuySubscription");
   };
 
   // Only show loading if we have NO cached data at all
   // This allows showing cached data immediately while refreshing in background
-  const hasCachedData = walletScreen || statsStatus === 'succeeded' || detailsStatus === 'succeeded' || vipStatus;
-  const isLoading = !hasCachedData && (detailsStatus === 'loading' || statsStatus === 'loading' || walletScreenStatus === 'loading' || vipLoadingStatus === 'loading');
-  const hasFailed = detailsStatus === 'failed' || statsStatus === 'failed' || walletScreenStatus === 'failed' || vipLoadingStatus === 'failed';
+  const hasCachedData = walletScreen || detailsStatus === 'succeeded' || vipStatus;
+  const isLoading = !hasCachedData && (detailsStatus === 'loading' || walletScreenStatus === 'loading' || vipLoadingStatus === 'loading');
+  const hasFailed = detailsStatus === 'failed' || walletScreenStatus === 'failed' || vipLoadingStatus === 'failed';
 
   // Only show loading screen if we have absolutely no data
   // Otherwise, show cached data immediately and refresh in background

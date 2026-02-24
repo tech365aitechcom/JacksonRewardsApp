@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from '@/contexts/AuthContext';
-
-import { acceptDisclosure } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import useOnboardingStore from "@/stores/useOnboardingStore";
+import { acceptDisclosure, submitOnboarding } from "@/lib/api";
 
 export default function PermissionsPage() {
   const router = useRouter();
@@ -53,12 +53,10 @@ export default function PermissionsPage() {
   const handleAgree = async () => {
     if (isSubmitting) return;
 
-    // Check both AuthContext token and localStorage as fallback
     const storedToken = localStorage.getItem("authToken");
     const authToken = token || storedToken;
 
     if (!authToken) {
-      console.error("No auth token found. User must be logged in.");
       setError("Authentication error. Please log in again.");
       router.replace("/login");
       return;
@@ -68,13 +66,33 @@ export default function PermissionsPage() {
     setError(null);
 
     try {
+      // 1. Submit all onboarding answers in one call (POST /api/onboarding/submit)
+      // User identified by auth token only; no mobile in body.
+      const onboardingState = useOnboardingStore.getState();
+      const payload = {
+        ...(onboardingState.primaryGoal != null && { primaryGoal: onboardingState.primaryGoal }),
+        ...(onboardingState.gender != null && { gender: onboardingState.gender }),
+        ...(onboardingState.ageRange != null && { ageRange: onboardingState.ageRange }),
+        ...(Array.isArray(onboardingState.gamePreferences) && onboardingState.gamePreferences.length > 0 && { gamePreferences: onboardingState.gamePreferences }),
+        ...(onboardingState.gameStyle != null && { gameStyle: onboardingState.gameStyle }),
+        ...(onboardingState.improvementArea != null && { improvementArea: onboardingState.improvementArea }),
+        ...(onboardingState.dailyEarningGoal != null && { dailyEarningGoal: Number(onboardingState.dailyEarningGoal) }),
+      };
+
+      await submitOnboarding(payload, authToken);
+
+      // 2. Mark onboarding complete and clear local onboarding data
+      localStorage.setItem("onboardingComplete", "true");
+      useOnboardingStore.getState().resetOnboarding();
+
+      // 3. Accept disclosure and go to location
       await acceptDisclosure(authToken);
       localStorage.setItem("permissionsAccepted", "true");
       router.push("/location");
-
     } catch (err) {
-      console.error("Failed to accept disclosure:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      console.error("Onboarding submit or disclosure error:", err);
+      const message = err?.body?.message ?? err?.body?.error ?? err?.message ?? "Something went wrong. Please try again.";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

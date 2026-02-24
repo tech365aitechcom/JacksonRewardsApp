@@ -153,12 +153,14 @@ export default function BuySubscription() {
         if (paymentMethod === "google_play") {
             dispatch(setPurchaseStatus({ status: "awaiting_payment" }));
             // Manually set the product ID in Redux state for GooglePlayPaymentSheet
-            dispatch({ type: "vip/initiateGooglePlayPurchase/fulfilled", payload: {
-                subscriptionId: "test_subscription_id",
-                googlePlayProductId: getProductId(selectedTier, selectedPlan),
-                tierId: selectedTier,
-                plan: selectedPlan,
-            }});
+            dispatch({
+                type: "vip/initiateGooglePlayPurchase/fulfilled", payload: {
+                    subscriptionId: "test_subscription_id",
+                    googlePlayProductId: getProductId(selectedTier, selectedPlan),
+                    tierId: selectedTier,
+                    plan: selectedPlan,
+                }
+            });
             return;
         }
 
@@ -285,10 +287,10 @@ export default function BuySubscription() {
             console.error("❌ [handlePaymentSuccess] Error details:", error);
             console.error("❌ [handlePaymentSuccess] Error type:", typeof error);
             console.error("❌ [handlePaymentSuccess] Error keys:", error ? Object.keys(error) : "null");
-            
+
             // More detailed error handling
             let errorMessage = 'Payment confirmation failed. Please contact support.';
-            
+
             // Extract error message from various possible locations
             // The error from unwrap() is the rejected value from rejectWithValue
             if (typeof error === 'string') {
@@ -304,8 +306,8 @@ export default function BuySubscription() {
             }
 
             // Check if this is a backend configuration issue (like missing Stripe customer)
-            if (errorMessage.includes("No such customer") || 
-                errorMessage.includes("customer") || 
+            if (errorMessage.includes("No such customer") ||
+                errorMessage.includes("customer") ||
                 errorMessage.includes("Customer")) {
                 errorMessage = "Payment processing error: Account configuration issue detected. Your payment was processed, but we need to set up your account. Please contact support with your payment details and we'll activate your subscription.";
             }

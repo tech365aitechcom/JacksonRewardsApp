@@ -61,7 +61,15 @@ function AuthCallbackContent() {
   const collectBackendMessages = (params) => {
     const messages = [];
     const seen = new Set();
-    const keys = ["message", "error", "error_description", "error_message", "msg", "detail", "details"];
+    const keys = [
+      "message",
+      "error",
+      "error_description",
+      "error_message",
+      "msg",
+      "detail",
+      "details",
+    ];
     for (const key of keys) {
       const raw = params.get(key);
       if (raw == null || raw === "") continue;
@@ -90,7 +98,10 @@ function AuthCallbackContent() {
       const provider = searchParams.get("provider");
       const userId = searchParams.get("userId");
       const allBackendMessages = collectBackendMessages(searchParams);
-      const hasError = allBackendMessages || searchParams.get("message") || searchParams.get("error");
+      const hasError =
+        allBackendMessages ||
+        searchParams.get("message") ||
+        searchParams.get("error");
 
       // 1. Handle Native Deep Link (Keep as is)
       if (Capacitor.isNativePlatform()) {
@@ -100,7 +111,8 @@ function AuthCallbackContent() {
           if (provider) deepLink += `&provider=${encodeURIComponent(provider)}`;
           if (userId) deepLink += `&userId=${encodeURIComponent(userId)}`;
         } else {
-          const message = allBackendMessages || "Authentication token not found.";
+          const message =
+            allBackendMessages || "Authentication token not found.";
           deepLink += `?message=${encodeURIComponent(message)}`;
         }
 
@@ -117,7 +129,27 @@ function AuthCallbackContent() {
 
       // 2. Handle Errors – show all messages from backend
       if (hasError) {
-        setErrorMessage(allBackendMessages || searchParams.get("message") || searchParams.get("error") || "Authentication failed.");
+        let errorMessage =
+          allBackendMessages ||
+          searchParams.get("message") ||
+          searchParams.get("error") ||
+          "Authentication failed.";
+
+        // Improve message for suspended/pending accounts
+        const lowerError = errorMessage.toLowerCase();
+        if (
+          lowerError.includes("suspend") ||
+          lowerError.includes("pending") ||
+          lowerError.includes("not active") ||
+          lowerError.includes("deactiv") ||
+          lowerError.includes("forbidden") ||
+          lowerError.includes("unauthorized")
+        ) {
+          errorMessage =
+            "Your account is currently suspended or pending. Please contact support for assistance.";
+        }
+
+        setErrorMessage(errorMessage);
         setStatus("error");
         setTimeout(() => router.replace("/login"), 4000);
         return;
@@ -127,7 +159,7 @@ function AuthCallbackContent() {
       if (token) {
         try {
           console.log(
-            "✅ [Auth Callback] Token received, processing via Context..."
+            "✅ [Auth Callback] Token received, processing via Context...",
           );
 
           // result now contains: { ok: true, statusData: { needsDisclosure, needsLocation } }
@@ -144,19 +176,65 @@ function AuthCallbackContent() {
             setStatus("success");
             setAuthCompleted(true);
           } else {
-            setErrorMessage(
-              typeof result.error === "string"
-                ? result.error
-                : result.error?.message || result.error?.error || JSON.stringify(result.error) || "Authentication failed"
-            );
+            // Handle error - check if it's a suspended/pending account error
+            let errorMsg = "";
+            if (typeof result.error === "string") {
+              errorMsg = result.error;
+            } else if (result.error?.message) {
+              errorMsg = result.error.message;
+            } else if (result.error?.error) {
+              errorMsg = result.error.error;
+            } else {
+              errorMsg =
+                JSON.stringify(result.error) || "Authentication failed";
+            }
+
+            // Improve message for suspended/pending accounts
+            const lowerError = errorMsg.toLowerCase();
+            if (
+              lowerError.includes("suspend") ||
+              lowerError.includes("pending") ||
+              lowerError.includes("not active") ||
+              lowerError.includes("deactiv") ||
+              lowerError.includes("forbidden") ||
+              lowerError.includes("unauthorized")
+            ) {
+              errorMsg =
+                "Your account is currently suspended or pending. Please contact support for assistance.";
+            }
+
+            setErrorMessage(errorMsg);
             setStatus("error");
             setTimeout(() => router.replace("/login"), 4000);
           }
         } catch (error) {
           const msg = error?.response?.data
-            ? [error.response.data.message, error.response.data.error, error.response.data.detail, error.message].filter(Boolean).join(". ")
+            ? [
+                error.response.data.message,
+                error.response.data.error,
+                error.response.data.detail,
+                error.message,
+              ]
+                .filter(Boolean)
+                .join(". ")
             : error?.message || "Authentication failed";
-          setErrorMessage(msg);
+
+          // Improve message for suspended/pending accounts
+          let finalMsg = msg;
+          const lowerMsg = msg.toLowerCase();
+          if (
+            lowerMsg.includes("suspend") ||
+            lowerMsg.includes("pending") ||
+            lowerMsg.includes("not active") ||
+            lowerMsg.includes("deactiv") ||
+            lowerMsg.includes("forbidden") ||
+            lowerMsg.includes("unauthorized")
+          ) {
+            finalMsg =
+              "Your account is currently suspended or pending. Please contact support for assistance.";
+          }
+
+          setErrorMessage(finalMsg);
           setStatus("error");
           setTimeout(() => router.replace("/login"), 4000);
         }
@@ -196,13 +274,13 @@ function AuthCallbackContent() {
         // 2. Log LocalStorage Actions
         if (!needsDisclosure) {
           console.log(
-            "💾 [DEBUG-REDIRECT] Setting local: permissionsAccepted = true"
+            "💾 [DEBUG-REDIRECT] Setting local: permissionsAccepted = true",
           );
           localStorage.setItem("permissionsAccepted", "true");
         }
         if (!needsLocation) {
           console.log(
-            "💾 [DEBUG-REDIRECT] Setting local: locationCompleted = true"
+            "💾 [DEBUG-REDIRECT] Setting local: locationCompleted = true",
           );
           localStorage.setItem("locationCompleted", "true");
         }
@@ -210,17 +288,17 @@ function AuthCallbackContent() {
         // 3. Log the Final Decision
         if (needsDisclosure) {
           console.log(
-            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /permissions (Disclosure Required)"
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /permissions (Disclosure Required)",
           );
           router.replace("/permissions");
         } else if (needsLocation) {
           console.log(
-            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /location (Location Required)"
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /location (Location Required)",
           );
           router.replace("/location");
         } else {
           console.log(
-            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /homepage (All steps complete)"
+            "👉 [DEBUG-REDIRECT] DECISION: Redirecting to /homepage (All steps complete)",
           );
           router.replace("/homepage");
         }
@@ -240,7 +318,7 @@ function AuthCallbackContent() {
 
       console.log(
         "⚠️ [DEBUG-REDIRECT] Condition not met yet. Waiting for:",
-        missing.join(", ")
+        missing.join(", "),
       );
     }
   }, [authCompleted, isLoading, user, userStatusFlags, router]);
