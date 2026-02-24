@@ -1,5 +1,6 @@
 package com.jackson.app;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebView;
@@ -29,6 +30,11 @@ public class MainActivity extends BridgeActivity {
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
+
+        // Enable WebView debugging
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
 
         // Hide the action bar again after super.onCreate
         if (getSupportActionBar() != null) {
