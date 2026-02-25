@@ -322,7 +322,7 @@ export default function LoginPage() {
     });
 
     setIsRedirecting(true);
-    const backendUrl = "https://rewardsuatapi.hireagent.co";
+    const backendUrl = "http://localhost:4001";
 
     // Check if the app is running on a native mobile platform (iOS/Android)
     if (Capacitor.isNativePlatform()) {

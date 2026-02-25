@@ -21,7 +21,7 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                                 // Ensure proper protocol
                                 return avatarUrl.startsWith('http')
                                     ? avatarUrl
-                                    : `https://rewardsuatapi.hireagent.co${avatarUrl}`;
+                                    : `http://localhost:4001${avatarUrl}`;
                             })()
                             : "/profile.png"
                     }

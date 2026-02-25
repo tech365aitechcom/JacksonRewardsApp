@@ -2138,7 +2138,7 @@ export function AuthProvider({ children }) {
 
         try {
           const statusRes = await fetch(
-            "https://rewardsuatapi.hireagent.co/api/location/status",
+            "http://localhost:4001/api/location/status",
             {
               method: "GET",
               headers: {
