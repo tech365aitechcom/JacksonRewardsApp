@@ -23,7 +23,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
     React.useEffect(() => {
         const user = typeof window !== "undefined" ? getUserFromLocalStorage() : null;
         const hasFreshCache = mostPlayedScreenGames?.length && mostPlayedScreenCacheTimestamp && (Date.now() - mostPlayedScreenCacheTimestamp < CACHE_STALE_MS);
-        if (hasFreshCache || mostPlayedScreenStatus === "loading") return;
+        if (hasFreshCache || mostPlayedScreenStatus === "loading" || mostPlayedScreenStatus === "failed") return;
         dispatch(fetchMostPlayedScreenGames({
             user: user || null,
             page: 1,

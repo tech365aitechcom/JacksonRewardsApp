@@ -38,7 +38,7 @@ export const HighestEarningGame = () => {
     // FIX: deps are section-specific primitives — no loop when other sections update
     useEffect(() => {
         const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
-        if (hasFreshCache || sectionStatus === "loading") return;
+        if (hasFreshCache || sectionStatus === "loading" || sectionStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
             user: userProfile,

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   login,
@@ -26,6 +26,7 @@ import {
 } from "@/lib/verisoulSDK";
 import useOnboardingStore from "@/stores/useOnboardingStore";
 import { App } from "@capacitor/app";
+import { Preferences } from "@capacitor/preferences";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchUserProfile,
@@ -128,6 +129,7 @@ export function AuthProvider({ children }) {
             // Capacitor v7+: addListener returns a Promise<PluginListenerHandle>
             listener = await App.addListener("appUrlOpen", (event) => {
               const urlString = event.url;
+              console.log("🔗 [DeepLink] appUrlOpen fired. Raw URL:", urlString);
 
               let parsableUrl;
               let path;
@@ -140,33 +142,76 @@ export function AuthProvider({ children }) {
                 );
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
+                console.log("🔗 [DeepLink] Custom scheme parsed →", { path, hasToken: !!token, allParams: Object.fromEntries(parsableUrl.searchParams) });
               }
               // Handle HTTPS deep links (Android App Links)
               else if (urlString.startsWith("https://")) {
                 parsableUrl = new URL(urlString);
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
+                console.log("🔗 [DeepLink] HTTPS scheme parsed →", { path, hasToken: !!token, allParams: Object.fromEntries(parsableUrl.searchParams) });
+              } else {
+                console.warn("🔗 [DeepLink] Unknown URL scheme — not handled:", urlString);
               }
 
               // Process the deep link
               if (path && token) {
+                console.log("🔗 [DeepLink] Has token → success path:", path);
                 if (path === "/reset-password") {
                   router.push(`/reset-password?token=${token}`);
                 } else if (path === "/auth/callback") {
-                  handleSocialAuthCallback(token).then((result) => {
-                    router.replace(result.ok ? "/location" : "/login");
-                  });
+                  // Navigate immediately to the callback page (spinner UI) instead of
+                  // processing auth inline — this prevents the login screen from sitting
+                  // idle for ~3s while API calls complete in the background.
+                  // source=native tells the callback page to skip its browser-close redirect.
+                  console.log("🔗 [DeepLink] Navigating to /auth/callback with token (source=native)");
+                  router.replace(
+                    `/auth/callback?token=${encodeURIComponent(token)}&source=native`,
+                  );
                 }
-              } else if (path === "/auth/callback" && parsableUrl) {
-                // No token → backend sent an error message back via deep link
-                const message =
+              } else if (
+                (path === "/auth/error" || path === "/auth/callback") &&
+                parsableUrl
+              ) {
+                // Backend sent an error back via deep link (no token present)
+                const accountStatus =
+                  parsableUrl.searchParams.get("accountStatus") || null;
+                const rawMessage =
                   parsableUrl.searchParams.get("message") ||
                   parsableUrl.searchParams.get("error") ||
                   parsableUrl.searchParams.get("error_description") ||
-                  "Google sign-in failed. Please try again.";
-                router.replace(
-                  `/login?googleError=${encodeURIComponent(message)}`,
-                );
+                  null;
+
+                console.log("❌ [DeepLink] Error path detected →", { path, accountStatus, rawMessage, allParams: Object.fromEntries(parsableUrl.searchParams) });
+
+                // Apply status → message mapping per backend spec
+                let message;
+                if (accountStatus === "suspended") {
+                  message =
+                    rawMessage ||
+                    "Your account has been suspended. Please contact support for more information.";
+                } else if (accountStatus === "inactive") {
+                  message =
+                    "Your account is inactive. Please contact support to reactivate your account.";
+                } else if (accountStatus === "paused") {
+                  message =
+                    rawMessage ||
+                    "Your account has been paused. Please contact support for more information.";
+                } else if (accountStatus) {
+                  message =
+                    "Your account is not active. Please contact support for more information.";
+                } else {
+                  // No accountStatus = server crash fallback
+                  message = rawMessage || "Google authentication failed";
+                }
+
+                console.log("❌ [DeepLink] Mapped error message:", message, "| accountStatus:", accountStatus);
+
+                const loginUrl = `/login?googleError=${encodeURIComponent(message)}${accountStatus ? `&accountStatus=${encodeURIComponent(accountStatus)}` : ""}`;
+                console.log("❌ [DeepLink] Navigating to login with error URL:", loginUrl);
+                router.replace(loginUrl);
+              } else {
+                console.warn("🔗 [DeepLink] Path not matched or no parsableUrl →", { path, hasToken: !!token, hasParsableUrl: !!parsableUrl });
               }
             });
 
@@ -487,12 +532,19 @@ export function AuthProvider({ children }) {
       walletScreen &&
       (walletScreenStatus === "succeeded" || walletScreenStatus === "idle");
     // gamesBySection is an object {sectionName: []}, not an array — use Object.keys
-    const hasGamesData = gamesBySection && Object.keys(gamesBySection).length > 0;
+    const hasGamesData =
+      gamesBySection && Object.keys(gamesBySection).length > 0;
     const hasBonusDaysData = bonusDaysData && bonusDaysStatus === "succeeded";
     const hasVipData = vipStatusState === "succeeded";
     const SURVEY_CACHE_TTL = 90 * 1000;
-    const hasFreshSurveys = surveysStatus === "succeeded" && surveysCacheTimestamp && Date.now() - surveysCacheTimestamp < SURVEY_CACHE_TTL;
-    const hasFreshNonGameOffers = nonGameOffersStatus === "succeeded" && nonGameOffersCacheTimestamp && Date.now() - nonGameOffersCacheTimestamp < SURVEY_CACHE_TTL;
+    const hasFreshSurveys =
+      surveysStatus === "succeeded" &&
+      surveysCacheTimestamp &&
+      Date.now() - surveysCacheTimestamp < SURVEY_CACHE_TTL;
+    const hasFreshNonGameOffers =
+      nonGameOffersStatus === "succeeded" &&
+      nonGameOffersCacheTimestamp &&
+      Date.now() - nonGameOffersCacheTimestamp < SURVEY_CACHE_TTL;
 
     // Get user for game fetching
     const getUser = () =>
@@ -525,8 +577,22 @@ export function AuthProvider({ children }) {
       dispatch(fetchUserData({ userId: user._id, token }));
     }
     if (userForGames && !hasGamesData) {
-      dispatch(fetchGamesBySection({ uiSection: "Swipe", user: userForGames, page: 1, limit: 10 }));
-      dispatch(fetchGamesBySection({ uiSection: "Most Played", user: userForGames, page: 1, limit: 10 }));
+      dispatch(
+        fetchGamesBySection({
+          uiSection: "Swipe",
+          user: userForGames,
+          page: 1,
+          limit: 10,
+        }),
+      );
+      dispatch(
+        fetchGamesBySection({
+          uiSection: "Most Played",
+          user: userForGames,
+          page: 1,
+          limit: 10,
+        }),
+      );
     }
 
     // ── STAGE 2 (400 ms): Daily challenge ──────────────────────────────────
@@ -534,58 +600,123 @@ export function AuthProvider({ children }) {
     const year = now.getFullYear();
     const month = now.getMonth();
     const dailyTimer = setTimeout(() => {
-      if (typeof window !== "undefined" && window.location.pathname === "/dailychallenge") return;
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname === "/dailychallenge"
+      )
+        return;
       const state = store.getState();
       const dc = state.dailyChallenge || {};
       const CACHE_TTL = 5 * 60 * 1000;
-      const hasFreshCalendar = dc.calendar && dc.calendarCacheTimestamp && Date.now() - dc.calendarCacheTimestamp < CACHE_TTL;
-      const hasFreshToday = dc.today && dc.todayCacheTimestamp && Date.now() - dc.todayCacheTimestamp < CACHE_TTL;
-      const hasFreshBonus = dc.bonusDays && dc.bonusDaysCacheTimestamp && Date.now() - dc.bonusDaysCacheTimestamp < CACHE_TTL;
-      if ((dc.calendarStatus || "idle") === "idle" && !hasFreshCalendar) dispatch(fetchDailyCalendar({ year, month, token }));
-      if ((dc.todayStatus || "idle") === "idle" && !hasFreshToday) dispatch(fetchDailyToday({ token }));
-      if ((dc.bonusDaysStatus || "idle") === "idle" && !hasFreshBonus) dispatch(fetchBonusDays({ token }));
+      const hasFreshCalendar =
+        dc.calendar &&
+        dc.calendarCacheTimestamp &&
+        Date.now() - dc.calendarCacheTimestamp < CACHE_TTL;
+      const hasFreshToday =
+        dc.today &&
+        dc.todayCacheTimestamp &&
+        Date.now() - dc.todayCacheTimestamp < CACHE_TTL;
+      const hasFreshBonus =
+        dc.bonusDays &&
+        dc.bonusDaysCacheTimestamp &&
+        Date.now() - dc.bonusDaysCacheTimestamp < CACHE_TTL;
+      if ((dc.calendarStatus || "idle") === "idle" && !hasFreshCalendar)
+        dispatch(fetchDailyCalendar({ year, month, token }));
+      if ((dc.todayStatus || "idle") === "idle" && !hasFreshToday)
+        dispatch(fetchDailyToday({ token }));
+      if ((dc.bonusDaysStatus || "idle") === "idle" && !hasFreshBonus)
+        dispatch(fetchBonusDays({ token }));
     }, 400);
 
     // ── STAGE 3 (5 s): Wallet transactions + account / financial data ──────
     const walletTxTimer = setTimeout(() => {
-      const path = typeof window !== "undefined" ? window.location.pathname : "";
-      const skipRoutes = ["/Ticket", "/AchieveGoals", "/cash-coach", "/contact-us", "/privacy-policy", "/reset-password"];
-      if (skipRoutes.some((r) => path === r || path.startsWith(r + "/"))) return;
+      const path =
+        typeof window !== "undefined" ? window.location.pathname : "";
+      const skipRoutes = [
+        "/Ticket",
+        "/AchieveGoals",
+        "/cash-coach",
+        "/contact-us",
+        "/privacy-policy",
+        "/reset-password",
+      ];
+      if (skipRoutes.some((r) => path === r || path.startsWith(r + "/")))
+        return;
       dispatch(fetchWalletTransactions({ token, limit: 5 }));
-      dispatch(fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }));
+      dispatch(
+        fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }),
+      );
       dispatch(fetchAccountOverview());
       dispatch(fetchFinancialGoals(token));
       dispatch(fetchVipTiers("US"));
       dispatch(fetchLocationHistory(token));
-      dispatch(fetchUserAchievements({ token, category: "games", status: "completed" }));
+      dispatch(
+        fetchUserAchievements({
+          token,
+          category: "games",
+          status: "completed",
+        }),
+      );
     }, 5000);
 
     // ── STAGE 4 (6 s): Most Played screen (full list for /DownloadGame page) ─
     const mostPlayedScreenTimer = setTimeout(() => {
       if (userForGames) {
-        dispatch(fetchMostPlayedScreenGames({ user: userForGames, page: 1, limit: 50 }));
+        dispatch(
+          fetchMostPlayedScreenGames({
+            user: userForGames,
+            page: 1,
+            limit: 50,
+          }),
+        );
       }
     }, 6000);
 
     // ── STAGE 5 (7 s): Leadership + Highest Earning (Wallet / Profile screens) ─
     const secondaryGamesTimer = setTimeout(() => {
       if (userForGames) {
-        dispatch(fetchGamesBySection({ uiSection: "Leadership", user: userForGames, page: 1, limit: 10 }));
-        dispatch(fetchGamesBySection({ uiSection: "Highest Earning", user: userForGames, page: 1, limit: 10 }));
+        dispatch(
+          fetchGamesBySection({
+            uiSection: "Leadership",
+            user: userForGames,
+            page: 1,
+            limit: 10,
+          }),
+        );
+        dispatch(
+          fetchGamesBySection({
+            uiSection: "Highest Earning",
+            user: userForGames,
+            page: 1,
+            limit: 10,
+          }),
+        );
       }
     }, 7000);
 
     // ── STAGE 6 (9 s): Cash Coach Recommendation (TaskListSection / AchieveGoals) ─
     const taskListTimer = setTimeout(() => {
       if (userForGames) {
-        dispatch(fetchGamesBySection({ uiSection: "Cash Coach Recommendation", user: userForGames, page: 1, limit: 10 }));
+        dispatch(
+          fetchGamesBySection({
+            uiSection: "Cash Coach Recommendation",
+            user: userForGames,
+            page: 1,
+            limit: 10,
+          }),
+        );
       }
     }, 9000);
 
     // ── STAGE 7 (30 s): Deals page pre-warm (Cashback + Shopping + Surveys) ────
     const dealsPrewarmTimer = setTimeout(async () => {
       try {
-        const defaultParams = { category: "all", page: 1, limit: 6, useAdminConfig: "true" };
+        const defaultParams = {
+          category: "all",
+          page: 1,
+          limit: 6,
+          useAdminConfig: "true",
+        };
         const [cashbackRes, shoppingRes, surveysRes] = await Promise.all([
           getCashbackOffers(defaultParams, token),
           getShoppingOffers(defaultParams, token),
@@ -647,9 +778,19 @@ export function AuthProvider({ children }) {
 
       // Debounce: only refresh once after 500ms of focus event
       focusTimeoutId = setTimeout(async () => {
-        const path = typeof window !== "undefined" ? window.location.pathname : "";
-        const skipRefreshRoutes = ["/AchieveGoals", "/Ticket", "/cash-coach", "/contact-us", "/privacy-policy"];
-        if (skipRefreshRoutes.some((r) => path === r || path.startsWith(r + "/"))) return;
+        const path =
+          typeof window !== "undefined" ? window.location.pathname : "";
+        const skipRefreshRoutes = [
+          "/AchieveGoals",
+          "/Ticket",
+          "/cash-coach",
+          "/contact-us",
+          "/privacy-policy",
+        ];
+        if (
+          skipRefreshRoutes.some((r) => path === r || path.startsWith(r + "/"))
+        )
+          return;
 
         dispatch(fetchUserProfile({ token, force: true, background: true }));
         dispatch(fetchVipStatus(token));
@@ -720,7 +861,8 @@ export function AuthProvider({ children }) {
                   );
 
                   const sessionAuthData = {
-                    accountId: user._id || user.id || String(user._id || user.id),
+                    accountId:
+                      user._id || user.id || String(user._id || user.id),
                     email: user.email || "",
                     metadata: {
                       deviceId: deviceMetadata.deviceId,
@@ -916,7 +1058,7 @@ export function AuthProvider({ children }) {
     return () => controller.abort();
   }, [token]);
 
-  const handleAuthSuccess = async (data) => {
+  const handleAuthSuccess = useCallback(async (data) => {
     // Log the full response structure for debugging
     console.log("🔍 [AuthContext] handleAuthSuccess received:", {
       hasData: !!data,
@@ -1188,7 +1330,9 @@ export function AuthProvider({ children }) {
     }
 
     return { ok: true, user };
-  };
+  // dispatch is stable (Redux guarantee); all other deps are imported module-level
+  // constants or stable setState functions — safe to use empty deps.
+  }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signIn = async (emailOrMobile, password, turnstileToken = null) => {
     try {
@@ -2032,6 +2176,21 @@ export function AuthProvider({ children }) {
       console.error("❌ Failed to purge persistor:", err);
     }
 
+    // Clear biometric backup keys from Capacitor Preferences (not covered by persistor.purge)
+    // These are stored directly via Preferences.set() in biometricAuth.js, not as Redux persist keys
+    try {
+      await Preferences.remove({ key: "biometric_username_backup" });
+      await Preferences.remove({ key: "biometric_password_backup" });
+      console.log(
+        "✅ [AuthContext] Cleared biometric backup keys from Capacitor Preferences",
+      );
+    } catch (err) {
+      console.error(
+        "❌ Failed to clear Capacitor Preferences biometric backup:",
+        err,
+      );
+    }
+
     setUser(null);
     setToken(null);
 
@@ -2123,41 +2282,44 @@ export function AuthProvider({ children }) {
   };
 
   // MODIFIED: This function now leverages our Redux thunk for cleaner logic
-  const handleSocialAuthCallback = async (socialToken) => {
+  const handleSocialAuthCallback = useCallback(async (socialToken) => {
     setIsLoading(true);
 
     try {
-      // 1. Fetch User Profile
-      const resultAction = await dispatch(fetchUserProfile(socialToken));
+      // 1. Fetch profile + location status in PARALLEL (saves ~200-400ms vs sequential)
+      const [profileAction, locationResult] = await Promise.allSettled([
+        dispatch(fetchUserProfile(socialToken)),
+        fetch(
+          "https://rewardsuatapi.hireagent.co/api/location/status",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${socialToken}`,
+              "Content-Type": "application/json",
+            },
+          },
+        ),
+      ]);
 
-      if (fetchUserProfile.fulfilled.match(resultAction)) {
+      const resultAction = profileAction.status === "fulfilled" ? profileAction.value : null;
+
+      if (resultAction && fetchUserProfile.fulfilled.match(resultAction)) {
         const userProfile = resultAction.payload;
 
-        // --- FETCH USER STATUS (Disclosure/Location) ---
+        // --- PARSE USER STATUS (Disclosure/Location) ---
         let statusData = { needsDisclosure: true, needsLocation: true }; // Safe defaults
 
         try {
-          const statusRes = await fetch(
-            "https://rewardsuatapi.hireagent.co/api/location/status",
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${socialToken}`,
-                "Content-Type": "application/json",
-              },
-            },
-          );
-
-          const rawText = await statusRes.text();
-
-          try {
-            const statusJson = JSON.parse(rawText);
-
-            if (statusJson.success) {
-              statusData = statusJson.data;
+          if (locationResult.status === "fulfilled") {
+            const rawText = await locationResult.value.text();
+            try {
+              const statusJson = JSON.parse(rawText);
+              if (statusJson.success) {
+                statusData = statusJson.data;
+              }
+            } catch (_) {
+              // Silent JSON parse failure
             }
-          } catch (_) {
-            // Silent JSON parse failure
           }
         } catch (_) {
           // Silent network/CORS failure
@@ -2175,7 +2337,7 @@ export function AuthProvider({ children }) {
           statusData,
         };
       } else {
-        const payload = resultAction.payload;
+        const payload = resultAction?.payload;
         const backendMessage =
           typeof payload === "string"
             ? payload
@@ -2200,7 +2362,8 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  // handleAuthSuccess is memoized above; dispatch is stable.
+  }, [dispatch, handleAuthSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateUserInContext = (newUserData) => {
     setUser(newUserData);

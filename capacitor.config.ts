@@ -17,8 +17,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
+      // launchAutoHide: false — JS calls SplashScreen.hide() when ready (industry standard).
+      // The plugin keeps the native splash visible indefinitely until we call hide().
+      launchAutoHide: false,
+      // launchFadeOutDuration: smooth cross-fade when the splash is dismissed (matches iOS feel).
+      launchFadeOutDuration: 400,
       backgroundColor: "#000000",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",

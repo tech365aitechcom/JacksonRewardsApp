@@ -4,8 +4,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
 import { useRouter } from "next/navigation";
 import { handleGameDownload } from "@/lib/gameDownloadUtils";
+import { useVipStatus } from "@/hooks/useVipStatus";
+import { trackUndoUsage, getUndoUsage } from "@/lib/api";
 
 const EMPTY_ARRAY = [];
+
+const UNDO_LIMITS = { Free: 1, Bronze: 6, Platinum: 12, Gold: 8 };
 
 const GameCard = ({ onClose: onCloseProp }) => {
     const dispatch = useDispatch();
@@ -20,14 +24,15 @@ const GameCard = ({ onClose: onCloseProp }) => {
     const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const inProgressGames = useSelector((state) => state.games.inProgressGames ?? EMPTY_ARRAY);
     const { details: userProfile } = useSelector((state) => state.profile);
+    const { currentTier } = useVipStatus();
     const [showTooltip, setShowTooltip] = useState(false);
     const [currentGameIndex, setCurrentGameIndex] = useState(0);
     const [undoCount, setUndoCount] = useState(0);
     const [showVIPModal, setShowVIPModal] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [swipeHistory, setSwipeHistory] = useState([]);
-    const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-    const [maxUndoLimit, setMaxUndoLimit] = useState(3);
+    const [maxUndoLimit, setMaxUndoLimit] = useState(1);
+    const [isUnlimitedUndo, setIsUnlimitedUndo] = useState(false);
     const [showLastCardModal, setShowLastCardModal] = useState(false);
     const [isLastCardReached, setIsLastCardReached] = useState(false);
     const [showLastCard, setShowLastCard] = useState(false);
@@ -35,6 +40,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
     const [isLoopMode, setIsLoopMode] = useState(false);
     const tooltipRef = useRef(null);
     const cardRef = useRef(null);
+    const undoLoadedRef = useRef(false);
     const [swipeDirection, setSwipeDirection] = useState(null);
     const [startX, setStartX] = useState(0);
     const [currentX, setCurrentX] = useState(0);
@@ -51,49 +57,70 @@ const GameCard = ({ onClose: onCloseProp }) => {
         return localStorage.getItem('userId') || 'default_user_id';
     }, []);
 
-    // SIMPLE LOGIC: Use Redux state to check if user has downloaded games
+    // Load undo count on mount: backend is source of truth, localStorage is fallback
     useEffect(() => {
-        // Use Redux state instead of localStorage for consistency
-        const hasDownloadedGames = inProgressGames && inProgressGames.length > 0;
-
-        // SIMPLE LOGIC: If no downloaded games = unlimited undos, no VIP modal
-        // If downloaded games = limited undos (3), VIP modal after limit
-        const isFirstTime = !hasDownloadedGames;
-        setIsFirstTimeUser(isFirstTime);
-
-        // Load undo count from LOCAL storage
-        const savedUndoCount = localStorage.getItem('gameCard_undoCount');
-        if (isFirstTime) {
-            // No downloaded games: unlimited undos, reset count
-            setUndoCount(0);
-            localStorage.removeItem('gameCard_undoCount');
-            setMaxUndoLimit(-1); // Unlimited
-        } else {
-            // Has downloaded games: limited undos
-            const countToSet = savedUndoCount ? parseInt(savedUndoCount, 10) : 0;
-            setUndoCount(countToSet);
-            setMaxUndoLimit(3); // Limited to 3
-        }
-
-        // Load swipe history from localStorage
-        const savedSwipeHistory = localStorage.getItem('gameCard_swipeHistory');
-        if (savedSwipeHistory) {
-            try {
-                const parsedHistory = JSON.parse(savedSwipeHistory);
-                setSwipeHistory(parsedHistory);
-            } catch (error) {
-                setSwipeHistory([]);
+        const loadUndoCount = async () => {
+            // Load swipe history from localStorage immediately (no backend equivalent)
+            const savedSwipeHistory = localStorage.getItem('gameCard_swipeHistory');
+            if (savedSwipeHistory) {
+                try {
+                    const parsed = JSON.parse(savedSwipeHistory);
+                    setSwipeHistory(parsed);
+                } catch (_) {
+                    setSwipeHistory([]);
+                }
             }
-        }
 
-    }, [inProgressGames]);
+            // Try to get the authoritative undo count from backend
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await getUndoUsage(token);
+                if (res?.success && res?.data) {
+                    if (res.data.unlimited === true) {
+                        // No games downloaded yet — unlimited undo/swipe
+                        setIsUnlimitedUndo(true);
+                        console.log('[GameCard][Init] Unlimited undo mode (no games downloaded yet)');
+                    } else if (res.data.undoCount != null) {
+                        const serverCount = res.data.undoCount;
+                        setUndoCount(serverCount);
+                        localStorage.setItem('gameCard_undoCount', serverCount.toString());
+                        console.log(`[GameCard][Init] undoCount from backend: ${serverCount}`);
+                    } else {
+                        throw new Error('no data');
+                    }
+                } else {
+                    throw new Error('no data');
+                }
+            } catch (_) {
+                // Fallback to localStorage if API fails
+                const savedUndoCount = localStorage.getItem('gameCard_undoCount');
+                const countToSet = savedUndoCount ? parseInt(savedUndoCount, 10) : 0;
+                setUndoCount(countToSet);
+                console.log(`[GameCard][Init] undoCount from localStorage fallback: ${countToSet}`);
+            } finally {
+                undoLoadedRef.current = true;
+            }
+        };
 
-    // Save undo count to LOCAL storage (persist across navigation)
+        loadUndoCount();
+    }, []); // runs once on mount only
+
+    // Update undo limit when VIP tier changes — does NOT touch undoCount
     useEffect(() => {
-        if (!isFirstTimeUser) {
-            localStorage.setItem('gameCard_undoCount', undoCount.toString());
-        }
-    }, [undoCount, isFirstTimeUser]);
+        const tier = currentTier
+            ? currentTier.charAt(0).toUpperCase() + currentTier.slice(1).toLowerCase()
+            : 'Free';
+        const limit = UNDO_LIMITS[tier] ?? 1;
+        setMaxUndoLimit(limit);
+        console.log(`[GameCard][VIP] Tier detected: "${currentTier}" → normalized: "${tier}" → maxUndoLimit set to ${limit}`);
+    }, [currentTier]);
+
+    // Save undo count to localStorage — only after initial load to avoid overwriting saved value
+    useEffect(() => {
+        if (!undoLoadedRef.current) return;
+        localStorage.setItem('gameCard_undoCount', undoCount.toString());
+        console.log(`[GameCard][Save] undoCount saved to localStorage: ${undoCount}`);
+    }, [undoCount]);
 
     // Save swipe history to localStorage (always — including empty so cleared state persists)
     useEffect(() => {
@@ -199,37 +226,55 @@ const GameCard = ({ onClose: onCloseProp }) => {
     }, [currentGameIndex, swipeGames, logSwipePreference, router]);
 
     const handleUndo = useCallback(() => {
-        // SIMPLE LOGIC: Check if user can undo
-        const canUndo = (maxUndoLimit === -1) || (undoCount < maxUndoLimit);
+        const canUndo = isUnlimitedUndo || undoCount < maxUndoLimit;
+        console.log(`[GameCard][Undo] Attempted — unlimited: ${isUnlimitedUndo}, tier: "${currentTier || 'Free'}", used: ${undoCount}/${maxUndoLimit}, canUndo: ${canUndo}, historyLength: ${swipeHistory.length}`, { currentTier, maxUndoLimit, undoCount });
 
         if (canUndo) {
             if (swipeHistory.length > 0) {
-                // Use swipe history for precise undo
                 const lastSwipe = swipeHistory[swipeHistory.length - 1];
+                console.log(`[GameCard][Undo] Restoring game at index ${lastSwipe.gameIndex} (title: "${lastSwipe.game?.title || 'unknown'}")`);
                 setCurrentGameIndex(lastSwipe.gameIndex);
                 setSwipeHistory(prev => prev.slice(0, -1));
 
-                // Reset last card state if going back to a previous game
                 if (isLastCardReached) {
                     setIsLastCardReached(false);
                     setShowLastCard(false);
                 }
             } else if (currentGameIndex > 0) {
-                // Simple fallback: go back to previous game
+                console.log(`[GameCard][Undo] No history — falling back to index ${currentGameIndex - 1}`);
                 setCurrentGameIndex(currentGameIndex - 1);
+            } else {
+                console.log('[GameCard][Undo] Nothing to undo — no history and at first card');
             }
 
-            // FIXED: Only increment undo count for users with downloaded games
-            if (!isFirstTimeUser) {
-                setUndoCount(undoCount + 1);
+            if (!isUnlimitedUndo) {
+                const newUndoCount = undoCount + 1;
+                setUndoCount(newUndoCount);
+                console.log(`[GameCard][Undo] Success — undoCount now ${newUndoCount}/${maxUndoLimit}`);
+
+                // Track undo usage in backend (fire-and-forget)
+                const restoredGame = swipeHistory.length > 0 ? swipeHistory[swipeHistory.length - 1]?.game : null;
+                trackUndoUsage(
+                    {
+                        gameId: restoredGame?._id || restoredGame?.id || restoredGame?.gameId || null,
+                        gameTitle: restoredGame?.title || null,
+                        undoCount: newUndoCount,
+                        maxUndoLimit: maxUndoLimit,
+                        tier: currentTier
+                            ? currentTier.charAt(0).toUpperCase() + currentTier.slice(1).toLowerCase()
+                            : 'Free',
+                        restoredFromIndex: currentGameIndex,
+                    },
+                    typeof window !== "undefined" ? localStorage.getItem("authToken") : null,
+                ).catch((err) => console.warn('[GameCard][Undo] trackUndoUsage failed (non-critical):', err));
+            } else {
+                console.log('[GameCard][Undo] Success (unlimited mode — no count tracked)');
             }
         } else {
-            // FIXED: Show VIP modal only for users with downloaded games who reached undo limit
-            if (!isFirstTimeUser && undoCount >= maxUndoLimit) {
-                setShowVIPModal(true);
-            }
+            console.log(`[GameCard][Undo] Limit reached (${undoCount}/${maxUndoLimit}) — showing VIP upgrade modal`);
+            setShowVIPModal(true);
         }
-    }, [isFirstTimeUser, maxUndoLimit, undoCount, swipeHistory, isLastCardReached, currentGameIndex]);
+    }, [isUnlimitedUndo, maxUndoLimit, undoCount, swipeHistory, isLastCardReached, currentGameIndex, currentTier]);
 
     const handleDownload = useCallback(async () => {
         const currentGame = swipeGames[currentGameIndex];
@@ -249,7 +294,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 }
             }
         }
-    }, [currentGameIndex, swipeGames, undoCount, swipeHistory.length, isFirstTimeUser]);
+    }, [currentGameIndex, swipeGames, undoCount, swipeHistory.length]);
 
     const handleClose = useCallback(() => {
         // If in loop mode, go back to last game instead of closing
@@ -291,6 +336,17 @@ const GameCard = ({ onClose: onCloseProp }) => {
     const handleReject = () => {
         handleSwipeLeft(); // Same as swipe left - skip current game and show next
     };
+
+    // X button: skip to next available game only — no loop, no undo history
+    const handleXButton = useCallback(() => {
+        console.log(`[GameCard][X] Pressed — currentIndex: ${currentGameIndex}, total: ${swipeGames.length}`);
+        if (currentGameIndex >= swipeGames.length - 1) {
+            console.log('[GameCard][X] Already at last game — nothing to do');
+            return;
+        }
+        console.log(`[GameCard][X] Moving to index ${currentGameIndex + 1} (NO undo history entry added)`);
+        setCurrentGameIndex(currentGameIndex + 1);
+    }, [currentGameIndex, swipeGames]);
 
     const handleVIPUpgrade = () => {
         setShowVIPModal(false);
@@ -395,7 +451,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
             src: "https://c.animaapp.com/DfFsihWg/img/group-2@2x.png",
             alt: "Close",
             position: "left-0",
-            onClick: handleUndo,
+            onClick: handleXButton,
         },
         {
             id: 2,
@@ -403,8 +459,8 @@ const GameCard = ({ onClose: onCloseProp }) => {
             alt: "Undo",
             position: "left-24",
             label: {
-                current: isFirstTimeUser ? '∞' : (maxUndoLimit === -1 ? '∞' : maxUndoLimit - undoCount),
-                total: isFirstTimeUser ? '∞' : (maxUndoLimit === -1 ? '∞' : maxUndoLimit)
+                current: isUnlimitedUndo ? '∞' : Math.max(0, maxUndoLimit - undoCount),
+                total: isUnlimitedUndo ? '∞' : maxUndoLimit,
             },
             onClick: handleUndo,
         },
@@ -921,17 +977,15 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     >
                         <div className="text-white font-medium text-sm [font-family:'Poppins',Helvetica] leading-normal">
                             <div className="text-center text-gray-200">
-                                {isFirstTimeUser
-                                    ? "As a new user, you can undo as many times as needed."
-                                    : `You have ${maxUndoLimit === -1 ? 'unlimited' : maxUndoLimit - undoCount} undo attempts remaining.`
-                                }
+                                {isUnlimitedUndo
+                                    ? 'You have unlimited undos! Download a game to activate tier-based limits.'
+                                    : `You have ${Math.max(0, maxUndoLimit - undoCount)} undo attempt${maxUndoLimit - undoCount !== 1 ? 's' : ''} remaining.`}
                             </div>
-                            {!isFirstTimeUser && (
-                                <div className="text-center text-gray-400 text-xs mt-2">
-                                    {maxUndoLimit === 3 && "Returning User: 3 undos"}
-                                    {maxUndoLimit === -1 && "First-time User: Unlimited undos"}
-                                </div>
-                            )}
+                            <div className="text-center text-gray-400 text-xs mt-2">
+                                {isUnlimitedUndo
+                                    ? 'Unlimited swipes & undos'
+                                    : `${currentTier || 'Free'} plan: ${maxUndoLimit} undo${maxUndoLimit !== 1 ? 's' : ''}`}
+                            </div>
                         </div>
                         <div className="absolute top-[-8px] right-[25px] w-4 h-4 bg-black/95 border-t border-l border-gray-600/50 transform rotate-45"></div>
                     </div>
@@ -943,7 +997,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         <div className="bg-black rounded-lg p-6 max-w-sm mx-4 border border-gray-600">
                             <h3 className="text-lg font-bold text-white mb-4">Upgrade Your Plan</h3>
                             <p className="text-white mb-6 text-center">
-                                You've used all your undo attempts. Update your plan to unlock unlimited undos and more premium features!
+                                You've used all {maxUndoLimit} undo attempt{maxUndoLimit !== 1 ? 's' : ''} on your {currentTier || 'Free'} plan. Upgrade to get more undos: Bronze (6), Gold (8), Platinum (12).
                             </p>
                             <div className="flex gap-3">
                                 <button

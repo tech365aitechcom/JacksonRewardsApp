@@ -10,8 +10,16 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-        <!-- System splash screen: black background, no icon so it's invisible/instant -->
-        <item name="android:windowSplashScreenBackground">#000000</item>
+        <!--
+            System splash screen (Android 12+).
+            windowSplashScreenBackground: dominant green from splash.jpg so the transition
+            from system-splash → Activity-window-background (splash_bg = splash.jpg) is seamless.
+            windowSplashScreenAnimatedIcon: the adaptive launcher icon (Jackson character).
+            This is the industry-standard pattern — show the real app icon centred on a
+            brand-colour background, exactly like WhatsApp, Instagram, Spotify, etc.
+        -->
+        <item name="android:windowSplashScreenBackground">#3DB140</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
 
         <!-- Activity window background while WebView initializes after system splash -->
         <item name="android:background">@drawable/splash_bg</item>

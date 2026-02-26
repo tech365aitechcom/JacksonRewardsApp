@@ -2,6 +2,8 @@ package com.jackson.app;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.webkit.WebView;
 import androidx.core.splashscreen.SplashScreen;
@@ -71,12 +73,14 @@ public class MainActivity extends BridgeActivity {
             // Ignore if bridge is not available yet
         }
 
-        // Keep the splash screen visible for a minimum duration
-        splashScreen.setKeepOnScreenCondition(() -> {
-            // You can add conditions here to control when to hide the splash screen
-            // For now, we'll let it show for a minimum duration
-            return false; // This will hide the splash screen immediately after the app loads
-        });
+        // Keep the Android 12+ system splash visible until Capacitor's own overlay
+        // has had a chance to attach to the WebView. Without this delay the system
+        // splash exits immediately, exposing a raw white/black frame before the
+        // Capacitor layer appears. 250 ms is enough for the plugin to initialise.
+        // Industry pattern: hold system splash → Capacitor overlay takes over seamlessly.
+        final boolean[] keepSplash = {true};
+        splashScreen.setKeepOnScreenCondition(() -> keepSplash[0]);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash[0] = false, 250);
     }
 
     /** AdMob App ID from AndroidManifest (for debug logs). */

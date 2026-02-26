@@ -25,7 +25,7 @@ export const ChallengeGroupSection = ({ streak }) => {
         if (!token) return;
 
         const hasFreshBonus = bonusDaysData && bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
-        if (hasFreshBonus || bonusDaysStatus === "loading") return;
+        if (hasFreshBonus || bonusDaysStatus === "loading" || bonusDaysStatus === "failed") return;
 
         dispatch(fetchBonusDays({ token }));
     }, [token, bonusDaysStatus, bonusDaysData, bonusDaysCacheTimestamp, dispatch]);

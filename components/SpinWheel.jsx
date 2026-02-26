@@ -1547,8 +1547,8 @@ export default function SpinWheel() {
                                 )}
                             </motion.div>
 
-                            {/* Display reward breakdown: XP and Coins earned - Icon + Value only */}
-                            {spinReward && spinReward.amount > 0 && (
+                            {/* Display reward breakdown: XP and Coins earned - hidden when pending (ad not yet watched) */}
+                            {spinReward && spinReward.amount > 0 && !(pendingReward > 0 && pendingSpinId) && (
                                 <motion.div
                                     className="mb-4"
                                     initial={{ opacity: 0, scale: 0.8 }}
@@ -1583,15 +1583,17 @@ export default function SpinWheel() {
                                 </motion.div>
                             )}
 
-                            {/* Display ONLY the backend message - no hardcoded status info */}
-                            <motion.div
-                                className="text-base text-gray-300 mb-3 leading-snug whitespace-pre-line text-center px-4"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.4 }}
-                            >
-                                {result}
-                            </motion.div>
+                            {/* Display ONLY the backend message - hidden when pending (ad not yet watched) */}
+                            {!(pendingReward > 0 && pendingSpinId) && (
+                                <motion.div
+                                    className="text-base text-gray-300 mb-3 leading-snug whitespace-pre-line text-center px-4"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.4 }}
+                                >
+                                    {result}
+                                </motion.div>
+                            )}
 
                             {/* Pending reward indicator */}
                             {pendingReward > 0 && (
@@ -1615,7 +1617,11 @@ export default function SpinWheel() {
                                 >
                                     <div className="flex items-center justify-center gap-2">
                                         {spinReward && normalizeRewardType(spinReward.type) === 'xp' ? (
-                                            <span className="text-yellow-300">⭐</span>
+                                            <img
+                                                src="/xp.svg"
+                                                alt="XP"
+                                                className="w-4 h-4"
+                                            />
                                         ) : (
                                             <img
                                                 src="/dollor.png"

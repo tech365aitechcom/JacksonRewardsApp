@@ -86,7 +86,7 @@ export const TaskListSection = () => {
     // Treat cache as fresh when we have a recent timestamp (even if result was empty) to avoid loop.
     useEffect(() => {
         const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
-        if (hasFreshCache || sectionStatus === "loading") return;
+        if (hasFreshCache || sectionStatus === "loading" || sectionStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionKey,
             user: userProfile,

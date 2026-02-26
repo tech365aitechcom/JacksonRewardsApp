@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
 import { useAuth } from "../../contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import BiometricLoginButton from "@/components/BiometricLoginButton";
 import Script from "next/script";
@@ -10,13 +10,15 @@ import Script from "next/script";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [emailOrMobile, setEmailOrMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState({});
+  const [accountStatusError, setAccountStatusError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [biometricMessage, setBiometricMessage] = useState(null);
@@ -26,17 +28,32 @@ export default function LoginPage() {
   const turnstileWidgetId = useRef(null);
 
   // Show Google login error passed via query param (from native deep link error flow)
+  // Uses useSearchParams() so it re-runs even when router.replace() navigates to the
+  // same /login route without unmounting this component (e.g. after Google OAuth error)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const googleError = params.get("googleError");
-      if (googleError) {
-        setError({ form: decodeURIComponent(googleError) });
-        // Clean the URL so error doesn't persist on refresh
-        window.history.replaceState({}, "", "/login");
-      }
+    const googleError = searchParams.get("googleError");
+    const accountStatus = searchParams.get("accountStatus");
+    console.log("🔑 [LoginPage] searchParams changed →", { googleError, accountStatus });
+
+    if (googleError) {
+      const decoded = decodeURIComponent(googleError);
+      console.log("🔑 [LoginPage] googleError found → decoded:", decoded);
+      setError({ form: decoded });
+    } else {
+      console.log("🔑 [LoginPage] No googleError in searchParams");
     }
-  }, []);
+
+    if (accountStatus) {
+      console.log("🔑 [LoginPage] accountStatus found:", accountStatus);
+      setAccountStatusError(accountStatus);
+    }
+
+    if (googleError || accountStatus) {
+      // Clean the URL so error doesn't persist on refresh
+      window.history.replaceState({}, "", "/login");
+      console.log("🔑 [LoginPage] URL cleaned to /login");
+    }
+  }, [searchParams]);
 
   // Prevent overscroll behavior on mobile and hide scrollbars
   useEffect(() => {
@@ -269,7 +286,7 @@ export default function LoginPage() {
           } else {
             router.push("/homepage");
           }
-        }, 24);
+        }, 30);
       }
       else {
         const backendError = result?.error;
@@ -722,6 +739,11 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+              {error.form && (
+                <div className="absolute top-[360px] left-1/2 transform -translate-x-1/2 w-[316px] text-center text-red-400 text-xs [font-family:'Poppins',Helvetica]">
+                  {error.form}
+                </div>
+              )}
 
               <div className="absolute w-[216px] h-[65px] top-[289px] left-1/2 transform -translate-x-1/2">
                 <p className="absolute top-10 left-0 [font-family:'Poppins',Helvetica]  text-center font-medium text-neutral-400 text-sm tracking-[0] leading-[normal]">
@@ -831,14 +853,8 @@ export default function LoginPage() {
                         </div>
                       </button>
                     </div>
-                    {error.form && (
-                      <div className="w-full max-w-[305px] flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
-                        <span className="text-red-400 text-base leading-none">⚠</span>
-                        <p className="text-red-400 text-xs [font-family:'Poppins',Helvetica] text-center break-words flex-1">
-                          {error.form}
-                        </p>
-                      </div>
-                    )}
+                    {console.log("🔑 [LoginPage] Render — error.form:", error.form, "| accountStatusError:", accountStatusError)}
+
                     {biometricMessage && (
                       <div className="w-full max-w-[305px] flex flex-col items-center gap-2">
                         <p className="text-red-400 text-xs text-center break-words">
@@ -908,5 +924,13 @@ export default function LoginPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
