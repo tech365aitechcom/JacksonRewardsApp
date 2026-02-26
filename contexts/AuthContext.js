@@ -1,5 +1,11 @@
 "use client";
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   login,
@@ -129,7 +135,10 @@ export function AuthProvider({ children }) {
             // Capacitor v7+: addListener returns a Promise<PluginListenerHandle>
             listener = await App.addListener("appUrlOpen", (event) => {
               const urlString = event.url;
-              console.log("🔗 [DeepLink] appUrlOpen fired. Raw URL:", urlString);
+              console.log(
+                "🔗 [DeepLink] appUrlOpen fired. Raw URL:",
+                urlString,
+              );
 
               let parsableUrl;
               let path;
@@ -142,16 +151,27 @@ export function AuthProvider({ children }) {
                 );
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
-                console.log("🔗 [DeepLink] Custom scheme parsed →", { path, hasToken: !!token, allParams: Object.fromEntries(parsableUrl.searchParams) });
+                console.log("🔗 [DeepLink] Custom scheme parsed →", {
+                  path,
+                  hasToken: !!token,
+                  allParams: Object.fromEntries(parsableUrl.searchParams),
+                });
               }
               // Handle HTTPS deep links (Android App Links)
               else if (urlString.startsWith("https://")) {
                 parsableUrl = new URL(urlString);
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
-                console.log("🔗 [DeepLink] HTTPS scheme parsed →", { path, hasToken: !!token, allParams: Object.fromEntries(parsableUrl.searchParams) });
+                console.log("🔗 [DeepLink] HTTPS scheme parsed →", {
+                  path,
+                  hasToken: !!token,
+                  allParams: Object.fromEntries(parsableUrl.searchParams),
+                });
               } else {
-                console.warn("🔗 [DeepLink] Unknown URL scheme — not handled:", urlString);
+                console.warn(
+                  "🔗 [DeepLink] Unknown URL scheme — not handled:",
+                  urlString,
+                );
               }
 
               // Process the deep link
@@ -164,7 +184,9 @@ export function AuthProvider({ children }) {
                   // processing auth inline — this prevents the login screen from sitting
                   // idle for ~3s while API calls complete in the background.
                   // source=native tells the callback page to skip its browser-close redirect.
-                  console.log("🔗 [DeepLink] Navigating to /auth/callback with token (source=native)");
+                  console.log(
+                    "🔗 [DeepLink] Navigating to /auth/callback with token (source=native)",
+                  );
                   router.replace(
                     `/auth/callback?token=${encodeURIComponent(token)}&source=native`,
                   );
@@ -182,7 +204,12 @@ export function AuthProvider({ children }) {
                   parsableUrl.searchParams.get("error_description") ||
                   null;
 
-                console.log("❌ [DeepLink] Error path detected →", { path, accountStatus, rawMessage, allParams: Object.fromEntries(parsableUrl.searchParams) });
+                console.log("❌ [DeepLink] Error path detected →", {
+                  path,
+                  accountStatus,
+                  rawMessage,
+                  allParams: Object.fromEntries(parsableUrl.searchParams),
+                });
 
                 // Apply status → message mapping per backend spec
                 let message;
@@ -205,13 +232,24 @@ export function AuthProvider({ children }) {
                   message = rawMessage || "Google authentication failed";
                 }
 
-                console.log("❌ [DeepLink] Mapped error message:", message, "| accountStatus:", accountStatus);
+                console.log(
+                  "❌ [DeepLink] Mapped error message:",
+                  message,
+                  "| accountStatus:",
+                  accountStatus,
+                );
 
                 const loginUrl = `/login?googleError=${encodeURIComponent(message)}${accountStatus ? `&accountStatus=${encodeURIComponent(accountStatus)}` : ""}`;
-                console.log("❌ [DeepLink] Navigating to login with error URL:", loginUrl);
+                console.log(
+                  "❌ [DeepLink] Navigating to login with error URL:",
+                  loginUrl,
+                );
                 router.replace(loginUrl);
               } else {
-                console.warn("🔗 [DeepLink] Path not matched or no parsableUrl →", { path, hasToken: !!token, hasParsableUrl: !!parsableUrl });
+                console.warn(
+                  "🔗 [DeepLink] Path not matched or no parsableUrl →",
+                  { path, hasToken: !!token, hasParsableUrl: !!parsableUrl },
+                );
               }
             });
 
@@ -1058,281 +1096,295 @@ export function AuthProvider({ children }) {
     return () => controller.abort();
   }, [token]);
 
-  const handleAuthSuccess = useCallback(async (data) => {
-    // Log the full response structure for debugging
-    console.log("🔍 [AuthContext] handleAuthSuccess received:", {
-      hasData: !!data,
-      dataType: typeof data,
-      dataKeys: data ? Object.keys(data) : [],
-      fullData: data,
-    });
-
-    // Extract token and user - handle multiple possible response structures:
-    // 1. { token, user } - direct structure
-    // 2. { data: { token, user } } - nested in data
-    // 3. { success: true, data: { token, user } } - API response wrapper
-    // 4. { success: true, token, user } - API response with token/user at top level
-    let token = null;
-    let user = null;
-
-    // Try direct access first
-    if (data?.token) token = data.token;
-    if (data?.user) user = data.user;
-
-    // Try nested in data object
-    if (!token && data?.data?.token) token = data.data.token;
-    if (!user && data?.data?.user) user = data.data.user;
-
-    // Try alternative nested structures
-    if (!token && data?.response?.token) token = data.response.token;
-    if (!user && data?.response?.user) user = data.response.user;
-
-    // Validate token and user before proceeding
-    if (!token || !user) {
-      // Enhanced error logging with full response structure
-      const errorDetails = {
-        hasToken: !!token,
-        hasUser: !!user,
-        tokenValue: token
-          ? typeof token === "string"
-            ? token.substring(0, 20) + "..."
-            : String(token)
-          : null,
-        userValue: user
-          ? typeof user === "object"
-            ? Object.keys(user)
-            : String(user)
-          : null,
-        dataKeys: data ? Object.keys(data) : [],
+  const handleAuthSuccess = useCallback(
+    async (data) => {
+      // Log the full response structure for debugging
+      console.log("🔍 [AuthContext] handleAuthSuccess received:", {
+        hasData: !!data,
         dataType: typeof data,
-        hasSuccess: !!data?.success,
-        successValue: data?.success,
-        hasError: !!data?.error,
-        errorValue: data?.error,
-        hasMessage: !!data?.message,
-        messageValue: data?.message,
-        fullDataStructure: JSON.stringify(data, null, 2).substring(0, 1000),
-      };
-
-      console.error("❌ [AuthContext] Invalid auth data:", errorDetails);
-
-      // Provide more helpful error message
-      const errorMessage =
-        data?.error?.message ||
-        data?.error ||
-        data?.message ||
-        "Invalid authentication data received from server";
-
-      throw new Error(errorMessage);
-    }
-
-    // CRITICAL: Save to localStorage FIRST (synchronously) before setting state
-    // This ensures token is available immediately for navigation
-    try {
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      console.log("✅ [AuthContext] Token saved to localStorage");
-    } catch (err) {
-      console.error("❌ Failed to save to localStorage", err);
-      throw new Error("Failed to persist authentication token");
-    }
-
-    setUser(user);
-    setToken(token); // Setting the token here triggers the Redux fetch effect above
-
-    // Sync my-games in background after login/signup (non-blocking)
-    syncMyGames(token).catch(() => {});
-
-    // INDUSTRIAL: Run Verisoul fraud auth AFTER first paint (non-blocking)
-    (async () => {
-      try {
-        const deviceMetadata = await getDeviceMetadata();
-        let verisoulSessionId = await getVerisoulSessionId();
-        const isFallback = (id) =>
-          typeof id === "string" && id.startsWith("fallback_");
-        if (verisoulSessionId) {
-          const reinitResult = await reinitializeVerisoulSession();
-          if (reinitResult?.sessionId)
-            verisoulSessionId = reinitResult.sessionId;
-          if (isFallback(verisoulSessionId)) {
-            await new Promise((r) => setTimeout(r, 500));
-            const retrySessionId = await getVerisoulSessionId();
-            if (retrySessionId && !isFallback(retrySessionId))
-              verisoulSessionId = retrySessionId;
-          }
-        }
-        if (verisoulSessionId && isFallback(verisoulSessionId))
-          verisoulSessionId = null;
-        const sessionAuthData = {
-          accountId: user._id || user.id || String(user._id || user.id),
-          email: user.email || "",
-          metadata: {
-            deviceId: deviceMetadata.deviceId,
-            appVersion: deviceMetadata.appVersion,
-            deviceModel: deviceMetadata.deviceModel,
-            osVersion: deviceMetadata.osVersion,
-            platform: deviceMetadata.platform,
-            userAgent: deviceMetadata.userAgent,
-            language: deviceMetadata.language,
-            timezone: deviceMetadata.timezone,
-            loginTime: new Date().toISOString(),
-          },
-          group: user.group || user.userGroup || "regular_users",
-        };
-        if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
-        if (user.createdAt || user.created_at) {
-          sessionAuthData.metadata.signupDate =
-            user.createdAt || user.created_at;
-        }
-        const fraudResponse = await authenticateFraudSession(
-          sessionAuthData,
-          token,
-        );
-        if (fraudResponse?.success && fraudResponse?.sessionId) {
-          localStorage.setItem("verisoul_session_id", fraudResponse.sessionId);
-        }
-      } catch (error) {
-        console.error(
-          "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
-          error,
-        );
-      }
-    })();
-
-    // IMPORTANT: Store user data in Redux profile immediately after login
-    // This ensures age and gender are available immediately for game fetching
-    if (user && (user.age || user.ageRange || user.gender || user._id)) {
-      dispatch({
-        type: "profile/setUserFromLogin",
-        payload: user,
+        dataKeys: data ? Object.keys(data) : [],
+        fullData: data,
       });
-    }
 
-    // PREFETCH: Load every API used on the home screen before navigating.
-    // Navigation only happens after all responses are received — no loading states on home screen.
-    if (token) {
-      // TIER 1 — Profile first: user data (age/gender) is required by game section fetches
-      await dispatch(fetchUserProfile({ token }));
+      // Extract token and user - handle multiple possible response structures:
+      // 1. { token, user } - direct structure
+      // 2. { data: { token, user } } - nested in data
+      // 3. { success: true, data: { token, user } } - API response wrapper
+      // 4. { success: true, token, user } - API response with token/user at top level
+      let token = null;
+      let user = null;
 
-      // TIER 2 — Progress bar data: wallet balance + profile stats + XP tier in parallel
-      await Promise.allSettled([
-        dispatch(fetchWalletScreen({ token })),
-        dispatch(fetchProfileStats({ token })),
-        getXPTierProgressBar(token).then((response) => {
-          if (
-            response?.success &&
-            response?.data &&
-            typeof window !== "undefined"
-          ) {
-            try {
-              localStorage.setItem(
-                "xpTierProgressBar",
-                JSON.stringify({ data: response.data, timestamp: Date.now() }),
-              );
-            } catch (_) {}
-          }
-          return response;
-        }),
-      ]);
+      // Try direct access first
+      if (data?.token) token = data.token;
+      if (data?.user) user = data.user;
 
-      // TIER 3 — All remaining homepage sections in parallel
-      await Promise.allSettled([
-        // Non-gaming offers (NonGameOffersSection)
-        dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" })),
-        // Surveys (SurveysSection)
-        dispatch(fetchSurveys({ token })),
-        // VIP status (VipBanner)
-        dispatch(fetchVipStatus(token)),
-        // User game data (useHomepageData / inProgressGames)
-        ...(user && user._id
-          ? [
-              dispatch(fetchUserData({ userId: user._id, token })),
-              // Swipe games (GameCard)
-              dispatch(
-                fetchGamesBySection({
-                  uiSection: "Swipe",
-                  user,
-                  page: 1,
-                  limit: 10,
-                  token,
-                }),
-              ),
-              // Most Played games (MostPlayedGames)
-              dispatch(
-                fetchGamesBySection({
-                  uiSection: "Most Played",
-                  user,
-                  page: 1,
-                  limit: 10,
-                  token,
-                }),
-              ),
-            ]
-          : []),
-      ]);
-    }
+      // Try nested in data object
+      if (!token && data?.data?.token) token = data.data.token;
+      if (!user && data?.data?.user) user = data.data.user;
 
-    // Welcome bonus tasks/timer in background (don't block navigation)
-    if (token) {
-      getWelcomeBonusTasks(token)
-        .then((response) => {
-          if (
-            response?.success &&
-            response?.data &&
-            typeof window !== "undefined"
-          ) {
-            try {
-              localStorage.setItem(
-                "welcomeBonusTasks",
-                JSON.stringify({ data: response.data, timestamp: Date.now() }),
-              );
-            } catch (_) {}
-          }
-        })
-        .catch(() => {});
-      getWelcomeBonusTimer(token)
-        .then((data) => {
-          if (!data || data.success === false) return;
-          const inner = data?.data;
-          const timer = inner?.timer || data?.timer;
-          const msg = inner?.message ?? data?.message ?? data?.msg ?? "";
-          const isActive = inner?.isActive;
-          let end = null;
-          if (inner && typeof inner === "object" && inner.isActive === false)
-            end = Date.now() - 1000;
-          else if (timer && typeof timer === "object") {
-            if (timer.isExpired === true) end = Date.now() - 1000;
-            else if (
-              typeof timer.timeUntilExpiry === "number" &&
-              timer.timeUntilExpiry > 0
-            )
-              end = Date.now() + timer.timeUntilExpiry;
-            else if (timer.completionDeadline) {
-              const t = new Date(timer.completionDeadline).getTime();
-              if (!isNaN(t) && t > Date.now()) end = t;
+      // Try alternative nested structures
+      if (!token && data?.response?.token) token = data.response.token;
+      if (!user && data?.response?.user) user = data.response.user;
+
+      // Validate token and user before proceeding
+      if (!token || !user) {
+        // Enhanced error logging with full response structure
+        const errorDetails = {
+          hasToken: !!token,
+          hasUser: !!user,
+          tokenValue: token
+            ? typeof token === "string"
+              ? token.substring(0, 20) + "..."
+              : String(token)
+            : null,
+          userValue: user
+            ? typeof user === "object"
+              ? Object.keys(user)
+              : String(user)
+            : null,
+          dataKeys: data ? Object.keys(data) : [],
+          dataType: typeof data,
+          hasSuccess: !!data?.success,
+          successValue: data?.success,
+          hasError: !!data?.error,
+          errorValue: data?.error,
+          hasMessage: !!data?.message,
+          messageValue: data?.message,
+          fullDataStructure: JSON.stringify(data, null, 2).substring(0, 1000),
+        };
+
+        console.error("❌ [AuthContext] Invalid auth data:", errorDetails);
+
+        // Provide more helpful error message
+        const errorMessage =
+          data?.error?.message ||
+          data?.error ||
+          data?.message ||
+          "Invalid authentication data received from server";
+
+        throw new Error(errorMessage);
+      }
+
+      // CRITICAL: Save to localStorage FIRST (synchronously) before setting state
+      // This ensures token is available immediately for navigation
+      try {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        console.log("✅ [AuthContext] Token saved to localStorage");
+      } catch (err) {
+        console.error("❌ Failed to save to localStorage", err);
+        throw new Error("Failed to persist authentication token");
+      }
+
+      setUser(user);
+      setToken(token); // Setting the token here triggers the Redux fetch effect above
+
+      // Sync my-games in background after login/signup (non-blocking)
+      syncMyGames(token).catch(() => {});
+
+      // INDUSTRIAL: Run Verisoul fraud auth AFTER first paint (non-blocking)
+      (async () => {
+        try {
+          const deviceMetadata = await getDeviceMetadata();
+          let verisoulSessionId = await getVerisoulSessionId();
+          const isFallback = (id) =>
+            typeof id === "string" && id.startsWith("fallback_");
+          if (verisoulSessionId) {
+            const reinitResult = await reinitializeVerisoulSession();
+            if (reinitResult?.sessionId)
+              verisoulSessionId = reinitResult.sessionId;
+            if (isFallback(verisoulSessionId)) {
+              await new Promise((r) => setTimeout(r, 500));
+              const retrySessionId = await getVerisoulSessionId();
+              if (retrySessionId && !isFallback(retrySessionId))
+                verisoulSessionId = retrySessionId;
             }
           }
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem(
-                "welcomeBonusTimer",
-                JSON.stringify({
-                  message: msg,
-                  endTime: end,
-                  isActive,
-                  timestamp: Date.now(),
-                }),
-              );
-            } catch (_) {}
+          if (verisoulSessionId && isFallback(verisoulSessionId))
+            verisoulSessionId = null;
+          const sessionAuthData = {
+            accountId: user._id || user.id || String(user._id || user.id),
+            email: user.email || "",
+            metadata: {
+              deviceId: deviceMetadata.deviceId,
+              appVersion: deviceMetadata.appVersion,
+              deviceModel: deviceMetadata.deviceModel,
+              osVersion: deviceMetadata.osVersion,
+              platform: deviceMetadata.platform,
+              userAgent: deviceMetadata.userAgent,
+              language: deviceMetadata.language,
+              timezone: deviceMetadata.timezone,
+              loginTime: new Date().toISOString(),
+            },
+            group: user.group || user.userGroup || "regular_users",
+          };
+          if (verisoulSessionId) sessionAuthData.session_id = verisoulSessionId;
+          if (user.createdAt || user.created_at) {
+            sessionAuthData.metadata.signupDate =
+              user.createdAt || user.created_at;
           }
-        })
-        .catch(() => {});
-    }
+          const fraudResponse = await authenticateFraudSession(
+            sessionAuthData,
+            token,
+          );
+          if (fraudResponse?.success && fraudResponse?.sessionId) {
+            localStorage.setItem(
+              "verisoul_session_id",
+              fraudResponse.sessionId,
+            );
+          }
+        } catch (error) {
+          console.error(
+            "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
+            error,
+          );
+        }
+      })();
 
-    return { ok: true, user };
-  // dispatch is stable (Redux guarantee); all other deps are imported module-level
-  // constants or stable setState functions — safe to use empty deps.
-  }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
+      // IMPORTANT: Store user data in Redux profile immediately after login
+      // This ensures age and gender are available immediately for game fetching
+      if (user && (user.age || user.ageRange || user.gender || user._id)) {
+        dispatch({
+          type: "profile/setUserFromLogin",
+          payload: user,
+        });
+      }
+
+      // PREFETCH: Load every API used on the home screen before navigating.
+      // Navigation only happens after all responses are received — no loading states on home screen.
+      if (token) {
+        // TIER 1 — Profile first: user data (age/gender) is required by game section fetches
+        await dispatch(fetchUserProfile({ token }));
+
+        // TIER 2 — Progress bar data: wallet balance + profile stats + XP tier in parallel
+        await Promise.allSettled([
+          dispatch(fetchWalletScreen({ token })),
+          dispatch(fetchProfileStats({ token })),
+          getXPTierProgressBar(token).then((response) => {
+            if (
+              response?.success &&
+              response?.data &&
+              typeof window !== "undefined"
+            ) {
+              try {
+                localStorage.setItem(
+                  "xpTierProgressBar",
+                  JSON.stringify({
+                    data: response.data,
+                    timestamp: Date.now(),
+                  }),
+                );
+              } catch (_) {}
+            }
+            return response;
+          }),
+        ]);
+
+        // TIER 3 — All remaining homepage sections in parallel
+        await Promise.allSettled([
+          // Non-gaming offers (NonGameOffersSection)
+          dispatch(
+            fetchNonGameOffers({ token, offerType: "cashback_shopping" }),
+          ),
+          // Surveys (SurveysSection)
+          dispatch(fetchSurveys({ token })),
+          // VIP status (VipBanner)
+          dispatch(fetchVipStatus(token)),
+          // User game data (useHomepageData / inProgressGames)
+          ...(user && user._id
+            ? [
+                dispatch(fetchUserData({ userId: user._id, token })),
+                // Swipe games (GameCard)
+                dispatch(
+                  fetchGamesBySection({
+                    uiSection: "Swipe",
+                    user,
+                    page: 1,
+                    limit: 10,
+                    token,
+                  }),
+                ),
+                // Most Played games (MostPlayedGames)
+                dispatch(
+                  fetchGamesBySection({
+                    uiSection: "Most Played",
+                    user,
+                    page: 1,
+                    limit: 10,
+                    token,
+                  }),
+                ),
+              ]
+            : []),
+        ]);
+      }
+
+      // Welcome bonus tasks/timer in background (don't block navigation)
+      if (token) {
+        getWelcomeBonusTasks(token)
+          .then((response) => {
+            if (
+              response?.success &&
+              response?.data &&
+              typeof window !== "undefined"
+            ) {
+              try {
+                localStorage.setItem(
+                  "welcomeBonusTasks",
+                  JSON.stringify({
+                    data: response.data,
+                    timestamp: Date.now(),
+                  }),
+                );
+              } catch (_) {}
+            }
+          })
+          .catch(() => {});
+        getWelcomeBonusTimer(token)
+          .then((data) => {
+            if (!data || data.success === false) return;
+            const inner = data?.data;
+            const timer = inner?.timer || data?.timer;
+            const msg = inner?.message ?? data?.message ?? data?.msg ?? "";
+            const isActive = inner?.isActive;
+            let end = null;
+            if (inner && typeof inner === "object" && inner.isActive === false)
+              end = Date.now() - 1000;
+            else if (timer && typeof timer === "object") {
+              if (timer.isExpired === true) end = Date.now() - 1000;
+              else if (
+                typeof timer.timeUntilExpiry === "number" &&
+                timer.timeUntilExpiry > 0
+              )
+                end = Date.now() + timer.timeUntilExpiry;
+              else if (timer.completionDeadline) {
+                const t = new Date(timer.completionDeadline).getTime();
+                if (!isNaN(t) && t > Date.now()) end = t;
+              }
+            }
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem(
+                  "welcomeBonusTimer",
+                  JSON.stringify({
+                    message: msg,
+                    endTime: end,
+                    isActive,
+                    timestamp: Date.now(),
+                  }),
+                );
+              } catch (_) {}
+            }
+          })
+          .catch(() => {});
+      }
+
+      return { ok: true, user };
+      // dispatch is stable (Redux guarantee); all other deps are imported module-level
+      // constants or stable setState functions — safe to use empty deps.
+    },
+    [dispatch],
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signIn = async (emailOrMobile, password, turnstileToken = null) => {
     try {
@@ -2282,88 +2334,89 @@ export function AuthProvider({ children }) {
   };
 
   // MODIFIED: This function now leverages our Redux thunk for cleaner logic
-  const handleSocialAuthCallback = useCallback(async (socialToken) => {
-    setIsLoading(true);
+  const handleSocialAuthCallback = useCallback(
+    async (socialToken) => {
+      setIsLoading(true);
 
-    try {
-      // 1. Fetch profile + location status in PARALLEL (saves ~200-400ms vs sequential)
-      const [profileAction, locationResult] = await Promise.allSettled([
-        dispatch(fetchUserProfile(socialToken)),
-        fetch(
-          "https://rewardsuatapi.hireagent.co/api/location/status",
-          {
+      try {
+        // 1. Fetch profile + location status in PARALLEL (saves ~200-400ms vs sequential)
+        const [profileAction, locationResult] = await Promise.allSettled([
+          dispatch(fetchUserProfile(socialToken)),
+          fetch("http://localhost:4001/api/location/status", {
             method: "GET",
             headers: {
               Authorization: `Bearer ${socialToken}`,
               "Content-Type": "application/json",
             },
-          },
-        ),
-      ]);
+          }),
+        ]);
 
-      const resultAction = profileAction.status === "fulfilled" ? profileAction.value : null;
+        const resultAction =
+          profileAction.status === "fulfilled" ? profileAction.value : null;
 
-      if (resultAction && fetchUserProfile.fulfilled.match(resultAction)) {
-        const userProfile = resultAction.payload;
+        if (resultAction && fetchUserProfile.fulfilled.match(resultAction)) {
+          const userProfile = resultAction.payload;
 
-        // --- PARSE USER STATUS (Disclosure/Location) ---
-        let statusData = { needsDisclosure: true, needsLocation: true }; // Safe defaults
+          // --- PARSE USER STATUS (Disclosure/Location) ---
+          let statusData = { needsDisclosure: true, needsLocation: true }; // Safe defaults
 
-        try {
-          if (locationResult.status === "fulfilled") {
-            const rawText = await locationResult.value.text();
-            try {
-              const statusJson = JSON.parse(rawText);
-              if (statusJson.success) {
-                statusData = statusJson.data;
+          try {
+            if (locationResult.status === "fulfilled") {
+              const rawText = await locationResult.value.text();
+              try {
+                const statusJson = JSON.parse(rawText);
+                if (statusJson.success) {
+                  statusData = statusJson.data;
+                }
+              } catch (_) {
+                // Silent JSON parse failure
               }
-            } catch (_) {
-              // Silent JSON parse failure
             }
+          } catch (_) {
+            // Silent network/CORS failure
           }
-        } catch (_) {
-          // Silent network/CORS failure
+          // ----------------------------------------------------
+
+          // 2. Handle Auth Success (Save to state/Redux)
+          const authResult = await handleAuthSuccess({
+            token: socialToken,
+            user: userProfile.data?.user || userProfile.user || userProfile,
+          });
+
+          return {
+            ...authResult,
+            statusData,
+          };
+        } else {
+          const payload = resultAction?.payload;
+          const backendMessage =
+            typeof payload === "string"
+              ? payload
+              : (payload?.message ??
+                payload?.error ??
+                (payload && typeof payload === "object"
+                  ? JSON.stringify(payload)
+                  : "Social auth profile fetch failed"));
+          throw new Error(backendMessage);
         }
-        // ----------------------------------------------------
-
-        // 2. Handle Auth Success (Save to state/Redux)
-        const authResult = await handleAuthSuccess({
-          token: socialToken,
-          user: userProfile.data?.user || userProfile.user || userProfile,
-        });
-
-        return {
-          ...authResult,
-          statusData,
-        };
-      } else {
-        const payload = resultAction?.payload;
-        const backendMessage =
-          typeof payload === "string"
-            ? payload
-            : (payload?.message ??
-              payload?.error ??
-              (payload && typeof payload === "object"
-                ? JSON.stringify(payload)
-                : "Social auth profile fetch failed"));
-        throw new Error(backendMessage);
+      } catch (error) {
+        const message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          (error?.response?.data?.detail &&
+            (Array.isArray(error.response.data.detail)
+              ? error.response.data.detail.join(". ")
+              : error.response.data.detail)) ||
+          error?.message ||
+          "Login failed";
+        return { ok: false, error: message };
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        (error?.response?.data?.detail &&
-          (Array.isArray(error.response.data.detail)
-            ? error.response.data.detail.join(". ")
-            : error.response.data.detail)) ||
-        error?.message ||
-        "Login failed";
-      return { ok: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
-  // handleAuthSuccess is memoized above; dispatch is stable.
-  }, [dispatch, handleAuthSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+      // handleAuthSuccess is memoized above; dispatch is stable.
+    },
+    [dispatch, handleAuthSuccess],
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateUserInContext = (newUserData) => {
     setUser(newUserData);
