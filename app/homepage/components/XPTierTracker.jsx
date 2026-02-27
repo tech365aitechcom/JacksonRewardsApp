@@ -5,7 +5,7 @@ import { XPPointsModal } from "../../../components/XPPointsModal";
 import { useWalletUpdates } from "@/hooks/useWalletUpdates";
 import { getXPTierProgressBar } from "@/lib/api";
 
-// XP from profile API (http://localhost:4001/api/profile) -> xp.current, xp.total, xp.tier
+// XP from profile API (https://rewardsuatapi.hireagent.co/api/profile) -> xp.current, xp.total, xp.tier
 const XPTierTracker = ({ stats, token }) => {
     const [isXPModalOpen, setIsXPModalOpen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);

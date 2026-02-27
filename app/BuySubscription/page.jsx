@@ -701,9 +701,9 @@ export default function BuySubscription() {
               return (
                 <button
                   key={tier.id}
-                  className={`inline-flex items-center justify-center gap-2.5 px-[21px] py-[13px] relative flex-1 ${tier.id === 'bronze'
-                      ? 'border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#ffffff4c]'
-                      : ''
+                  className={`inline-flex flex-col items-center justify-center gap-0.5 px-[21px] py-[8px] relative flex-1 ${tier.id === 'bronze'
+                    ? 'border-r [border-right-style:solid] border-l [border-left-style:solid] border-[#ffffff4c]'
+                    : ''
                     } ${isActive ? 'rounded-[10px] overflow-hidden' : ''}`}
                   onClick={() => handleTierSelect(tier.id)}
                   role='tab'
@@ -712,13 +712,20 @@ export default function BuySubscription() {
                     isActive ? { background: tierData[tier.id].gradient } : {}
                   }
                 >
+                  {tier.id === 'gold' && (
+                    <div className="inline-flex items-center justify-center px-[6px] py-[2px] bg-black rounded-[6px] mb-0.5">
+                      <span className="[font-family:'Poppins',Helvetica] font-semibold text-[#F5D800] text-[9px] leading-none whitespace-nowrap">
+                        Most popular
+                      </span>
+                    </div>
+                  )}
                   <div
-                    className={`relative w-fit [font-family:'Poppins',Helvetica] 
+                    className={`relative w-fit [font-family:'Poppins',Helvetica]
     ${isActive
                         ? `font-bold text-[#f4f3fc] text-[18px] text-center ${tier.name === 'Platinum' ? 'mr-3' : ''
                         }`
                         : 'font-normal text-[#f4f3fc] text-[16px] text-center'
-                      } 
+                      }
     tracking-[0] leading-[normal]`}
                   >
                     {tier.name}
@@ -796,8 +803,8 @@ export default function BuySubscription() {
                     <button
                       key={plan.id}
                       className={`flex w-[335px] h-[70.53px] items-center justify-between px-[25.98px] py-[22.27px] relative rounded-[18.56px] ${selectedPlan === plan.id
-                          ? 'bg-black overflow-hidden border-[2.78px] border-solid border-[#1c1c1e] shadow-[0px_0px_0px_0.93px_#ffd200]'
-                          : 'border border-solid border-[#ffffff80]'
+                        ? 'bg-black overflow-hidden border-[2.78px] border-solid border-[#1c1c1e] shadow-[0px_0px_0px_0.93px_#ffd200]'
+                        : 'border border-solid border-[#ffffff80]'
                         }`}
                       onClick={() => handlePlanSelect(plan.id)}
                       role='radio'
@@ -826,8 +833,8 @@ export default function BuySubscription() {
                   <button
                     key={plan.id}
                     className={`flex w-[335px] h-[70.53px] items-center justify-between px-[25.98px] py-[22.27px] relative rounded-[18.56px] ${selectedPlan === plan.id
-                        ? 'bg-black overflow-hidden border-[2.78px] border-solid border-[#1c1c1e] shadow-[0px_0px_0px_0.93px_#ffd200]'
-                        : 'border border-solid border-[#ffffff80]'
+                      ? 'bg-black overflow-hidden border-[2.78px] border-solid border-[#1c1c1e] shadow-[0px_0px_0px_0.93px_#ffd200]'
+                      : 'border border-solid border-[#ffffff80]'
                       }`}
                     onClick={() => handlePlanSelect(plan.id)}
                     role='radio'
