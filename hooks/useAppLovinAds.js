@@ -174,7 +174,7 @@ export const useAppLovinAds = () => {
 
       // Health route commented out so ad init is faster; SDK proceeds without waiting on backend health
       // console.log('[useAppLovinAds] 🔍 Step 1: Verifying backend connection...');
-      // console.log('[useAppLovinAds] 🌐 Backend URL:', process.env.NEXT_PUBLIC_API_URL || 'https://rewardsuatapi.hireagent.co');
+      // console.log('[useAppLovinAds] 🌐 Backend URL:', process.env.NEXT_PUBLIC_API_URL || 'https://rewardsapi.hireagent.co');
       // try {
       //   const healthCheck = await getAppLovinHealth();
       //   console.log('[useAppLovinAds] ✅ Backend health check passed:', healthCheck);

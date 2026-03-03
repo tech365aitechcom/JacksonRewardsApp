@@ -339,7 +339,7 @@ function LoginPageContent() {
     });
 
     setIsRedirecting(true);
-    const backendUrl = "https://rewardsuatapi.hireagent.co";
+    const backendUrl = "https://rewardsapi.hireagent.co";
 
     // Check if the app is running on a native mobile platform (iOS/Android)
     if (Capacitor.isNativePlatform()) {

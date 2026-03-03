@@ -3,7 +3,7 @@ import React, { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
-// Coins from profile API (https://rewardsuatapi.hireagent.co/api/profile) -> wallet.balance
+// Coins from profile API (https://rewardsapi.hireagent.co/api/profile) -> wallet.balance
 const RewardProgress = ({ stats }) => {
     const router = useRouter();
     const rewardGoal = 10000;
