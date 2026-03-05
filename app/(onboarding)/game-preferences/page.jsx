@@ -1,23 +1,16 @@
 'use client'
 import useOnboardingStore from '@/stores/useOnboardingStore'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-
-const GAME_OPTIONS = [
-  { label: 'Puzzle & Brain', value: 'puzzle_brain' },
-  { label: 'Strategy', value: 'strategy' },
-  { label: 'Arcade', value: 'arcade' },
-  { label: 'Simulation', value: 'simulation' },
-  { label: 'Card & Casino', value: 'card_casino' },
-  { label: 'Sports & Racing', value: 'sports_racing' },
-  { label: 'Word & Trivia', value: 'word_trivia' },
-  { label: 'Role Playing / Adventure', value: 'role_playing_adventure' },
-]
+import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 
 export default function GamePreferencesSelection() {
   const router = useRouter()
-  const { gamePreferences, setGamePreferences, setCurrentStep } =
+  const { gamePreferences, setGamePreferences, setCurrentStep, currentStep } =
     useOnboardingStore()
+  const { gamePreferencesOptions, status: onboardingStatus, error } = useSelector((state) => state.onboarding);
+
   const gamePreferencesSafe = Array.isArray(gamePreferences)
     ? gamePreferences
     : []
@@ -26,92 +19,163 @@ export default function GamePreferencesSelection() {
     setCurrentStep(3)
   }, [setCurrentStep])
 
-  const handlePreferenceSelect = async (value) => {
-    const current = Array.isArray(gamePreferences) ? [...gamePreferences] : []
+  useEffect(() => {
+    if (gamePreferencesSafe.length === 3) {
+      setTimeout(() => {
+        router.push('/game-styles')
+      }, 500)
+    }
+  }, [gamePreferencesSafe.length, router])
 
-    let updated
-    if (current.includes(value)) {
-      updated = current.filter((item) => item !== value)
+  const handlePreferenceSelect = (optionId) => {
+    const currentPreferences = [...gamePreferencesSafe];
+    const index = currentPreferences.indexOf(optionId);
+    if (index > -1) {
+      // Remove if already selected
+      currentPreferences.splice(index, 1);
     } else {
-      if (current.length < 3) {
-        updated = [...current, value]
-      } else {
-        return // don't allow more than 3
+      // Add if not selected, but only if less than 3
+      if (currentPreferences.length < 3) {
+        currentPreferences.push(optionId);
       }
     }
-
-    await setGamePreferences(updated)
-
-    if (updated.length === 3) {
-      router.push('/game-styles')
-    }
+    setGamePreferences(currentPreferences);
   }
 
+  const goBack = () => {
+    router.push('/select-gender')
+  }
+
+  const currentQ = {
+    id: 3,
+    question: "What type of game do you enjoy playing?",
+    emoji: "🎮",
+    options: gamePreferencesOptions.map(option => ({
+      text: option.label,
+      emoji: "🎮",
+      icon: null
+    }))
+  }
+
+  const progress = (3 / 5) * 100;
+
   return (
-    <div className='relative w-full h-screen bg-[#272052] overflow-hidden flex flex-col'>
-      {/* Background blur effect */}
-      <div className='absolute w-[542px] h-[542px] top-0 left-0 bg-[#af7de6] rounded-full blur-[250px]' />
+    <div className="w-full mx-auto h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white relative overflow-y-auto">
+      {/* Animated Background Elements */}
+      <div className="absolute top-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-40 left-10 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl animate-pulse delay-700" />
 
-      {/* Header content */}
-      <div className='relative z-10 px-6 pt-20 font-poppins'>
-        <h1 className='text-white text-4xl font-light leading-tight mb-4'>
-          What types of games do you enjoy playing?
-        </h1>
+      {/* Status Bar */}
 
-        <p className='text-white/70 text-base font-light'>Select up to 3</p>
-      </div>
 
-      {/* Selection buttons */}
-      <div className='relative z-10 flex-1 flex flex-col justify-center px-6 space-y-6'>
-        {GAME_OPTIONS.map((option) => {
-          const isSelected = gamePreferencesSafe.includes(option.value)
-          return (
-            <button
-              key={option.value}
-              onClick={() => handlePreferenceSelect(option.value)}
-              className='relative w-full h-16 group focus:outline-none'
-            >
-              {/* Bottom shadow */}
-              <div className='absolute inset-x-0 top-0 h-18 bg-[#D8D5E9] rounded-full' />
+      {/* Fixed Header */}
+      <div className="-mt-4 sticky top-0 bg-gradient-to-b from-gray-900 via-purple-900/95 to-transparent backdrop-blur-sm z-10 pb-0 sm:pb-0.5 md:pb-1 lg:pb-2 pt-0">
+        <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+          {/* Branding */}
+          <div className="text-center mb-4 sm:mb-6 md:mb-8">
+            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-2">💜</div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 bg-gradient-to-r from-purple-200 to-violet-200 bg-clip-text text-transparent">
+              Jackson
+            </h1>
+            <p className="text-purple-300 text-sm sm:text-base md:text-lg">
+              ✨ Let's personalize your experience
+            </p>
+          </div>
 
-              {/* Main button */}
+          {/* Question */}
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 sm:mb-2 animate-bounce-slow">{currentQ.emoji}</div>
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold leading-tight">
+              {currentQ.question}
+            </h2>
+            <p className="text-purple-300 text-sm sm:text-base mt-2">
+              Choose up to 3
+            </p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-xs sm:text-sm text-purple-300">
+              <span>Step {currentStep} of 5</span>
+              <span className="font-semibold">{Math.round(progress)}% 🚀</span>
+            </div>
+            <div className="w-full h-2.5 bg-gray-800/50 rounded-full overflow-hidden shadow-inner">
               <div
-                className={`absolute inset-x-0 top-0 h-16 rounded-full transition-all duration-300 flex items-center justify-start px-12 gap-4
-             bg-white group-hover:translate-y-0.5`}
+                className="h-full bg-gradient-to-r from-purple-500 via-violet-500 to-purple-500 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+                style={{ width: `${progress}%` }}
               >
-                {isSelected ? (
-                  <div className='w-5 h-5 bg-[#7e22ce] rounded-md flex items-center justify-center'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      className='w-3 h-3 text-white'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                      strokeWidth={3}
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        d='M5 13l4 4L19 7'
-                      />
-                    </svg>
-                  </div>
-                ) : (
-                  <div className='w-5 h-5 border-2 border-gray-300 rounded' />
-                )}
-
-                <span
-                  className={`text-base font-semibold font-poppins tracking-wide transition-colors duration-200 ${
-                    isSelected ? 'text-[#272052]' : 'text-[#2D2D2D]'
-                  }`}
-                >
-                  {option.label}
-                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
               </div>
-            </button>
-          )
-        })}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Question Content */}
+      <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 pt-10 pb-8 sm:pb-10 md:pb-12 lg:pb-14">
+
+        <div className="space-y-2">
+          {currentQ.options.map((option, index) => {
+            const isSelected = gamePreferencesSafe.includes(gamePreferencesOptions[index]?.id);
+            return (
+              <button
+                key={index}
+                onClick={() => handlePreferenceSelect(gamePreferencesOptions[index].id)}
+                disabled={!isSelected && gamePreferencesSafe.length === 3}
+                className={`w-full p-2 sm:p-3 md:p-4 lg:p-5 rounded-2xl text-left transition-all duration-300 active:scale-95 transform ${isSelected
+                  ? 'bg-gradient-to-r from-purple-600 to-violet-600 border-2 border-purple-400 shadow-lg shadow-purple-500/50'
+                  : gamePreferencesSafe.length === 3
+                    ? 'bg-gray-600/40 border-2 border-gray-700/50 cursor-not-allowed opacity-50'
+                    : 'bg-purple-900/40 border-2 border-purple-700/50 hover:border-purple-500/70 hover:bg-purple-800/50'
+                  }`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-lg sm:text-xl ${isSelected ? 'bg-white/20' : 'bg-purple-800/50'
+                    }`}>
+                    {option.emoji}
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-tight">{option.text}</span>
+                  </div>
+                  <div className={`flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                    ? 'bg-white border-white'
+                    : 'border-purple-400'
+                    }`}>
+                    {isSelected && <CheckCircle className="w-2 h-2 sm:w-3 sm:h-3 text-purple-600" />}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+
+      </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,20 +1,31 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import useOnboardingStore from "@/stores/useOnboardingStore";
+import { acceptDisclosure, submitOnboarding } from "@/lib/api";
 
 export default function PermissionsPage() {
-  const [verificationCode, setVerificationCode] = useState([
-    "0",
-    "0",
-    "0",
-    "0",
-  ]);
+  const router = useRouter();
+  const { token, isLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const verificationInputs = [
-    { id: 0, value: verificationCode[0] },
-    { id: 1, value: verificationCode[1] },
-    { id: 2, value: verificationCode[2] },
-    { id: 3, value: verificationCode[3] },
-  ];
+  // Check for token in localStorage and redirect if missing
+  useEffect(() => {
+    // Wait for AuthContext to finish loading
+    if (isLoading) return;
+
+    // Check both AuthContext state and localStorage as fallback
+    const storedToken = localStorage.getItem("authToken");
+    const hasToken = token || storedToken;
+
+    if (!hasToken) {
+      console.error("No auth token found. Redirecting to login.");
+      router.replace("/login");
+      return;
+    }
+  }, [token, isLoading, router]);
 
   const permissionItems = [
     {
@@ -39,131 +50,115 @@ export default function PermissionsPage() {
     },
   ];
 
-  const handleVerificationInputChange = (index, value) => {
-    const newCode = [...verificationCode];
-    newCode[index] = value;
-    setVerificationCode(newCode);
+  const handleAgree = async () => {
+    if (isSubmitting) return;
+
+    const storedToken = localStorage.getItem("authToken");
+    const authToken = token || storedToken;
+
+    if (!authToken) {
+      setError("Authentication error. Please log in again.");
+      router.replace("/login");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // 1. Submit all onboarding answers in one call (POST /api/onboarding/submit)
+      // User identified by auth token only; no mobile in body.
+      const onboardingState = useOnboardingStore.getState();
+      const payload = {
+        ...(onboardingState.primaryGoal != null && { primaryGoal: onboardingState.primaryGoal }),
+        ...(onboardingState.gender != null && { gender: onboardingState.gender }),
+        ...(onboardingState.ageRange != null && { ageRange: onboardingState.ageRange }),
+        ...(Array.isArray(onboardingState.gamePreferences) && onboardingState.gamePreferences.length > 0 && { gamePreferences: onboardingState.gamePreferences }),
+        ...(onboardingState.gameStyle != null && { gameStyle: onboardingState.gameStyle }),
+        ...(onboardingState.improvementArea != null && { improvementArea: onboardingState.improvementArea }),
+        ...(onboardingState.dailyEarningGoal != null && { dailyEarningGoal: Number(onboardingState.dailyEarningGoal) }),
+      };
+
+      await submitOnboarding(payload, authToken);
+
+      // 2. Mark onboarding complete and clear local onboarding data
+      localStorage.setItem("onboardingComplete", "true");
+      useOnboardingStore.getState().resetOnboarding();
+
+      // 3. Accept disclosure and go to location
+      await acceptDisclosure(authToken);
+      localStorage.setItem("permissionsAccepted", "true");
+      router.push("/location");
+    } catch (err) {
+      console.error("Onboarding submit or disclosure error:", err);
+      const message = err?.body?.message ?? err?.body?.error ?? err?.message ?? "Something went wrong. Please try again.";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleVerify = () => {
-    console.log("Verification code:", verificationCode.join(""));
-  };
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen bg-[#272052] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
-  const handleAgree = () => {
-    console.log("User agreed to permissions");
-  };
+  // Don't render if no token (will redirect in useEffect)
+  const storedToken = localStorage.getItem("authToken");
+  if (!token && !storedToken) {
+    return null;
+  }
 
   return (
-    <div className="w-full h-screen bg-[#272052] relative overflow-hidden">
-      <div className="w-full max-w-sm mx-auto h-full bg-[#272052] relative overflow-hidden">
-        {/* Background blur effect */}
-        <div
-          className="absolute w-full h-full bg-[#af7de6] rounded-full blur-[250px] opacity-40 scale-150 top-[-200px] left-[-100px]"
-          aria-hidden="true"
-        />
-
-      {/* Verification Section */}
-      <section
-        className="relative z-10 text-center px-8 pt-20"
-        aria-labelledby="verification-heading"
-      >
-        <h1
-          id="verification-heading"
-          className="[font-family:'Poppins',Helvetica] font-normal text-white text-3xl tracking-[0.20px] leading-[1.3] mb-20"
-        >
-          We have sent<br />
-          verification code to<br />
-          your phone number
-        </h1>
-
-        <p className="[font-family:'Poppins',Helvetica] font-light text-white text-base tracking-[0.20px] leading-normal mb-16">
-          Verify it&apos;s you
-        </p>
-
-        <div
-          className="flex items-center justify-center gap-4 mb-12"
-          role="group"
-          aria-label="Verification code input"
-        >
-          {verificationInputs.map((input, index) => (
-            <div key={input.id} className="relative">
-              <div className="w-16 h-16 bg-[url(https://c.animaapp.com/3ZacrHav/img/card@2x.png)] bg-cover rounded-lg">
-                <input
-                  type="text"
-                  maxLength="1"
-                  value={input.value}
-                  onChange={(e) =>
-                    handleVerificationInputChange(index, e.target.value)
-                  }
-                  className="w-full h-full bg-transparent [font-family:'Poppins',Helvetica] font-medium text-white text-xl text-center focus:outline-none border-none"
-                  aria-label={`Verification code digit ${index + 1}`}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={handleVerify}
-          className="w-full max-w-xs mx-auto h-12 rounded-xl bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#272052]"
-          aria-label="Verify phone number"
-        >
-          <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
-            Verify
-          </span>
-        </button>
-      </section>
-
-      {/* Overlay */}
+    <div className="w-full min-h-screen bg-[#272052] flex items-center justify-center ">
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm z-20"
-        aria-hidden="true"
-      />
-
-      {/* Permissions Modal */}
-      <section
-        className="absolute bottom-4 left-4 right-4 h-[85%] z-30 rounded-2xl overflow-hidden [background:radial-gradient(50%_50%_at_50%_50%,rgba(134,47,148,1)_0%,rgba(6,9,78,1)_100%)] flex flex-col"
+        className="w-[315px] h-[720px] max-h-full bg-[radial-gradient(ellipse_at_center,_#862F94_0%,_#06094E_100%)] rounded-[15px] flex flex-col relative overflow-hidden"
         aria-labelledby="permissions-heading"
       >
         <header className="p-6 pb-4">
-          <h2
+          <h1
             id="permissions-heading"
-            className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]"
+            className="[font-family:'Poppins',Helvetica] font-semibold text-[#EFEFEF] text-[18px] tracking-[0] leading-[normal]"
           >
             Prominent Disclosure
-          </h2>
+          </h1>
         </header>
 
         <div className="flex-1 px-6 pb-20 overflow-y-auto">
-          <div className="space-y-6">
-            {permissionItems.map((item, index) => (
-              <article
-                key={index}
-                className="flex flex-col gap-2"
-              >
-                <h3 className="[font-family:'Poppins',Helvetica] font-normal text-white text-sm tracking-[0] leading-5 text-left">
-                  {item.title}
-                </h3>
-                <p className="[font-family:'Poppins',Helvetica] font-light text-gray-300 text-xs tracking-[0] leading-5 text-left pl-4">
-                  {item.description}
-                </p>
-              </article>
-            ))}
+          <div className="relative">
+            {/* Dotted Line from Figma Design */}
+            <div className="space-y-6">
+              {permissionItems.map((item, index) => (
+                <article key={index} className="pl-3">
+                  <h2 className="[font-family:'Poppins',Helvetica] font-normal text-[#FEFEFE] text-[14px] tracking-[0] leading-5 text-left">
+                    {`${index + 1}. ${item.title}`}
+                  </h2>
+                  <p className="mt-2 [font-family:'Poppins',Helvetica] font-light text-[#FEFEFE] text-[12px] tracking-[0] leading-5 text-left">
+                    {item.description}
+                  </p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="absolute bottom-6 left-6 right-6">
+        <div className="absolute bottom-6 left-6 right-6 z-10">
+          {error && <p className="text-red-400 text-center text-sm mb-2">{error}</p>}
           <button
             onClick={handleAgree}
-            className="w-full h-12 rounded-xl bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+            disabled={isSubmitting}
+            className="w-full h-12 rounded-xl bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)] hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Agree to permissions"
           >
             <span className="[font-family:'Poppins',Helvetica] font-semibold text-white text-base tracking-[0] leading-[normal]">
-              Agree
+              {isSubmitting ? 'Agreeing...' : 'Agree'}
             </span>
           </button>
         </div>
-      </section>
       </div>
     </div>
   );

@@ -1,80 +1,59 @@
-'use client'
-import { create } from 'zustand'
-import { Preferences } from '@capacitor/preferences'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
-const STORAGE_KEY = 'onboarding-data'
+const useOnboardingStore = create(
+  persist(
+    (set) => ({
+      // Data for Onboarding Steps (collected once, posted at final step via POST /api/onboarding/submit)
+      mobile: null,
+      currentStep: 1,
+      primaryGoal: null, // "earn" | "save" | "invest" | "learn"
+      ageRange: null,
+      gender: null,
+      gamePreferences: [],
+      gameStyle: null,
+      gameHabit: null, // UI state, not sent to API
 
-const useOnboardingStore = create((set, get) => ({
-  currentStep: 1,
-  ageRange: null,
-  gender: null,
-  gamePreferences: [],
-  gameStyle: null,
-  gameHabit: null,
+      // Additional fields for onboarding submit API
+      improvementArea: "budgeting",
+      dailyEarningGoal: 900, // default per API doc if omitted
 
-  setCurrentStep: async (step) => {
-    set({ currentStep: step })
-    await saveToStorage({ ...get(), currentStep: step })
-  },
+      // Actions — only update local state; submit happens once at final onboarding (permissions Agree)
+      setCurrentStep: (step) => set({ currentStep: step }),
+      setMobile: (mobile) => set({ mobile }),
+      setPrimaryGoal: (goal) => set({ primaryGoal: goal }),
+      setAgeRange: (age) => set({ ageRange: age }),
+      setGender: (gender) => set({ gender }),
+      setGamePreferences: (preferences) =>
+        set({ gamePreferences: preferences }),
+      setGameStyle: (style) => set({ gameStyle: style }),
+      setGameHabit: (habit) => set({ gameHabit: habit }),
+      setImprovementArea: (area) => set({ improvementArea: area }),
+      setDailyEarningGoal: (goal) =>
+        set({ dailyEarningGoal: goal != null ? Number(goal) : 900 }),
 
-  setAgeRange: async (ageRange) => {
-    set({ ageRange })
-    await saveToStorage({ ...get(), ageRange })
-  },
+      // Reset the store after onboarding has been submitted
+      resetOnboarding: () =>
+        set({
+          mobile: null,
+          currentStep: 1,
+          primaryGoal: null,
+          ageRange: null,
+          gender: null,
+          gamePreferences: [],
+          gameStyle: null,
+          gameHabit: null,
+          improvementArea: "budgeting",
+          dailyEarningGoal: 900,
+        }),
 
-  setGender: async (gender) => {
-    set({ gender })
-    await saveToStorage({ ...get(), gender })
-  },
-
-  setGamePreferences: async (prefs) => {
-    const safePrefs = Array.isArray(prefs) ? prefs : []
-    set({ gamePreferences: safePrefs })
-    await saveToStorage({ ...get(), gamePreferences: safePrefs })
-  },
-
-  setGameStyle: async (gameStyle) => {
-    set({ gameStyle })
-    await saveToStorage({ ...get(), gameStyle })
-  },
-
-  setGameHabit: async (gameHabit) => {
-    set({ gameHabit })
-    await saveToStorage({ ...get(), gameHabit })
-  },
-
-  loadFromStorage: async () => {
-    const result = await Preferences.get({ key: STORAGE_KEY })
-    if (result.value) {
-      const data = JSON.parse(result.value)
-      set({
-        ...data,
-        gamePreferences: Array.isArray(data.gamePreferences)
-          ? data.gamePreferences
-          : [],
-      })
-    }
-  },
-
-  resetOnboarding: async () => {
-    const reset = { goal: null, gender: null, ageRange: null }
-    set(reset)
-    await Preferences.remove({ key: STORAGE_KEY })
-  },
-}))
-
-async function saveToStorage(data) {
-  await Preferences.set({
-    key: STORAGE_KEY,
-    value: JSON.stringify({
-      currentStep: data.currentStep,
-      ageRange: data.ageRange,
-      gender: data.gender,
-      gamePreferences: data.gamePreferences,
-      gameStyle: data.gameStyle,
-      gameHabit: data.gameHabit,
+      loadFromStorage: () => Promise.resolve(),
     }),
-  })
-}
+    {
+      name: "onboarding-storage",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
 
-export default useOnboardingStore
+export default useOnboardingStore;

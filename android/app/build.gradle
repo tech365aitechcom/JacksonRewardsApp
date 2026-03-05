@@ -7,8 +7,8 @@ android {
         applicationId "com.jackson.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 6
+        versionName "1.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -40,6 +40,13 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+     // 1. ADD THESE FIREBASE LIBRARIES HERE
+    implementation platform('com.google.firebase:firebase-bom:33.1.2')
+    implementation 'com.google.firebase:firebase-auth'
+    // AppLovin MAX SDK is included via cordova-plugin-applovin-max
+    // No need to add it manually here
+    // Google User Messaging Platform (UMP) SDK for AdMob consent (GDPR/CCPA)
+    implementation "com.google.android.ump:user-messaging-platform:4.0.0"
 }
 
 apply from: 'capacitor.build.gradle'

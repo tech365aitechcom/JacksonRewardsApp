@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+ (API 31) splash screen overrides.
+    On Android 12+, the OS always shows a system-managed splash screen before the
+    Activity draws. These attributes configure that system splash.
+    windowSplashScreen* attributes are API 31+ only, so they must live here.
+-->
+<resources>
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!--
+            System splash screen (Android 12+).
+            windowSplashScreenBackground: dominant green from splash.jpg so the transition
+            from system-splash → Activity-window-background (splash_bg = splash.jpg) is seamless.
+            windowSplashScreenAnimatedIcon: the adaptive launcher icon (Jackson character).
+            This is the industry-standard pattern — show the real app icon centred on a
+            brand-colour background, exactly like WhatsApp, Instagram, Spotify, etc.
+        -->
+        <item name="android:windowSplashScreenBackground">#3DB140</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+        <!-- Activity window background while WebView initializes after system splash -->
+        <item name="android:background">@drawable/splash_bg</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

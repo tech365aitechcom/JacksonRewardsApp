@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Full-bleed bitmap drawable for the splash screen window background.
+    android:gravity="fill" scales the bitmap to fill the entire window bounds,
+    ensuring the image covers the full screen at any density or resolution.
+-->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/splash"
+    android:gravity="fill"
+    android:tileMode="disabled" />

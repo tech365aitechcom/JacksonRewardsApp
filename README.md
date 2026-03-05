@@ -1,5 +1,30 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Environment Setup
+
+Before running the application, you need to set up your environment variables:
+
+1. **Copy the example environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Fill in your actual API keys and configuration values** in the `.env` file:
+   - Verisoul API Key and Project ID (for fraud prevention)
+   - Firebase configuration (for authentication)
+   - Cloudflare Turnstile Site Key (for CAPTCHA)
+   - Stripe Publishable Key (for payments)
+   - Backend API URL
+   - App Version
+
+3. **Important Security Notes:**
+   - Never commit your `.env` file to version control
+   - The `.env` file is already in `.gitignore`
+   - Use different keys for development and production
+   - Server-side secrets (like `JWT_SECRET`) should never have the `NEXT_PUBLIC_` prefix
+
+See `.env.example` for all required environment variables.
+
 ## Getting Started
 
 First, run the development server:
