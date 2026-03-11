@@ -12,7 +12,7 @@ const VipBanner = () => {
 
     // OPTIMIZED: Memoize VIP status calculation
     const vipData = useMemo(() => {
-        const isVipActive = vipStatus?.data?.isActive && vipStatus?.data?.currentTier && vipStatus?.data?.currentTier !== "Free";
+        const isVipActive = vipStatus?.data?.isActive && vipStatus?.data?.currentTier && vipStatus?.data?.currentTier.toLowerCase() !== "free";
         const currentTier = vipStatus?.data?.currentTier;
 
         return {

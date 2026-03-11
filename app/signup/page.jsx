@@ -492,47 +492,17 @@ const SignUp = () => {
   //   }
   // };
   const handleSendOtp = async () => {
-    console.log("DEBUG: [handleSendOtp] Function triggered");
     setError({});
-
     const fullNumber = `${countryCode}${formData.mobile}`;
-    console.log("DEBUG: [handleSendOtp] Formatted phone number:", fullNumber);
-
     setIsLoadingss(true);
-    console.log("DEBUG: [handleSendOtp] Loading set to true. Calling sendFirebaseOtp helper...");
-
     try {
-      // 1. Check Backend if number is used (commented out in your original)
-      /*
-      console.log("DEBUG: [handleSendOtp] Performing backend availability check...");
-      const check = await fetch('/api/auth/check-availability', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ mobile: fullNumber })
-      });
-      console.log("DEBUG: [handleSendOtp] Backend check status:", check.status);
-      */
-
-      // 2. If free, send Firebase OTP
-      console.log("DEBUG: [handleSendOtp] Awaiting sendFirebaseOtp resolution...");
       const result = await sendFirebaseOtp(fullNumber);
-
-      console.log("DEBUG: [handleSendOtp] ✅ sendFirebaseOtp successfully returned:", result);
-
       setIsOtpSent(true);
-      setCountdown(180); // Start 3-minute timer
-      console.log("DEBUG: [handleSendOtp] UI state updated: OTP Sent = true, Timer started.");
-
+      setCountdown(180);
     } catch (err) {
-      console.error("DEBUG: [handleSendOtp] ❌ Catch block reached!");
-      console.error("DEBUG: [handleSendOtp] Error Object:", err);
-      console.error("DEBUG: [handleSendOtp] Firebase Error Code:", err.code);
-      console.error("DEBUG: [handleSendOtp] Error Message:", err.message);
-
       setError({ mobile: err.message });
     } finally {
       setIsLoadingss(false);
-      console.log("DEBUG: [handleSendOtp] Flow finished. Loading set to false.");
     }
   };
   const handleResendOtp = async () => {
@@ -549,7 +519,7 @@ const SignUp = () => {
     const otpCode = formData.otp.join("");
     try {
       const idToken = await verifyFirebaseOtp(otpCode);
-      setFirebaseIdToken(idToken); // Secure token saved
+      setFirebaseIdToken(idToken);
       setIsMobileVerified(true);
     } catch (err) {
       setError({ otp: "Invalid code" });
@@ -558,7 +528,6 @@ const SignUp = () => {
 
   return (
     <>
-      <div id="recaptcha-container"></div>
       {/* ============================================================
           CLOUDFLARE TURNSTILE SCRIPT LOADING
           ============================================================
@@ -801,6 +770,9 @@ const SignUp = () => {
                   </div>
                   {error.mobile && <p className="text-red-400 text-xs mt-1 ml-2 max-w-[314px] break-words">{error.mobile}</p>}
                 </div>
+
+                {/* reCAPTCHA — always in DOM for resend, hidden after OTP sent or verified */}
+                <div id="recaptcha-container" className={`flex justify-center ${isOtpSent || isMobileVerified ? 'hidden' : ''}`}></div>
 
                 {/* OTP SECTION */}
                 {isOtpSent && !isMobileVerified && (

@@ -1,11 +1,13 @@
 "use client";
 import Image from "next/image";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { handleGameDownload } from "@/lib/gameDownloadUtils";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
-// Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
+import { store } from "@/lib/redux/store";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
+
 const EMPTY_ARRAY = [];
 
 const SCALE_CONFIG = [
@@ -34,23 +36,28 @@ export const HighestEarningGame = () => {
     const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
     const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const { details: userProfile } = useSelector((state) => state.profile);
+    // Stable user ID avoids re-triggering the effect on every profile data refresh
+    const userId = userProfile?._id || userProfile?.id;
+    const userProfileRef = useRef(userProfile);
+    userProfileRef.current = userProfile;
 
-    // FIX: deps are section-specific primitives — no loop when other sections update
+    // One discover call only on mount — same pattern as MostPlayedGames / GameCard.
+    // Empty deps [] ensures this runs exactly once; guards prevent redundant API calls.
     useEffect(() => {
         const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
         if (hasFreshCache || sectionStatus === "loading" || sectionStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
-            user: userProfile,
+            user: userProfileRef.current,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, sectionName, sectionStatus, sectionTimestamp, userProfile]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Return to app (focus): one discover call only if cache older than 2 min. Same pattern as TaskListSection.
+    // Return to app (focus): one discover call only if cache older than 2 min. Same pattern as MostPlayedGames / GameCard.
     useEffect(() => {
         const handleRefreshIfStale = () => {
-            const state = require("@/lib/redux/store").store.getState();
+            const state = store.getState();
             const ts = state.games.gamesBySectionTimestamp[sectionName];
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
             if (!isStale) return;
@@ -81,8 +88,6 @@ export const HighestEarningGame = () => {
 
     // Map the new API data to component format - using normalizer for both besitos and bitlab
     const processedGames = highestEarningGames?.slice(0, 2).map((game) => {
-        // Use normalizer for both besitos and bitlab
-        const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
         const images = normalizeGameImages(game);
         const title = normalizeGameTitle(game);
         const category = normalizeGameCategory(game);

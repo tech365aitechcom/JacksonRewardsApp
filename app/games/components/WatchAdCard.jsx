@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useAppLovinAds } from '@/hooks/useAppLovinAds';
 import { Capacitor } from '@capacitor/core';
@@ -16,6 +16,7 @@ const WatchAdCard = ({
     const [cooldownRemaining, setCooldownRemaining] = useState(0); // in minutes
     const [error, setError] = useState(null);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const [rewardCoins, setRewardCoins] = useState(50);
     const [xpAmount, setXpAmount] = useState(5);
     const [cooldownHours, setCooldownHours] = useState(4);
@@ -39,6 +40,11 @@ const WatchAdCard = ({
     // Track whether the user is currently trying to load/show an ad (prevents showing
     // "Loading..." UI during background preloads after an ad completes)
     const [isAdActionInProgress, setIsAdActionInProgress] = useState(false);
+
+    // Guard: track which reward has already been claimed to prevent duplicate API calls.
+    // lastReward is never reset by the hook, so without this guard every isWatchingAd
+    // state change would re-fire claimAdReward with the same stale reward object.
+    const claimedRewardRef = useRef(null);
 
     // Check if running on web (not native)
     const isWeb = !Capacitor.isNativePlatform();
@@ -73,10 +79,13 @@ const WatchAdCard = ({
     }, [isShowingAd, isWeb]);
 
     /**
-     * Handle reward from last ad completion
+     * Handle reward from last ad completion.
+     * claimedRewardRef guards against duplicate claims: lastReward is never reset
+     * by the hook, so we only process each unique reward object once.
      */
     useEffect(() => {
-        if (lastReward && !isWatchingAd) {
+        if (lastReward && !isWatchingAd && claimedRewardRef.current !== lastReward) {
+            claimedRewardRef.current = lastReward;
             console.log('[WatchAdCard] 💰 Processing lastReward from hook:', lastReward);
 
             // Call the claim API to process the reward
@@ -144,6 +153,9 @@ const WatchAdCard = ({
                 const now = Date.now();
                 localStorage.setItem('lastBoosterAdWatched', now.toString());
                 console.log('[WatchAdCard] 💾 Stored last watched time:', new Date(now).toISOString());
+
+                // Use message from API response
+                setSuccessMessage(result.message || 'Reward claimed successfully!');
 
                 // Update state
                 setIsAdAvailable(false);
@@ -554,7 +566,7 @@ const WatchAdCard = ({
 
                 {/* Success Message */}
                 {showSuccessMessage && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-r from-[#4bba56] to-[#2a8a3e] rounded-lg p-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
+                    <div className="mt-2 bg-gradient-to-r from-[#4bba56] to-[#2a8a3e] rounded-lg p-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0">
                                 <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -562,7 +574,7 @@ const WatchAdCard = ({
                                 </svg>
                             </div>
                             <p className="text-white text-sm font-medium [font-family:'Poppins',Helvetica]">
-                                🎉 You earned {lastReward?.coins || rewardCoins} coins + {lastReward?.xp || xpAmount} XP!
+                                {successMessage}
                             </p>
                         </div>
                     </div>
@@ -570,7 +582,7 @@ const WatchAdCard = ({
 
                 {/* Error Message */}
                 {error && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-red-600 rounded-lg p-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
+                    <div className="mt-2 bg-red-600 rounded-lg p-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0">
                                 <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">

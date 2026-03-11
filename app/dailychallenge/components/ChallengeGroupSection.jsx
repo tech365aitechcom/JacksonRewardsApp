@@ -21,14 +21,16 @@ export const ChallengeGroupSection = ({ streak }) => {
 
     // Same cache format as DailyChallenge: only fetch when no fresh cache (or not already loading)
     const CACHE_STALE_MS = 5 * 60 * 1000; // 5 min - match slice TTL
+    // Use primitive timestamp + status as deps — avoids re-running on every bonusDaysData reference change
+    const hasBonusData = !!bonusDaysData;
     useEffect(() => {
         if (!token) return;
 
-        const hasFreshBonus = bonusDaysData && bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
+        const hasFreshBonus = hasBonusData && bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
         if (hasFreshBonus || bonusDaysStatus === "loading" || bonusDaysStatus === "failed") return;
 
         dispatch(fetchBonusDays({ token }));
-    }, [token, bonusDaysStatus, bonusDaysData, bonusDaysCacheTimestamp, dispatch]);
+    }, [token, bonusDaysStatus, hasBonusData, bonusDaysCacheTimestamp, dispatch]);
 
     // Generate milestones dynamically from bonus days - only use API data, no fallbacks
     const generateMilestones = () => {
@@ -272,9 +274,8 @@ export const ChallengeGroupSection = ({ streak }) => {
                                                         width={14}
                                                         height={14}
                                                         className="inline-block"
-                                                        loading="eager"
+                                                        loading="lazy"
                                                         decoding="async"
-                                                        priority
                                                     />
                                                 </div>
                                             )}
@@ -289,9 +290,8 @@ export const ChallengeGroupSection = ({ streak }) => {
                                                         width={14}
                                                         height={14}
                                                         className="inline-block"
-                                                        loading="eager"
+                                                        loading="lazy"
                                                         decoding="async"
-                                                        priority
                                                     />
                                                 </div>
                                             )}

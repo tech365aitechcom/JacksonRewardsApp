@@ -16,6 +16,10 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   plugins: {
+    FirebaseAuthentication: {
+      skipNativeAuth: false,
+      providers: ["phone"],
+    },
     SplashScreen: {
       // launchAutoHide: false — JS calls SplashScreen.hide() when ready (industry standard).
       // The plugin keeps the native splash visible indefinitely until we call hide().

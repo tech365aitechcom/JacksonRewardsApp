@@ -14,7 +14,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     const [showTooltip, setShowTooltip] = useState(false);
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [showRulesModal, setShowRulesModal] = useState(false);
-    const [modalPosition, setModalPosition] = useState(null);
 
     const [claiming, setClaiming] = useState(false);
     const [milestoneLevel, setMilestoneLevel] = useState(3); // Configurable milestone - Complete 3 tasks to claim
@@ -609,7 +608,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
 
     return (
-        <div className="w-[375px] min-h-[1019px]  mt-3 mb-3  px-2 flex flex-col">
+        <div className="w-[375px] h-auto  mt-3 mb-3  px-2 flex flex-col">
             {/* Header Section */}
             <div className="flex w-[375px] h-11 items-center justify-between pt-2 pb-5 px-6">
                 <div className="font-semibold text-[#f4f3fc] text-[20px]">
@@ -887,16 +886,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                         </p>
 
                         <button
-                            onClick={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                setModalPosition({
-                                    top: rect.top + window.scrollY,
-                                    left: rect.left + window.scrollX,
-                                    buttonHeight: rect.height,
-                                    buttonWidth: rect.width
-                                });
-                                setShowRulesModal(true);
-                            }}
+                            onClick={() => setShowRulesModal(true)}
                             disabled={isClaimed}
                             className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-[#716ae7] rounded-full flex-shrink-0
                             hover:bg-[#5a52d4] transition-colors duration-200 
@@ -1136,14 +1126,10 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 </div>
             )}
 
-            {/* Rules Modal */}
+            {/* Rules Modal — rendered via portal so it always centres over the full screen */}
             <RulesModal
                 isVisible={showRulesModal}
-                position={modalPosition}
-                onClose={() => {
-                    setShowRulesModal(false);
-                    setModalPosition(null);
-                }}
+                onClose={() => setShowRulesModal(false)}
             />
         </div>
     );

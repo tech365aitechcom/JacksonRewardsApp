@@ -13,7 +13,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchWalletScreen, fetchWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
+import { fetchWalletScreen } from "@/lib/redux/slice/walletTransactionsSlice";
+import { fetchProfileStats } from "@/lib/redux/slice/profileSlice";
 
 
 export default function WalletPage() {
@@ -27,7 +28,7 @@ export default function WalletPage() {
   } = useSelector((state) => state.profile);
 
   // VIP status using custom hook
-  const { vipStatus, isLoading: vipLoadingStatus, forceRefreshVipStatus } = useVipStatus();
+  const { vipStatus, isLoading: vipLoadingStatus } = useVipStatus();
 
 
   // Get wallet screen data from Redux store
@@ -63,43 +64,18 @@ export default function WalletPage() {
     };
   }, []);
 
-  // REMOVED: Duplicate fetchWalletScreen calls
-  // AuthContext's consolidated effect already handles initial fetch at 300ms
-  // AuthContext's focus handler already handles refresh on app resume with debouncing
-  // This page just reads from Redux store // Do this in background without blocking UI - show cached data immediately
-  // Fetch fresh wallet data on every visit to this page
+  // Force-refresh wallet data on every page visit (background, after cached data renders)
+  // AuthContext already handles focus-triggered refresh — no separate focus handler needed here
   useEffect(() => {
     if (!token) return;
 
-    // Use setTimeout to refresh in background after showing cached data
-    // This ensures smooth UX - cached data shows immediately, fresh data loads in background
     const refreshTimer = setTimeout(() => {
       dispatch(fetchWalletScreen({ token, force: true }));
       dispatch(fetchProfileStats({ token, force: true }));
-      // Also refresh Google Play subscription status (Android only)
-      forceRefreshVipStatus();
-    }, 100); // Small delay to let cached data render first
+    }, 100);
 
     return () => clearTimeout(refreshTimer);
-  }, [token, dispatch, forceRefreshVipStatus]);
-
-  // Refresh when app comes to foreground
-  useEffect(() => {
-    if (!token) return;
-
-    const handleFocus = () => {
-      dispatch(fetchWalletScreen({ token, force: true }));
-      dispatch(fetchProfileStats({ token, force: true }));
-      // Also refresh Google Play subscription status (Android only)
-      forceRefreshVipStatus();
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [token, dispatch, forceRefreshVipStatus]);
+  }, [token, dispatch]);
 
   const handleVipUpgrade = () => {
     if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/Wallet");

@@ -1,18 +1,32 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateLocation } from "@/lib/api";
+import { updateLocation, updateProfile } from "@/lib/api";
 import { getCityAndCountry } from "@/lib/locationUtils";
 import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 
 export default function LocationPage() {
   const [isLoading, setIsLoading] = useState(false);
+
+  // Block Android hardware back button — user must grant or skip location to proceed
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let listenerHandle;
+    App.addListener("backButton", () => {
+      // Do nothing — back is blocked on Location screen
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
+    return () => { listenerHandle?.remove(); };
+  }, []);
   const [error, setError] = useState(null);
   const [loadingStep, setLoadingStep] = useState("");
   const router = useRouter();
   const [isSkipping, setIsSkipping] = useState(false);
-  const { user, token } = useAuth();
+  const { user, token, updateUserInContext } = useAuth();
   const [showSkipWarning, setShowSkipWarning] = useState(false);
   // Main location handler with Android optimization
   const handleContinue = async () => {
@@ -133,6 +147,23 @@ export default function LocationPage() {
         // Send to backend
         setLoadingStep("Saving location data...");
         await updateLocation(locationData, token);
+
+        // Update location on user profile
+        const locationUpdate = {
+          location: {
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            country: locationData.country,
+            city: locationData.city,
+          },
+        };
+        updateProfile(locationUpdate, token).catch(() => {});
+
+        // Update user in context immediately
+        if (user) {
+          updateUserInContext({ ...user, ...locationUpdate });
+        }
+
         localStorage.setItem("locationCompleted", "true");
         router.push("/face-verification");
 

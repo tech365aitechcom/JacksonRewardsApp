@@ -157,8 +157,7 @@ export const Conversion = () => {
         try {
             const settings = await getConversionSettings();
             setConversionSettings(settings.data);
-        } catch (error) {
-            console.error("Failed to fetch conversion settings:", error);
+        } catch {
             // Fallback to default
             setConversionSettings({
                 conversionRules: [{
@@ -189,7 +188,6 @@ export const Conversion = () => {
 
     // Handle Convert Now - VIP: no ad, show conversion; non-VIP: show ad first, then conversion (same logic as SpinWheel)
     const handleConvertNow = async () => {
-        console.log('[Conversion] 👆 User clicked "Convert Now" button', { isVipActive: vipData.isVipActive });
 
         // Allow interrupting other flows
         if (timerRef.current) clearInterval(timerRef.current);
@@ -205,8 +203,7 @@ export const Conversion = () => {
         try {
             const settings = await getConversionSettings();
             setConversionSettings(settings.data);
-        } catch (error) {
-            console.error("Failed to fetch conversion settings:", error);
+        } catch {
             setConversionSettings({
                 conversionRules: [{ coinsPerUnit: 20, currencyAmount: 1 }],
                 defaultRule: { coinsPerDollar: 20 }
@@ -217,7 +214,6 @@ export const Conversion = () => {
 
         // Subscribers skip ads — show conversion immediately (same as SpinWheel VIP path)
         if (vipData.isVipActive) {
-            console.log('[Conversion] 🎯 VIP user — skipping ad, showing conversion');
             setAdFlowState("completed");
             calculateConversion();
             return;
@@ -226,7 +222,6 @@ export const Conversion = () => {
         try {
             if (!isInitialized) {
                 const errorMsg = 'Ad system is initializing. Please wait a moment and try again.';
-                console.warn('[Conversion] ⚠️ SDK not initialized:', errorMsg);
                 setError(errorMsg);
                 setTimeout(() => setError(null), 5000);
                 setAdFlowState("idle");
@@ -234,25 +229,20 @@ export const Conversion = () => {
             }
 
             if (!isAdReady) {
-                console.log('[Conversion] ⚠️ Ad not ready, loading...');
                 const loadSuccess = await loadAd();
                 if (!loadSuccess) {
                     throw new Error('Failed to load ad. Please try again.');
                 }
-                console.log('[Conversion] ✅ Ad loaded successfully');
             }
 
             setAdFlowState("watching");
 
-            console.log('[Conversion] 🎬 Calling showAd()...');
             await showAd({
-                onReward: (rewardData) => {
-                    console.log('[Conversion] 💰 Reward received:', rewardData);
+                onReward: () => {
                     setAdFlowState("completed");
                     calculateConversion();
                 },
                 onError: (errorMsg) => {
-                    console.error('[Conversion] ❌ Error in showAd callback:', errorMsg);
                     setError(errorMsg || 'Failed to show ad. Please try again.');
                     setTimeout(() => setError(null), 5000);
                     if (isWeb) setShowMockAd(false);
@@ -261,7 +251,6 @@ export const Conversion = () => {
             });
         } catch (error) {
             const errorMsg = error.message || 'Failed to process ad. Please try again.';
-            console.error('[Conversion] ❌ Ad error:', error);
             setError(errorMsg);
             setTimeout(() => {
                 setError(null);

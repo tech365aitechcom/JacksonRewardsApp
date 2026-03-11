@@ -84,44 +84,24 @@ export const DailyChallenge = () => {
 
     // Fetch data on component mount (only if not already prefetched)
     useEffect(() => {
-        console.log("📱 [DAILY CHALLENGE COMPONENT] Component mounted/updated:", {
-            hasToken: !!token,
-            calendarStatus,
-            todayStatus,
-            timestamp: new Date().toISOString(),
-        });
-
-        if (!token) {
-            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No authentication token available for daily challenge");
-            return;
-        }
+        if (!token) return;
 
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
 
-        console.log("📱 [DAILY CHALLENGE COMPONENT] Preparing to fetch data:", {
-            year,
-            month,
-            calendarStatus,
-            todayStatus,
-        });
-
         // Avoid duplicate requests if prefetch already ran
         if (calendarStatus === "idle") {
-            console.log("📱 [DAILY CHALLENGE COMPONENT] Dispatching fetchCalendar");
             dispatch(fetchCalendar({ year, month, token }));
         }
         if (todayStatus === "idle") {
-            console.log("📱 [DAILY CHALLENGE COMPONENT] Dispatching fetchToday");
             dispatch(fetchToday({ token }));
         }
-    }, [dispatch, token]); // Fixed: Only depend on dispatch and token to prevent infinite loops
+    }, [dispatch, token]); // Only depend on dispatch and token to prevent infinite loops
 
     // Listen for global challenge update events
     useEffect(() => {
         const handleChallengeUpdate = () => {
-            console.log("📡 [DAILY CHALLENGE COMPONENT] Received challenge update event");
             handleRefresh();
         };
 
@@ -131,10 +111,6 @@ export const DailyChallenge = () => {
 
     // Keep local loading true during month navigation until calendar request settles
     useEffect(() => {
-        console.log("📅 [DAILY CHALLENGE COMPONENT] Calendar status changed:", {
-            calendarStatus,
-            timestamp: new Date().toISOString(),
-        });
         if (calendarStatus === "loading") {
             setIsMonthLoading(true);
         } else {
@@ -229,38 +205,17 @@ export const DailyChallenge = () => {
 
     // Handle month navigation
     const handlePreviousMonth = () => {
-        console.log("⬅️ [DAILY CHALLENGE COMPONENT] handlePreviousMonth called:", {
-            isMonthLoading,
-            calendarStatus,
-            currentYear: calendar?.year,
-            currentMonth: calendar?.month,
-        });
-        if (isMonthLoading || calendarStatus === "loading") {
-            console.log("⬅️ [DAILY CHALLENGE COMPONENT] Navigation blocked (already loading)");
-            return;
-        }
-        if (!token) {
-            console.warn("⬅️ [DAILY CHALLENGE COMPONENT] No token, navigation blocked");
-            return;
-        }
+        if (isMonthLoading || calendarStatus === "loading") return;
+        if (!token) return;
 
         const currentDate = new Date(calendar?.year || new Date().getFullYear(), calendar?.month || new Date().getMonth());
         const previousMonth = new Date(currentDate);
         previousMonth.setMonth(previousMonth.getMonth() - 1);
 
-        console.log("⬅️ [DAILY CHALLENGE COMPONENT] Navigating to previous month:", {
-            year: previousMonth.getFullYear(),
-            month: previousMonth.getMonth(),
-        });
-
         setIsMonthLoading(true);
         {
             const key = `${previousMonth.getFullYear()}-${previousMonth.getMonth()}`;
             const cached = calendarCacheRef.current[key];
-            console.log("⬅️ [DAILY CHALLENGE COMPONENT] Cache check:", {
-                key,
-                hasCached: !!cached,
-            });
             setPendingCalendar(cached || generateSkeletonCalendar(previousMonth.getFullYear(), previousMonth.getMonth()));
         }
         dispatch(fetchCalendar({
@@ -271,38 +226,17 @@ export const DailyChallenge = () => {
     };
 
     const handleNextMonth = () => {
-        console.log("➡️ [DAILY CHALLENGE COMPONENT] handleNextMonth called:", {
-            isMonthLoading,
-            calendarStatus,
-            currentYear: calendar?.year,
-            currentMonth: calendar?.month,
-        });
-        if (isMonthLoading || calendarStatus === "loading") {
-            console.log("➡️ [DAILY CHALLENGE COMPONENT] Navigation blocked (already loading)");
-            return;
-        }
-        if (!token) {
-            console.warn("➡️ [DAILY CHALLENGE COMPONENT] No token, navigation blocked");
-            return;
-        }
+        if (isMonthLoading || calendarStatus === "loading") return;
+        if (!token) return;
 
         const currentDate = new Date(calendar?.year || new Date().getFullYear(), calendar?.month || new Date().getMonth());
         const nextMonth = new Date(currentDate);
         nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-        console.log("➡️ [DAILY CHALLENGE COMPONENT] Navigating to next month:", {
-            year: nextMonth.getFullYear(),
-            month: nextMonth.getMonth(),
-        });
-
         setIsMonthLoading(true);
         {
             const key = `${nextMonth.getFullYear()}-${nextMonth.getMonth()}`;
             const cached = calendarCacheRef.current[key];
-            console.log("➡️ [DAILY CHALLENGE COMPONENT] Cache check:", {
-                key,
-                hasCached: !!cached,
-            });
             setPendingCalendar(cached || generateSkeletonCalendar(nextMonth.getFullYear(), nextMonth.getMonth()));
         }
         dispatch(fetchCalendar({
@@ -314,11 +248,7 @@ export const DailyChallenge = () => {
 
     // Handle refresh - force refresh both calendar and today data
     const handleRefresh = () => {
-        console.log("🔄 [DAILY CHALLENGE COMPONENT] Manual refresh triggered");
-        if (!token) {
-            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No token for refresh");
-            return;
-        }
+        if (!token) return;
 
         const now = new Date();
         const year = now.getFullYear();
@@ -332,22 +262,8 @@ export const DailyChallenge = () => {
 
     // Handle today click - navigate to current month and open today's challenge
     const handleTodayClick = () => {
-        console.log("📅 [DAILY CHALLENGE COMPONENT] handleTodayClick called:", {
-            isMonthLoading,
-            calendarStatus,
-            currentYear: calendar?.year,
-            currentMonth: calendar?.month,
-        });
-
-        if (isMonthLoading || calendarStatus === "loading") {
-            console.log("📅 [DAILY CHALLENGE COMPONENT] Today click blocked (already loading)");
-            return;
-        }
-
-        if (!token) {
-            console.warn("⚠️ [DAILY CHALLENGE COMPONENT] No token, today click blocked");
-            return;
-        }
+        if (isMonthLoading || calendarStatus === "loading") return;
+        if (!token) return;
 
         const now = new Date();
         const currentYear = now.getFullYear();
@@ -357,20 +273,10 @@ export const DailyChallenge = () => {
         const isCurrentMonth = calendar?.year === currentYear && calendar?.month === currentMonth;
 
         if (!isCurrentMonth) {
-            // Navigate to current month
-            console.log("📅 [DAILY CHALLENGE COMPONENT] Navigating to current month:", {
-                year: currentYear,
-                month: currentMonth,
-            });
-
             setIsMonthLoading(true);
             {
                 const key = `${currentYear}-${currentMonth}`;
                 const cached = calendarCacheRef.current[key];
-                console.log("📅 [DAILY CHALLENGE COMPONENT] Cache check:", {
-                    key,
-                    hasCached: !!cached,
-                });
                 setPendingCalendar(cached || generateSkeletonCalendar(currentYear, currentMonth));
             }
             dispatch(fetchCalendar({
@@ -380,7 +286,6 @@ export const DailyChallenge = () => {
             }));
         } else {
             // Already on current month, open today's challenge modal
-            console.log("📅 [DAILY CHALLENGE COMPONENT] Already on current month, opening today's challenge");
             if (today?.hasChallenge) {
                 const isCompleted = today?.progress?.status === "completed" || today?.completed === true;
                 if (isCompleted) {

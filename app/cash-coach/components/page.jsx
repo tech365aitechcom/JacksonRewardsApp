@@ -9,6 +9,27 @@ import { GoalsAndTargetsSection } from "./GoalsAndTargetsSection";
 import { HomeIndicator } from "@/components/HomeIndicator";
 import { PageHeader } from "@/components/PageHeader";
 
+// Defined outside the component so React never treats it as a new type on re-render
+const CoinBalance = ({ coinBalance, onClick }) => (
+    <button
+        onClick={onClick}
+        className="h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center px-2.5 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+        type="button"
+        aria-label="Navigate to Wallet"
+    >
+        <div className="flex items-center gap-2 min-w-0">
+            <span className="text-white text-lg [font-family:'Poppins',Helvetica] font-semibold leading-[normal] break-all">
+                {coinBalance || 0}
+            </span>
+            <img
+                className="w-[23px] h-6 flex-shrink-0"
+                alt="Coin"
+                src="/dollor.png"
+            />
+        </div>
+    </button>
+);
+
 export default function CashCoachPage() {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -30,9 +51,8 @@ export default function CashCoachPage() {
 
     // Initialize audio element when component mounts
     useEffect(() => {
-        // Ensure audio is ready to play
         if (audioRef.current) {
-            audioRef.current.volume = 0.7; // Set volume (0.0 to 1.0)
+            audioRef.current.volume = 0.7;
             audioRef.current.load();
         }
     }, []);
@@ -61,61 +81,25 @@ export default function CashCoachPage() {
     const playCoinSound = () => {
         try {
             if (audioRef.current) {
-                // Reset audio to beginning
                 audioRef.current.currentTime = 0;
-                // Play the sound
                 const playPromise = audioRef.current.play();
-
                 if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => {
-                            // Audio playing successfully
-                            console.log("Coin sound playing");
-                        })
-                        .catch(error => {
-                            // Autoplay was prevented or other error
-                            console.log("Audio play failed:", error);
-                            // Try to play again after user interaction
-                            if (audioRef.current) {
-                                audioRef.current.play().catch(err => {
-                                    console.log("Retry audio play failed:", err);
-                                });
-                            }
-                        });
+                    playPromise.catch(() => {
+                        // Retry once silently after autoplay prevention
+                        audioRef.current?.play().catch(() => {});
+                    });
                 }
             }
-        } catch (error) {
-            console.log("Sound effect error:", error);
+        } catch {
+            // Sound effect unavailable — ignore silently
         }
     };
 
     // Handle coin balance click to navigate to Wallet
     const handleCoinBalanceClick = () => {
-        // Play coin sound when user clicks on coin balance
         playCoinSound();
         router.push("/Wallet");
     };
-
-    // Coin balance component for header
-    const CoinBalance = () => (
-        <button
-            onClick={handleCoinBalanceClick}
-            className="h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center px-2.5 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
-            type="button"
-            aria-label="Navigate to Wallet"
-        >
-            <div className="flex items-center gap-2 min-w-0">
-                <span className="text-white text-lg [font-family:'Poppins',Helvetica] font-semibold leading-[normal] break-all">
-                    {coinBalance || 0}
-                </span>
-                <img
-                    className="w-[23px] h-6 flex-shrink-0"
-                    alt="Coin"
-                    src="/dollor.png"
-                />
-            </div>
-        </button>
-    );
 
     return (
         <div className="flex flex-col overflow-x-hidden overflow-y-auto w-full min-h-screen items-center justify-start px-4 pb-2 pt-1 bg-black max-w-[390px] mx-auto relative">
@@ -128,7 +112,7 @@ export default function CashCoachPage() {
             <div className="mt-[26px] w-full">
                 <PageHeader
                     title="Cash Coach"
-                    rightElement={<CoinBalance />}
+                    rightElement={<CoinBalance coinBalance={coinBalance} onClick={handleCoinBalanceClick} />}
                     showBack={false}
                 />
             </div>

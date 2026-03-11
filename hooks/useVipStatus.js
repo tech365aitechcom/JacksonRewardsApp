@@ -15,8 +15,9 @@ export const useVipStatus = () => {
 
   // Auto-fetch VIP status when token is available and status is idle
   useEffect(() => {
+    console.log("[DEBUG-VIP] useVipStatus effect fired | vipStatusState:", vipStatusState, "| hasToken:", !!token, "| at:", new Date().toISOString());
     if (token && vipStatusState === "idle") {
-      console.log("🔄 [useVipStatus] Auto-fetching VIP status...");
+      console.log("[DEBUG-VIP] dispatching fetchVipStatus + fetchActiveGooglePlaySubscription");
       dispatch(fetchVipStatus(token));
       // Also check for active Google Play subscription on Android
       dispatch(fetchActiveGooglePlaySubscription(token));
@@ -26,7 +27,6 @@ export const useVipStatus = () => {
   // Memoized refresh VIP status function
   const refreshVipStatus = useCallback(() => {
     if (token) {
-      console.log("🔄 [useVipStatus] Manually refreshing VIP status...");
       dispatch(fetchVipStatus(token));
       // Also refresh Google Play subscription status
       dispatch(fetchActiveGooglePlaySubscription(token));
@@ -36,7 +36,6 @@ export const useVipStatus = () => {
   // Memoized force refresh VIP status (bypasses idle check)
   const forceRefreshVipStatus = useCallback(() => {
     if (token) {
-      console.log("🔄 [useVipStatus] Force refreshing VIP status...");
       dispatch(fetchVipStatus(token));
       // Also refresh Google Play subscription status
       dispatch(fetchActiveGooglePlaySubscription(token));
@@ -91,9 +90,6 @@ export const useVipStatusWithRefresh = () => {
       // Schedule refresh after debounce delay (500ms)
       debounceTimerRef.current = setTimeout(() => {
         if (token) {
-          console.log(
-            "🔄 [useVipStatusWithRefresh] Refreshing VIP status (debounced)..."
-          );
           vipStatusHook.refreshVipStatus();
         }
       }, 500);
@@ -101,18 +97,12 @@ export const useVipStatusWithRefresh = () => {
 
     const handleVisibilityChange = () => {
       if (!document.hidden && token) {
-        console.log(
-          "🔄 [useVipStatusWithRefresh] Page became visible..."
-        );
         debouncedRefresh();
       }
     };
 
     const handleFocus = () => {
       if (token) {
-        console.log(
-          "🔄 [useVipStatusWithRefresh] Page focused..."
-        );
         debouncedRefresh();
       }
     };

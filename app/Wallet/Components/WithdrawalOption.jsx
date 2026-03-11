@@ -76,10 +76,8 @@ export const WithdrawalOption = () => {
     const [isAndroid, setIsAndroid] = useState(false);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
-    // Redux state
-    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {}, (left, right) => {
-        return JSON.stringify(left) === JSON.stringify(right);
-    });
+    // Redux state — use default reference equality (Redux already uses shallow comparison)
+    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {});
 
     // Constants - Use coins directly without USD conversion
     const coinBalance = walletScreen?.wallet?.balance || 0;

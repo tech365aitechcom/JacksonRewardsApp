@@ -31,8 +31,9 @@ export default function WalletHeader({ balance = 0, appVersion = "V0.1.1", token
                     className="min-w-[87px] max-w-[140px] h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between gap-2 px-3 hover:opacity-80 transition-opacity duration-200 cursor-pointer flex-shrink-0"
                     type="button"
                     aria-label="Go to Wallet"
+                    suppressHydrationWarning
                 >
-                    <span className="text-white text-[16px] [font-family:'Poppins',Helvetica] font-semibold leading-[normal] truncate">
+                    <span suppressHydrationWarning className="text-white text-[16px] [font-family:'Poppins',Helvetica] font-semibold leading-[normal] truncate">
                         {displayBalance}
                     </span>
                     <img

@@ -820,12 +820,17 @@ export const useAppLovinAds = () => {
     return initializeSDK();
   }, [initializeSDK]);
 
-  // Initialize SDK on mount when token is available
+  // Initialize SDK on mount when token is available.
+  // initializeSDK is intentionally omitted from deps: the initializationAttemptedRef
+  // ref guard inside the function already prevents repeated calls, and including the
+  // callback reference would cause the effect to re-run every time initializeSDK is
+  // recreated (e.g. when sdkConfig or token changes), bypassing the ref guard.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (token && !isInitialized && !initializationAttemptedRef.current) {
       initializeSDK();
     }
-  }, [token, isInitialized, initializeSDK]);
+  }, [token, isInitialized]);
 
   // Fetch stats when initialized
   useEffect(() => {

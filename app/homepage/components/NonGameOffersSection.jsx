@@ -33,8 +33,12 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
         const { nonGameOffers: currentOffers, nonGameOffersCacheTimestamp: currentTs, nonGameOffersStatus: currentStatus } = currentState;
 
         const hasFreshCache = currentOffers?.length && currentTs && (Date.now() - currentTs < CACHE_STALE_MS);
-        if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") return;
-
+        console.log("[DEBUG-NONGAME-OFFERS] mount effect fired | currentStatus:", currentStatus, "| hasFreshCache:", hasFreshCache, "| currentTs:", currentTs);
+        if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") {
+            console.log("[DEBUG-NONGAME-OFFERS] skipping dispatch — reason:", hasFreshCache ? "fresh cache" : currentStatus);
+            return;
+        }
+        console.log("[DEBUG-NONGAME-OFFERS] dispatching fetchNonGameOffers");
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
     }, [token, skipFetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -46,7 +50,9 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
             const state = require("@/lib/redux/store").store.getState();
             const ts = state.surveys.nonGameOffersCacheTimestamp;
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            console.log("[DEBUG-NONGAME-OFFERS] focus/visibility fired | isStale:", isStale, "| ts:", ts, "| at:", new Date().toISOString());
             if (!isStale) return;
+            console.log("[DEBUG-NONGAME-OFFERS] focus: dispatching fetchNonGameOffers (background)");
             dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
         };
 
@@ -73,21 +79,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
 
     const totalsCards = nonGameOffers?.length || 0;
 
-    // Map all possible download/click link fields from API (shopping, cashback, magic receipt)
-    const getOfferLink = (offer) => {
-        if (!offer) return null;
-        return (
-            offer.metadata?.externalUrl ||
-            offer.clickUrl ||
-            offer.click_url ||
-            offer.preview_url ||
-            offer.downloadUrl ||
-            offer.download_link ||
-            offer.deepLink ||
-            offer.support_url ||
-            null
-        );
-    };
+    const getOfferLink = (offer) => offer?.clickUrl || null;
 
     const handleOfferClick = (offer) => {
         const clickUrl = getOfferLink(offer);
@@ -177,11 +169,9 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
     };
 
     // Get reward display based on offer type
-    const isCashback = (offer) =>
-        offer?.type === "cashback" || offer?.offerType === "cashback";
+    const isCashback = (offer) => offer?.offerType === "cashback";
 
-    const isShopping = (offer) =>
-        offer?.type === "shopping" || offer?.offerType === "shopping";
+    const isShopping = (offer) => offer?.offerType === "shopping";
 
     // Format reward number for display (e.g. 15000 -> "15,000")
     const formatRewardNumber = (num) => {
@@ -190,42 +180,11 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
         return n >= 1000 ? n.toLocaleString() : String(n);
     };
 
-    // Offer display name: shopping uses product_name/name/anchor, cashback uses title/merchant_name
-    const getOfferName = (offer) => {
-        if (!offer) return "Offer";
-        if (isShopping(offer)) {
-            return offer.product_name || offer.name || offer.anchor || offer.metadata?.product_name || offer.metadata?.name || "Offer";
-        }
-        if (isCashback(offer)) {
-            return offer.title || offer.merchant_name || "Offer";
-        }
-        return offer.title || offer.merchant_name || offer.product_name || offer.name || offer.anchor || "Offer";
-    };
+    const getOfferName = (offer) => offer?.title || "Offer";
 
-    const getRewardDisplay = (offer) => {
-        if (isCashback(offer)) {
-            return offer.cashback ? `${offer.cashback} ${offer.currency || ""}` : `${offer.coinReward || offer.userRewardCoins || 0}`;
-        } else if (isShopping(offer)) {
-            return offer.total_points || `${offer.coinReward || offer.userRewardCoins || 0}`;
-        } else if (offer.type === "magic_receipt") {
-            return offer.total_points || `${offer.coinReward || offer.userRewardCoins || 0}`;
-        } else {
-            return offer.coinReward || offer.userRewardCoins || 0;
-        }
-    };
+    const getRewardDisplay = (offer) => offer?.userRewardCoins ?? offer?.coinReward ?? 0;
 
-    // Get time display based on offer type
-    const getTimeDisplay = (offer) => {
-        if (isCashback(offer)) {
-            return offer.reward_delay_days ? `${offer.reward_delay_days}d` : offer.estimatedTime || "1m";
-        } else if (isShopping(offer)) {
-            return offer.estimatedTime ? `${offer.estimatedTime}m` : "1m";
-        } else if (offer.type === "magic_receipt") {
-            return offer.confirmation_time || offer.estimatedTime ? `${offer.estimatedTime || 2}m` : "2m";
-        } else {
-            return offer.estimatedTime ? `${offer.estimatedTime}m` : "1m";
-        }
-    };
+    const getTimeDisplay = (offer) => offer?.estimatedTime ? `${offer.estimatedTime}m` : "1m";
 
     // REMOVED: Loading state - always show content immediately (stale-while-revalidate pattern)
     // Background fetching happens automatically without blocking UI
@@ -247,20 +206,8 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
                 onTouchEnd={onTouchEnd}
             >
                 {nonGameOffers && nonGameOffers.length > 0 ? nonGameOffers.map((offer, index) => {
-                    // Get offer image - for cashback use metadata.thumbnail/images, for shopping use metadata.thumbnail, otherwise use banner/icon
-                    let offerImage;
-                    if (isCashback(offer)) {
-                        offerImage =
-                            offer.metadata?.thumbnail ||
-                            offer.images?.cardImage ||
-                            offer.images?.backgroundImage ||
-                            offer.images?.cardImageSmall ||
-                            "https://static.bitlabs.ai/categories/other.svg";
-                    } else if (isShopping(offer)) {
-                        offerImage = offer.metadata?.thumbnail || offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
-                    } else {
-                        offerImage = offer.banner || offer.icon || offer.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
-                    }
+                    // Get offer image
+                    const offerImage = offer.thumbnail || "https://static.bitlabs.ai/categories/other.svg";
 
                     // Get coins and XP (prefer user-facing rewards)
                     const coins = offer.userRewardCoins ?? offer.coinReward ?? 0;
@@ -304,52 +251,22 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
                             {/* Card content - decreased height to fit image and footer: w-[168px] h-[238px] */}
                             <div className="relative h-[234px] w-[168px]">
                                 {/* Background container */}
-                                <div className="absolute  flex justify-center items-center inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[15px] overflow-hidden">
+                                <div className="absolute flex justify-center items-start inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[15px] overflow-hidden">
                                     {/* Offer Image Section - full width to contain image */}
                                     <div className="relative w-full h-[174px] overflow-hidden">
-                                        {isCashback(offer) ? (
-                                            <img
-                                                className="w-full h-full object-contain rounded-t-[10px]"
-                                                src={offerImage}
-                                                alt={offer.merchant_name || "Cashback Offer"}
-                                                style={{ imageRendering: 'crisp-edges' }}
-                                                loading="eager"
-                                                decoding="async"
-                                                width="168"
-                                                height="174"
-                                                onError={(e) => {
-                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                }}
-                                            />
-                                        ) : isShopping(offer) ? (
-                                            <img
-                                                className="w-full h-full object-contain rounded-t-[10px]"
-                                                src={offerImage}
-                                                alt={offer.anchor || offer.title || "Shopping Offer"}
-                                                style={{ imageRendering: 'crisp-edges' }}
-                                                loading="eager"
-                                                decoding="async"
-                                                width="168"
-                                                height="174"
-                                                onError={(e) => {
-                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                }}
-                                            />
-                                        ) : (
-                                            <img
-                                                className="w-full h-full object-contain rounded-t-[10px]"
-                                                src={offerImage}
-                                                alt={offer.title || "Offer"}
-                                                style={{ imageRendering: 'crisp-edges' }}
-                                                loading="eager"
-                                                decoding="async"
-                                                width="168"
-                                                height="174"
-                                                onError={(e) => {
-                                                    e.target.src = "https://static.bitlabs.ai/categories/other.svg";
-                                                }}
-                                            />
-                                        )}
+                                        <img
+                                            className="w-full h-full object-cover rounded-t-[10px]"
+                                            src={offerImage}
+                                            alt={offer.title || "Offer"}
+                                            style={{ imageRendering: 'crisp-edges' }}
+                                            loading="eager"
+                                            decoding="async"
+                                            width="168"
+                                            height="174"
+                                            onError={(e) => {
+                                                e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Bottom gradient section - increased height by 2px: h-[52px] - faded to differentiate from Earn button */}

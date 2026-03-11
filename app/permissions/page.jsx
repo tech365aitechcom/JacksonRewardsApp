@@ -3,13 +3,27 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import useOnboardingStore from "@/stores/useOnboardingStore";
-import { acceptDisclosure, submitOnboarding } from "@/lib/api";
+import { acceptDisclosure, submitOnboarding, updateProfile } from "@/lib/api";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 
 export default function PermissionsPage() {
   const router = useRouter();
-  const { token, isLoading } = useAuth();
+  const { token, user, isLoading, updateUserInContext } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Block Android hardware back button — user must tap Agree to proceed
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let listenerHandle;
+    App.addListener("backButton", () => {
+      // Do nothing — back is blocked on Prominent Disclosure
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
+    return () => { listenerHandle?.remove(); };
+  }, []);
 
   // Check for token in localStorage and redirect if missing
   useEffect(() => {
@@ -85,9 +99,27 @@ export default function PermissionsPage() {
       localStorage.setItem("onboardingComplete", "true");
       useOnboardingStore.getState().resetOnboarding();
 
-      // 3. Accept disclosure and go to location
+      // 3. Accept disclosure
       await acceptDisclosure(authToken);
+
       localStorage.setItem("permissionsAccepted", "true");
+
+      // 4. Update permissionStatus + age + gender on the profile
+      // /api/disclosure/accept does NOT update permissionStatus, so we do it explicitly
+      // NOTE: use onboardingState captured above — store was already reset at line 100
+      const profileUpdate = {
+        permissionStatus: true,
+        ...(onboardingState.ageRange != null && { age: onboardingState.ageRange }),
+        ...(onboardingState.gender != null && { gender: onboardingState.gender }),
+      };
+      updateProfile(profileUpdate, authToken).catch(() => {});
+
+      // Update user in context immediately so app reflects latest state
+      if (user) {
+        const updatedUser = { ...user, ...profileUpdate };
+        updateUserInContext(updatedUser);
+      }
+
       router.push("/location");
     } catch (err) {
       console.error("Onboarding submit or disclosure error:", err);

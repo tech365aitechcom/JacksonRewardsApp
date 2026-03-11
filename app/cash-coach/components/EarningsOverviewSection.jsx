@@ -12,8 +12,6 @@ export const EarningsOverviewSection = () => {
     const { walletScreen } = useSelector((state) => state.walletTransactions);
     const coinBalance = walletScreen?.wallet?.balance || 0;
 
-    console.log("summary", summary);
-
     const earningsData = [
         {
             id: 1,

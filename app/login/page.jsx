@@ -275,18 +275,20 @@ function LoginPageContent() {
       const result = await signIn(emailOrMobile, password, turnstileToken);
 
       if (result?.ok) {
-        // OPTIMIZED: Small delay to ensure critical data (walletScreen, XP tier cache) is ready
-        // This allows handleAuthSuccess to complete its preloads before navigation
-        // Reduced from 2ms to 50ms to give Android WebView time to process Redux dispatches
+        // Wait 16 s so all prefetch API calls in handleAuthSuccess finish loading
+        // before navigating — homepage arrives with data ready, no loading states.
+        // Safety check: only redirect if the user hasn't navigated to another screen.
         setTimeout(() => {
-          // If autoRegister flag is set, redirect to face verification page
-          // Otherwise, go to homepage as usual
           if (autoRegister) {
             router.push("/face-verification?autoRegister=true");
           } else {
-            router.push("/homepage");
+            const currentPath =
+              typeof window !== "undefined" ? window.location.pathname : "";
+            if (currentPath === "/login" || currentPath === "/homepage") {
+              router.push("/homepage");
+            }
           }
-        }, 30);
+        }, 16000);
       }
       else {
         const backendError = result?.error;
@@ -853,7 +855,6 @@ function LoginPageContent() {
                         </div>
                       </button>
                     </div>
-                    {console.log("🔑 [LoginPage] Render — error.form:", error.form, "| accountStatusError:", accountStatusError)}
 
                     {biometricMessage && (
                       <div className="w-full max-w-[305px] flex flex-col items-center gap-2">

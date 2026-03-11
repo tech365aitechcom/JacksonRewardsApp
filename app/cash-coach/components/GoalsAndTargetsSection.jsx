@@ -39,9 +39,6 @@ export const GoalsAndTargetsSection = () => {
         { key: "savings", label: "Savings (Per Month)", max: 9999 },
         { key: "revenueGoal", label: "Revenue Goal from Jackson", max: 9999 },
     ];
-    // All goals have default value of 40, so button should always be enabled
-    const areAllGoalsSet = goalData.every(goal => (goals[goal.key] || 40) >= 40);
-    const isButtonDisabled = !areAllGoalsSet;
     return (
         <section className="flex  flex-col w-full justify-center mb-30 mt-7 items-start gap-2 relative">
             <header className="flex w-full items-center justify-between  ml-1 relative">
@@ -57,8 +54,7 @@ export const GoalsAndTargetsSection = () => {
             <div className="relative w-full p-5 bg-black rounded-[10px] shadow-[2.48px_2.48px_18.58px_#a6aabc4c,-1.24px_-1.24px_16.1px_#f9faff1a]">
                 <div className="flex flex-col w-full items-start gap-4">
                     {goalData.map((goal, index) => {
-                        // Default value is 40 as per requirement
-                        const currentValue = goals[goal.key] || 40;
+                        const currentValue = goals[goal.key] ?? 0;
                         const progress = (currentValue / goal.max) * 100;
                         const sliderStyle = {
                             background: `linear-gradient(to right, #6a6dcd ${progress}%, #307fe24c ${progress}%)`,
@@ -85,7 +81,7 @@ export const GoalsAndTargetsSection = () => {
                                             type="number"
                                             value={currentValue}
                                             onChange={(e) => handleValueChange(goal.key, e.target.value)}
-                                            className="w-10 min-w-0 [font-family:'Poppins',Helvetica] font-bold text-[#d9d9d9] text-sm text-center bg-transparent border-none outline-none p-0"
+                                            className="w-10 min-w-0 [font-family:'Poppins',Helvetica] font-bold text-[#d9d9d9] text-sm text-center bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                             min="0"
                                             max={goal.max}
                                         />

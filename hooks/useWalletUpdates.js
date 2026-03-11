@@ -15,12 +15,6 @@ export const useWalletUpdates = (token) => {
   );
 
   // Monitor wallet screen changes
-  useEffect(() => {
-    console.log(
-      "🔄 [useWalletUpdates] Wallet screen data updated:",
-      walletScreen
-    );
-  }, [walletScreen]);
 
   // Function to refresh wallet data
   const refreshWalletData = async () => {

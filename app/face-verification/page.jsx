@@ -3,18 +3,31 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
-import { registerFace } from "@/lib/api";
+import { registerFace, updateProfile } from "@/lib/api";
 import { NativeBiometric } from "capacitor-native-biometric";
 import { Camera } from "@capacitor/camera";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { App } from "@capacitor/app";
 
 export default function FaceVerificationPage() {
     const [isLoading, setIsLoading] = useState(false);
+
+    // Block Android hardware back button — user must complete or skip face verification
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
+        let listenerHandle;
+        App.addListener("backButton", () => {
+            // Do nothing — back is blocked on Face Verification screen
+        }).then((handle) => {
+            listenerHandle = handle;
+        });
+        return () => { listenerHandle?.remove(); };
+    }, []);
     const [error, setError] = useState(null);
     const [loadingStep, setLoadingStep] = useState("");
     const [isScanning, setIsScanning] = useState(false);
     const router = useRouter();
-    const { user, token } = useAuth();
+    const { user, token, updateUserInContext } = useAuth();
     const [biometricAvailable, setBiometricAvailable] = useState(false);
     const [biometricType, setBiometricType] = useState("");
     const [useCamera, setUseCamera] = useState(false);
@@ -530,6 +543,14 @@ export default function FaceVerificationPage() {
             // Mark face verification as completed
             console.log("✅ [CONTINUE] Marking verification as completed");
             localStorage.setItem("faceVerificationCompleted", "true");
+
+            // Update faceVerificationStatus on backend and in context
+            if (token) {
+                updateProfile({ faceVerificationStatus: true }, token).catch(() => {});
+            }
+            if (user) {
+                updateUserInContext({ ...user, faceVerificationStatus: true });
+            }
             localStorage.setItem("biometricType", biometricTypeString); // Store actual biometric type
             
             // Get username FIRST - needed for all storage operations

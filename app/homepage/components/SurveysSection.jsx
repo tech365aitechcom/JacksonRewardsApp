@@ -26,8 +26,12 @@ const SurveysSection = () => {
         if (!token) return;
 
         const hasFreshCache = surveys?.length && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_STALE_MS);
-        if (hasFreshCache || status === "loading" || status === "failed") return;
-
+        console.log("[DEBUG-SURVEYS] mount effect fired | status:", status, "| hasFreshCache:", hasFreshCache, "| cacheTimestamp:", cacheTimestamp);
+        if (hasFreshCache || status === "loading" || status === "failed") {
+            console.log("[DEBUG-SURVEYS] skipping dispatch — reason:", hasFreshCache ? "fresh cache" : status);
+            return;
+        }
+        console.log("[DEBUG-SURVEYS] dispatching fetchSurveys");
         dispatch(fetchSurveys({ token }));
     }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -40,7 +44,9 @@ const SurveysSection = () => {
             const ts = state.surveys.cacheTimestamp;
             const existing = state.surveys.surveys;
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
+            console.log("[DEBUG-SURVEYS] focus/visibility fired | isStale:", isStale, "| ts:", ts, "| at:", new Date().toISOString());
             if (!isStale) return;
+            console.log("[DEBUG-SURVEYS] focus: dispatching fetchSurveys (background)");
             dispatch(fetchSurveys({ token, force: true, background: true }));
         };
 
@@ -175,12 +181,12 @@ const SurveysSection = () => {
                 onTouchEnd={onTouchEnd}
             >
                 {surveys && surveys.length > 0 ? surveys.map((survey, index) => {
-                    // Get survey image (banner or icon)
-                    const surveyImage = survey.banner || survey.icon || survey.category?.icon_url || "https://static.bitlabs.ai/categories/other.svg";
+                    // Get survey image
+                    const surveyImage = survey.thumbnail || "https://static.bitlabs.ai/categories/other.svg";
 
-                    // Get coins and XP from reward object
-                    const coins = survey.reward?.coins || 0;
-                    const xp = survey.reward?.xp || 0;
+                    // Get coins and XP
+                    const coins = survey.userRewardCoins ?? survey.coinReward ?? 0;
+                    const xp = survey.userRewardXP ?? 0;
 
                     // Get survey title
                     const surveyTitle = survey.title || "Survey";

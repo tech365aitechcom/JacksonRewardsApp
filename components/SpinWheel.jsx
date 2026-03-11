@@ -1376,7 +1376,7 @@ export default function SpinWheel() {
                     <motion.button
                         onClick={handleSpin}
                         disabled={(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading}
-                        className={`w-[200px] h-12 text-white text-lg font-bold px-8 rounded-lg border-2 whitespace-nowrap ${(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading
+                        className={`w-[200px] h-12 text-white text-lg font-bold px-4 rounded-lg border-2 whitespace-nowrap flex items-center justify-center ${(isSpinning && !showResult) || cooldownRemaining > 0 || !canSpin || isLoading
                             ? 'bg-gradient-to-b from-red-600 to-red-800 border-red-900 shadow-[0_8px_0px_#8f1a1a,inset_0_2px_4px_rgba(255,255,255,0.4)] cursor-not-allowed pointer-events-none'
                             : 'bg-gradient-to-b from-red-600 to-red-800 border-red-900 shadow-[0_8px_0px_#8f1a1a,inset_0_2px_4px_rgba(255,255,255,0.4)]'
                             }`}

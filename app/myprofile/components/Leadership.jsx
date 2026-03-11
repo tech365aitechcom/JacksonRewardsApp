@@ -1,8 +1,18 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useRouter } from 'next/navigation'
 import { fetchGamesBySection } from '@/lib/redux/slice/gameSlice'
+import { store } from '@/lib/redux/store'
+import { normalizeGameImages, normalizeGameTitle, normalizeGameAmount, getTotalPromisedPoints } from '@/lib/gameDataNormalizer'
+
 const EMPTY_ARRAY = [];
+
+const formatNumber = (num) => {
+    if (num === null || num === undefined) return "0";
+    const numValue = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : num;
+    if (isNaN(numValue)) return "0";
+    return numValue.toLocaleString();
+};
 
 const Leadership = () => {
     const router = useRouter();
@@ -18,23 +28,28 @@ const Leadership = () => {
     const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
     const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const { details: userProfile } = useSelector((state) => state.profile);
+    // Stable user ID avoids re-triggering the effect on every profile data refresh
+    const userId = userProfile?._id || userProfile?.id;
+    const userProfileRef = useRef(userProfile);
+    userProfileRef.current = userProfile;
 
-    // FIX: deps are section-specific primitives — no loop when other sections update
+    // One discover call only on mount — same pattern as MostPlayedGames / GameCard.
+    // Empty deps [] ensures this runs exactly once; guards prevent redundant API calls.
     useEffect(() => {
         const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
         if (hasFreshCache || sectionStatus === "loading" || sectionStatus === "failed") return;
         dispatch(fetchGamesBySection({
             uiSection: sectionName,
-            user: userProfile,
+            user: userProfileRef.current,
             page: 1,
             limit: 10
         }));
-    }, [dispatch, sectionName, sectionStatus, sectionTimestamp, userProfile]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Return to app (focus): one discover call only if cache older than 2 min.
     useEffect(() => {
         const handleRefreshIfStale = () => {
-            const state = require("@/lib/redux/store").store.getState();
+            const state = store.getState();
             const ts = state.games.gamesBySectionTimestamp[sectionName];
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
             if (!isStale) return;
@@ -135,8 +150,6 @@ const Leadership = () => {
                     }`}
             >
                 {leadershipGames.map((game, index) => {
-                    // Use normalizer for both besitos and bitlab
-                    const { normalizeGameImages, normalizeGameTitle, normalizeGameAmount, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
                     const images = normalizeGameImages(game);
                     const displayImage = images.square_image || images.icon || game.images?.icon || game.icon || game.square_image || game.image || 'https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png';
                     const displayTitle = normalizeGameTitle(game);
@@ -148,14 +161,6 @@ const Leadership = () => {
                     const coins = Number.isFinite(raw) ? (raw === Math.round(raw) ? Math.round(raw) : Math.round(raw * 100) / 100) : 0;
                     const { totalXP } = getTotalPromisedPoints(game);
                     const totalXPDisplay = Number.isFinite(totalXP) ? Math.floor(totalXP) : 0;
-
-                    // Format numbers with commas
-                    const formatNumber = (num) => {
-                        if (num === null || num === undefined) return "0";
-                        const numValue = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : num;
-                        if (isNaN(numValue)) return "0";
-                        return numValue.toLocaleString();
-                    };
 
                     return (
                         <article

@@ -44,7 +44,8 @@ export const HighestTransctionCard = ({
                     src={gameLogoSrc || "/download.png"}
                     width={64}
                     height={64}
-                    priority
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
 
@@ -95,7 +96,8 @@ export const HighestTransctionCard = ({
                     src="/dollor.png"
                     width={20}
                     height={21}
-                    priority
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
 
@@ -140,10 +142,8 @@ export const HighestTransctionCard = ({
                             src="/xp.svg"
                             width={16}
                             height={15}
-                            loading="eager"
+                            loading="lazy"
                             decoding="async"
-
-                            priority
                         />
                     </div>
 
@@ -154,10 +154,8 @@ export const HighestTransctionCard = ({
                         src="https://c.animaapp.com/UNpBPFIY/img/vector-4234.svg"
                         width={26}
                         height={27}
-                        loading="eager"
+                        loading="lazy"
                         decoding="async"
-                        priority
-
                     />
                 </div>
             </div>

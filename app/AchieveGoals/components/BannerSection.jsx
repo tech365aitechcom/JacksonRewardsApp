@@ -17,21 +17,6 @@ export const BannerSection = () => {
             role="banner"
             aria-label="Daily Challenge Banner"
         >
-            {/* Preload images for fast rendering */}
-            <img
-                src="/arhievegolasbanner.png"
-                alt=""
-                className="hidden"
-                loading="eager"
-                fetchPriority="high"
-            />
-            <img
-                src="/tesurebox.png"
-                alt=""
-                className="hidden"
-                loading="eager"
-                fetchPriority="high"
-            />
             <div className="relative w-full max-w-[340px] h-[176px] p-[2px]">
                 {/* Outer glow layer with 3D border effect */}
                 <div

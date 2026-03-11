@@ -111,6 +111,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUserFlow, setIsNewUserFlow] = useState(false);
+  const [isLoginRedirectPending, setIsLoginRedirectPending] = useState(false);
 
   // NEW: Get the Redux dispatch function and the current status of the profile fetch
   const dispatch = useDispatch();
@@ -408,9 +409,10 @@ export function AuthProvider({ children }) {
 
                       const sessionAuthData = {
                         accountId:
+                          parsedUser.email ||
+                          parsedUser.mobile ||
                           parsedUser._id ||
-                          parsedUser.id ||
-                          String(parsedUser._id || parsedUser.id),
+                          parsedUser.id,
                         email: parsedUser.email || "",
                         metadata: {
                           deviceId: deviceMetadata.deviceId,
@@ -467,9 +469,10 @@ export function AuthProvider({ children }) {
 
                   const sessionAuthData = {
                     accountId:
+                      parsedUser.email ||
+                      parsedUser.mobile ||
                       parsedUser._id ||
-                      parsedUser.id ||
-                      String(parsedUser._id || parsedUser.id),
+                      parsedUser.id,
                     email: parsedUser.email || "",
                     metadata: {
                       deviceId: deviceMetadata.deviceId,
@@ -533,6 +536,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token) return;
 
+    console.log(
+      "[DEBUG-AUTHCTX] fetchInitialData effect fired at",
+      new Date().toISOString(),
+      "| user._id:",
+      user?._id,
+    );
     // Get current state to check what data is already available
     const currentState = store.getState();
     const {
@@ -600,6 +609,12 @@ export function AuthProvider({ children }) {
       dispatch(fetchVipStatus(token));
     }
     if (!hasWalletData) {
+      console.log(
+        "[DEBUG-AUTHCTX] fetchInitialData: hasWalletData=false → dispatching fetchWalletScreen | walletScreen:",
+        !!walletScreen,
+        "| walletScreenStatus:",
+        walletScreenStatus,
+      );
       dispatch(fetchWalletScreen({ token }));
     }
     if (!hasFreshNonGameOffers && nonGameOffersStatus !== "loading") {
@@ -798,7 +813,10 @@ export function AuthProvider({ children }) {
       clearTimeout(taskListTimer);
       clearTimeout(dealsPrewarmTimer);
     };
-  }, [token, dispatch, user]);
+    // Use user?._id (primitive string) instead of the full user object so this
+    // effect only re-runs when the logged-in account actually changes, not on
+    // every render where JSON.parse() creates a new object reference.
+  }, [token, dispatch, user?._id]);
 
   // Refresh profile and wallet when app comes to foreground (to get admin updates)
   // Also check fraud session status. Skip when on routes that don't use this data (e.g. AchieveGoals).
@@ -809,6 +827,11 @@ export function AuthProvider({ children }) {
     let focusTimeoutId = null;
 
     const handleFocus = async () => {
+      console.log(
+        "[DEBUG-AUTHCTX] window focus event fired at",
+        new Date().toISOString(),
+        "| debouncing 500ms...",
+      );
       // Clear any pending refresh to prevent duplicates
       if (focusTimeoutId) {
         clearTimeout(focusTimeoutId);
@@ -830,6 +853,12 @@ export function AuthProvider({ children }) {
         )
           return;
 
+        console.log(
+          "[DEBUG-AUTHCTX] focus debounce resolved — dispatching refreshes for path:",
+          path,
+          "at",
+          new Date().toISOString(),
+        );
         dispatch(fetchUserProfile({ token, force: true, background: true }));
         dispatch(fetchVipStatus(token));
         // Also refresh wallet/balance/XP when app comes to foreground
@@ -900,7 +929,7 @@ export function AuthProvider({ children }) {
 
                   const sessionAuthData = {
                     accountId:
-                      user._id || user.id || String(user._id || user.id),
+                      user.email || user.mobile || user._id || user.id,
                     email: user.email || "",
                     metadata: {
                       deviceId: deviceMetadata.deviceId,
@@ -940,7 +969,8 @@ export function AuthProvider({ children }) {
         clearTimeout(focusTimeoutId);
       }
     };
-  }, [token, dispatch, user]);
+    // Use user?._id (primitive) — same reasoning as the data-fetch effect above.
+  }, [token, dispatch, user?._id]);
 
   // useEffect(() => {
   //   // Only fetch if we haven't fetched before
@@ -961,6 +991,11 @@ export function AuthProvider({ children }) {
 
     // ✅ FIX: Skip gatekeeper during NEW USER onboarding flow
     if (isNewUserFlow) return;
+
+    // Skip gatekeeper while login prefetches are in-flight.
+    // handleAuthSuccess sets this true before setUser/setToken and clears it
+    // after all Tier 1-3 API calls finish — gatekeeper fires once with data ready.
+    if (isLoginRedirectPending) return;
 
     // Skip gatekeeper logic during auth callback to prevent redirect loop
     if (pathname === "/auth/callback") return;
@@ -989,7 +1024,7 @@ export function AuthProvider({ children }) {
     if (isAuthenticated && isProtectedRoute && isNewUserFlow) {
       setIsNewUserFlow(false);
     }
-  }, [isLoading, user, pathname, router, isNewUserFlow]);
+  }, [isLoading, user, pathname, router, isNewUserFlow, isLoginRedirectPending]);
 
   // Hardware back button handler for Capacitor - prevents logout on back navigation
   useEffect(() => {
@@ -1176,6 +1211,8 @@ export function AuthProvider({ children }) {
         throw new Error("Failed to persist authentication token");
       }
 
+      // Suppress the gatekeeper redirect until all prefetch data is ready.
+      setIsLoginRedirectPending(true);
       setUser(user);
       setToken(token); // Setting the token here triggers the Redux fetch effect above
 
@@ -1203,7 +1240,7 @@ export function AuthProvider({ children }) {
           if (verisoulSessionId && isFallback(verisoulSessionId))
             verisoulSessionId = null;
           const sessionAuthData = {
-            accountId: user._id || user.id || String(user._id || user.id),
+            accountId: user.email || user.mobile || user._id || user.id,
             email: user.email || "",
             metadata: {
               deviceId: deviceMetadata.deviceId,
@@ -1318,6 +1355,10 @@ export function AuthProvider({ children }) {
             : []),
         ]);
       }
+
+      // All Tier 1-3 data is now in Redux. Clear the flag so the gatekeeper
+      // fires once and redirects to /homepage with everything already loaded.
+      setIsLoginRedirectPending(false);
 
       // Welcome bonus tasks/timer in background (don't block navigation)
       if (token) {
@@ -2144,6 +2185,23 @@ export function AuthProvider({ children }) {
 
       // handleAuthSuccess saves token to localStorage synchronously before returning
       const result = await handleAuthSuccess(data);
+
+      // Merge onboarding fields into the saved user — backend signup response
+      // may return null for these fields even though they were submitted.
+      try {
+        const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const mergedUser = {
+          ...savedUser,
+          ...(signupData.gender != null && { gender: signupData.gender }),
+          ...(signupData.ageRange != null && { age: signupData.ageRange }),
+          ...(signupData.gamePreferences != null && { gamePreferences: signupData.gamePreferences }),
+          ...(signupData.gameStyle != null && { gameStyle: signupData.gameStyle }),
+          ...(signupData.improvementArea != null && { improvementArea: signupData.improvementArea }),
+          ...(signupData.dailyEarningGoal != null && { dailyEarningGoal: signupData.dailyEarningGoal }),
+        };
+        setUser(mergedUser);
+        localStorage.setItem("user", JSON.stringify(mergedUser));
+      } catch (e) {}
 
       // Verify token was saved
       const savedToken = localStorage.getItem("authToken");

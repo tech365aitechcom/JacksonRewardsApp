@@ -17,6 +17,11 @@ export const useNotifications = (token) => {
   const { details: profile } = useSelector((state) => state.profile);
   const notificationsEnabled =
     (profile?.profile?.notifications ?? false) === true;
+  // Timestamp saved to backend when user last re-enabled notifications.
+  // Stored server-side so it persists across devices, logouts, and account switches.
+  const notificationsReenabledAt = profile?.profile?.notificationsReenabledAt
+    ? new Date(profile.profile.notificationsReenabledAt).getTime()
+    : 0;
 
   const fetchNotifications = async () => {
     if (!token) {
@@ -39,10 +44,18 @@ export const useNotifications = (token) => {
 
 
       if (response && response.success && response.data) {
-        // Filter out only dismissed notifications (not read ones)
-        // According to docs, we should show notifications that are not dismissed
+        // Filter out dismissed notifications.
+        // Also filter out notifications created BEFORE the last re-enable timestamp
+        // (stored on the backend profile) so queued notifications from when
+        // notifications were disabled don't flood the user on re-enable.
         const unreadNotifications = Array.isArray(response.data)
-          ? response.data.filter((notif) => !notif.dismissed)
+          ? response.data.filter((notif) => {
+              if (notif.dismissed) return false;
+              if (notificationsReenabledAt && notif.createdAt) {
+                return new Date(notif.createdAt).getTime() >= notificationsReenabledAt;
+              }
+              return true;
+            })
           : [];
 
         

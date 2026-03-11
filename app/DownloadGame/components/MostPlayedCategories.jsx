@@ -19,7 +19,8 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
 
     const { mostPlayedScreenGames, mostPlayedScreenStatus, mostPlayedScreenError, mostPlayedScreenCacheTimestamp } = useSelector((state) => state.games);
 
-    // One fetch only if no fresh cache (or not loading). No 100ms refetch. User from localStorage (no profile).
+    // One fetch only on mount — same pattern as MostPlayedGames / GameCard.
+    // Empty deps [] ensures this runs exactly once; guards prevent redundant API calls.
     React.useEffect(() => {
         const user = typeof window !== "undefined" ? getUserFromLocalStorage() : null;
         const hasFreshCache = mostPlayedScreenGames?.length && mostPlayedScreenCacheTimestamp && (Date.now() - mostPlayedScreenCacheTimestamp < CACHE_STALE_MS);
@@ -29,7 +30,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
             page: 1,
             limit: 50
         }));
-    }, [dispatch, mostPlayedScreenGames?.length, mostPlayedScreenStatus, mostPlayedScreenCacheTimestamp]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Return to app (focus): refetch only if cache older than 2 min. User from localStorage.
     React.useEffect(() => {

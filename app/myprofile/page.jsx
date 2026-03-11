@@ -7,7 +7,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
   updateUserProfile,
   fetchUserProfile,
-  fetchVipStatus,
   fetchProfileStats,
 } from '@/lib/redux/slice/profileSlice'
 import { fetchWalletScreen } from '@/lib/redux/slice/walletTransactionsSlice'
@@ -35,7 +34,6 @@ export default function MyProfile() {
 
   // VIP status using custom hook
   const { vipStatus, isLoading: vipLoadingStatus, forceRefreshVipStatus } = useVipStatus()
-  console.log({ vipStatus })
   // Get wallet screen data from Redux store
   const { walletScreen } = useSelector((state) => state.walletTransactions)
   const coinBalance = walletScreen?.wallet?.balance || 0
@@ -72,11 +70,10 @@ export default function MyProfile() {
     // This ensures smooth UX - cached data shows immediately, fresh data loads in background
     const refreshTimer = setTimeout(() => {
       dispatch(fetchUserProfile({ token, force: true }))
-      dispatch(fetchVipStatus(token))
       // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }))
       dispatch(fetchProfileStats({ token, force: true }))
-      // Also refresh Google Play subscription status (Android only)
+      // forceRefreshVipStatus handles fetchVipStatus + fetchActiveGooglePlaySubscription
       forceRefreshVipStatus()
     }, 100) // Small delay to let cached data render first
 
@@ -89,11 +86,10 @@ export default function MyProfile() {
 
     const handleFocus = () => {
       dispatch(fetchUserProfile({ token, force: true }))
-      dispatch(fetchVipStatus(token))
       // Also refresh wallet/balance/XP to get admin coin/XP updates
       dispatch(fetchWalletScreen({ token, force: true }))
       dispatch(fetchProfileStats({ token, force: true }))
-      // Also refresh Google Play subscription status (Android only)
+      // forceRefreshVipStatus handles fetchVipStatus + fetchActiveGooglePlaySubscription
       forceRefreshVipStatus()
     }
 
@@ -111,9 +107,16 @@ export default function MyProfile() {
     const next = !original
 
     try {
+      // When re-enabling, save the timestamp to the backend profile so it
+      // persists across devices, logouts, and account switches.
+      const profileData = { notifications: next };
+      if (next === true) {
+        profileData.notificationsReenabledAt = new Date().toISOString();
+      }
+
       await dispatch(
         updateUserProfile({
-          profileData: { notifications: next },
+          profileData,
           token,
         }),
       ).unwrap()

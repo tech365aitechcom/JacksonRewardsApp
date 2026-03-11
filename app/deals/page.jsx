@@ -3,11 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-    getCashbackOffers,
-    getShoppingOffers,
-    getBitlabsSurveys,
-} from "@/lib/api";
+import { getAllNonGameOffers, getBitlabsSurveys } from "@/lib/api";
 import {
     dealsCache,
     dealsCacheTimestamp,
@@ -22,9 +18,7 @@ const DealsPage = () => {
     const { token } = useAuth();
 
     const [activeTab, setActiveTab] = useState("All");
-    const [cashbackOffers, setCashbackOffers] = useState([]);
-    const [shoppingOffers, setShoppingOffers] = useState([]);
-    const [surveyOffers, setSurveyOffers] = useState([]);
+    const [allOffers, setAllOffers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -34,11 +28,8 @@ const DealsPage = () => {
     const isFetchingRef = useRef(false);
 
     useEffect(() => {
-        hasLocalDataRef.current =
-            cashbackOffers.length > 0 ||
-            shoppingOffers.length > 0 ||
-            surveyOffers.length > 0;
-    }, [cashbackOffers, shoppingOffers, surveyOffers]);
+        hasLocalDataRef.current = allOffers.length > 0;
+    }, [allOffers]);
 
     const handleBack = () => {
         router.back();
@@ -48,7 +39,11 @@ const DealsPage = () => {
     const fetchAllDeals = useCallback(
         async ({ background = false } = {}) => {
             if (!token) return;
-            if (isFetchingRef.current) return; // prevent concurrent duplicate calls
+            if (isFetchingRef.current) {
+                console.log("[DEBUG-DEALS] fetchAllDeals called but already fetching — skipping | background:", background);
+                return;
+            }
+            console.log("[DEBUG-DEALS] fetchAllDeals called | background:", background, "| at:", new Date().toISOString());
             isFetchingRef.current = true;
 
             const shouldShowLoader = !background && !hasLocalDataRef.current;
@@ -59,59 +54,20 @@ const DealsPage = () => {
                     setError(null);
                 }
 
-                const defaultParams = {
-                    category: "all",
-                    page: 1,
-                    limit: 6, // fetch more than homepage sections
-                    useAdminConfig: "true",
-                };
-
-                const [cashbackRes, shoppingRes, surveysRes] = await Promise.all([
-                    getCashbackOffers(defaultParams, token),
-                    getShoppingOffers(defaultParams, token),
-                    getBitlabsSurveys(defaultParams, token),
+                const [nonGameRes, surveyRes] = await Promise.all([
+                    getAllNonGameOffers({}, token),
+                    getBitlabsSurveys({ page: 1 }, token),
                 ]);
 
-                // Normalize cashback offers
-                let cbOffers = [];
-                if (cashbackRes?.success && cashbackRes.data) {
-                    if (Array.isArray(cashbackRes.data.offers)) {
-                        cbOffers = cashbackRes.data.offers;
-                    } else if (cashbackRes.data.categorized?.cashback) {
-                        cbOffers = cashbackRes.data.categorized.cashback;
-                    }
-                }
+                const nonGameOffers = (nonGameRes?.success && Array.isArray(nonGameRes.data)) ? nonGameRes.data : [];
+                const surveyOffers = (surveyRes?.success && Array.isArray(surveyRes.data)) ? surveyRes.data : [];
 
-                // Normalize shopping offers
-                let shOffers = [];
-                if (shoppingRes?.success && shoppingRes.data) {
-                    if (Array.isArray(shoppingRes.data.offers)) {
-                        shOffers = shoppingRes.data.offers;
-                    } else if (shoppingRes.data.categorized?.shopping) {
-                        shOffers = shoppingRes.data.categorized.shopping;
-                    }
-                }
+                const combined = [...nonGameOffers, ...surveyOffers];
+                setAllOffers(combined);
 
-                // Normalize survey offers
-                let svOffers = [];
-                if (surveysRes?.success && Array.isArray(surveysRes.data?.surveys)) {
-                    svOffers = surveysRes.data.surveys;
-                }
-
-                // Keep full lists for cashback and surveys,
-                // but limit shopping offers to 6 items
-                setCashbackOffers(cbOffers);
-                setShoppingOffers(shOffers.slice(0, 6));
-                setSurveyOffers(svOffers);
-
-                // Update shared cache for future visits (also pre-warmed by AuthContext)
-                setDealsCache({
-                    cashbackOffers: cbOffers,
-                    shoppingOffers: shOffers.slice(0, 6),
-                    surveyOffers: svOffers,
-                });
-            } catch (err) {
-                console.error("Failed to load deals:", err);
+                // Update shared cache for future visits
+                setDealsCache({ allOffers: combined });
+            } catch {
                 if (!background) {
                     setError("Failed to load deals. Please try again later.");
                 }
@@ -137,9 +93,7 @@ const DealsPage = () => {
             now - dealsCacheTimestamp < DEALS_CACHE_TTL;
 
         if (hasFreshCache) {
-            setCashbackOffers(dealsCache.cashbackOffers || []);
-            setShoppingOffers(dealsCache.shoppingOffers || []);
-            setSurveyOffers(dealsCache.surveyOffers || []);
+            setAllOffers(dealsCache.allOffers || []);
 
             // Background refresh
             fetchAllDeals({ background: true });
@@ -154,11 +108,13 @@ const DealsPage = () => {
         if (!token) return;
 
         const handleFocus = () => {
+            console.log("[DEBUG-DEALS] focus event fired — calling fetchAllDeals(background) at", new Date().toISOString());
             fetchAllDeals({ background: true });
         };
 
         const handleVisibilityChange = () => {
             if (!document.hidden) {
+                console.log("[DEBUG-DEALS] visibilitychange (visible) — calling fetchAllDeals(background) at", new Date().toISOString());
                 fetchAllDeals({ background: true });
             }
         };
@@ -176,63 +132,13 @@ const DealsPage = () => {
     }, [token, fetchAllDeals]); // fetchAllDeals is now stable (only changes when token changes)
 
     // Helpers to extract display data
-    const getNonGameImage = (offer, fallback) => {
-        const isCashback =
-            offer?.type === "cashback" || offer?.offerType === "cashback";
-        const isShopping =
-            offer?.type === "shopping" || offer?.offerType === "shopping";
+    const getNonGameImage = (offer, fallback) => offer?.thumbnail || fallback;
 
-        if (isCashback) {
-            return (
-                offer?.metadata?.thumbnail ||
-                offer?.images?.cardImage ||
-                offer?.images?.backgroundImage ||
-                offer?.images?.cardImageSmall ||
-                fallback
-            );
-        }
+    const getNonGameTitle = (offer) => offer?.title || "Offer";
 
-        if (isShopping) {
-            return (
-                offer?.metadata?.thumbnail ||
-                offer?.banner ||
-                offer?.icon ||
-                offer?.category?.icon_url ||
-                fallback
-            );
-        }
-
-        return offer?.banner || offer?.icon || offer?.category?.icon_url || fallback;
-    };
-
-    const getNonGameTitle = (offer) => {
-        return offer?.title || offer?.merchant_name || offer?.anchor || "Offer";
-    };
-
-    const getNonGameDescription = (offer) => {
-        return (
-            offer?.description ||
-            offer?.short_description ||
-            offer?.metadata?.description ||
-            "Complete this offer to earn rewards."
-        );
-    };
-
-    const getSurveyImage = (survey, fallback) => {
-        return survey?.banner || survey?.icon || survey?.category?.icon_url || fallback;
-    };
-
-    const getSurveyTitle = (survey) => survey?.title || "Survey";
-
-    const getSurveyDescription = (survey) => {
-        if (survey?.description) return survey.description;
-        const est =
-            survey?.estimatedTime || survey?.reward?.estimatedTime || null;
-        if (est) {
-            return `Estimated time: ${est} min`;
-        }
-        return "Answer quick questions and earn rewards.";
-    };
+    const getNonGameDescription = (offer) =>
+        offer?.description ||
+        (offer?.estimatedTime ? `Estimated time: ${offer.estimatedTime} min` : "Complete this offer to earn rewards.");
 
     // Combine data based on active tab
     const buildKey = (prefix, entity, index) => {
@@ -250,24 +156,9 @@ const DealsPage = () => {
         return `${prefix}-${String(rawId)}`;
     };
 
-    // Handle click - mirror NonGameOffersSection + SurveysSection behavior
+    // Handle click
     const handleDealClick = (deal) => {
-        let clickUrl = null;
-
-        if (deal.type === "survey") {
-            // Surveys: use clickUrl like SurveysSection
-            clickUrl = deal.raw?.clickUrl || deal.raw?.click_url || null;
-        } else {
-            // Cashback / Shopping / Others: prefer externalUrl from metadata, then click/deep links
-            const src = deal.raw || {};
-            clickUrl =
-                src.metadata?.externalUrl ||
-                src.clickUrl ||
-                src.click_url ||
-                src.deepLink ||
-                null;
-        }
-
+        const clickUrl = deal.raw?.clickUrl || null;
         if (clickUrl) {
             window.open(clickUrl, "_blank", "noopener,noreferrer");
         }
@@ -276,56 +167,22 @@ const DealsPage = () => {
     const dealsToShow = useMemo(() => {
         const fallbackImg = "https://static.bitlabs.ai/categories/other.svg";
 
-        const cashbackCards = cashbackOffers.map((offer, index) => ({
-            id: buildKey("cashback", offer, index),
-            type: "cashback",
+        const cards = allOffers.map((offer, index) => ({
+            id: buildKey(offer.offerType || "offer", offer, index),
+            type: offer.offerType || "other",
             title: getNonGameTitle(offer),
             description: getNonGameDescription(offer),
             image: getNonGameImage(offer, fallbackImg),
             raw: offer,
         }));
 
-        const shoppingCards = shoppingOffers.map((offer, index) => ({
-            id: buildKey("shopping", offer, index),
-            type: "shopping",
-            title: getNonGameTitle(offer),
-            description: getNonGameDescription(offer),
-            image: getNonGameImage(offer, fallbackImg),
-            raw: offer,
-        }));
+        if (activeTab === "Shopping") return cards.filter((c) => c.type === "shopping");
+        if (activeTab === "Cashback") return cards.filter((c) => c.type === "cashback");
+        if (activeTab === "Surveys") return cards.filter((c) => c.type === "survey");
 
-        const surveyCards = surveyOffers.map((survey, index) => ({
-            id: buildKey("survey", survey, index),
-            type: "survey",
-            title: getSurveyTitle(survey),
-            description: getSurveyDescription(survey),
-            image: getSurveyImage(survey, fallbackImg),
-            raw: survey,
-        }));
-
-        // De-duplicate cards globally by id so the same offer
-        // never appears twice when switching tabs or in "All"
-        const allCards = [...cashbackCards, ...shoppingCards, ...surveyCards];
-        const seen = new Set();
-        const uniqueCards = allCards.filter((card) => {
-            if (seen.has(card.id)) return false;
-            seen.add(card.id);
-            return true;
-        });
-
-        if (activeTab === "Shopping") {
-            return uniqueCards.filter((card) => card.type === "shopping");
-        }
-        if (activeTab === "Cashback") {
-            return uniqueCards.filter((card) => card.type === "cashback");
-        }
-        if (activeTab === "Surveys") {
-            return uniqueCards.filter((card) => card.type === "survey");
-        }
-
-        // "All" tab: show all unique cards from all three sources
-        return uniqueCards;
-    }, [activeTab, cashbackOffers, shoppingOffers, surveyOffers]);
+        // "All" tab: every offer regardless of type
+        return cards;
+    }, [activeTab, allOffers]);
 
     return (
         <div className="relative w-full min-h-screen bg-black max-w-sm mx-auto flex flex-col items-center text-white">
@@ -425,7 +282,10 @@ const DealsPage = () => {
                                         <img
                                             src={deal.image}
                                             alt={deal.title}
-                                            className="w-full h-full object-contain"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                            }}
                                         />
                                     </div>
                                 </div>
