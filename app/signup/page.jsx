@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import useOnboardingStore from '@/stores/useOnboardingStore';
-import { sendOtp, verifyOtp } from '@/lib/api';
+import { sendOtp, verifyOtp, checkMobileAvailability } from '@/lib/api';
 import Script from 'next/script';
 import { sendFirebaseOtp, verifyFirebaseOtp } from "@/lib/firebaseOtp";
 
@@ -337,8 +337,8 @@ const SignUp = () => {
     }
     if (!formData.mobile.trim()) {
       clientErrors.mobile = "Mobile number is required.";
-    } else if (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile)) {
-      clientErrors.mobile = "Please enter a valid 10-digit Indian mobile number.";
+    } else if (!/^\d{5,15}$/.test(formData.mobile)) {
+      clientErrors.mobile = "Please enter a valid mobile number (5-15 digits).";
     }
     if (!formData.password) {
       clientErrors.password = "Password is required.";
@@ -495,12 +495,31 @@ const SignUp = () => {
     setError({});
     const fullNumber = `${countryCode}${formData.mobile}`;
     setIsLoadingss(true);
+
+    // Step 1: Check if mobile is already registered
     try {
-      const result = await sendFirebaseOtp(fullNumber);
+      const availabilityRes = await checkMobileAvailability(fullNumber.replace("+", ""));
+      // Handle both error throws and 200 responses with error messages
+      const resMessage = availabilityRes?.message || availabilityRes?.error || "";
+      if (availabilityRes?.success === false || resMessage.toLowerCase().includes("already") || resMessage.toLowerCase().includes("registered")) {
+        setError({ mobile: resMessage || "This mobile number is already registered. Please log in instead." });
+        setIsLoadingss(false);
+        return;
+      }
+    } catch (err) {
+      const message = err?.body?.message || err?.body?.error || err?.message || "This mobile number is already registered. Please log in instead.";
+      setError({ mobile: message });
+      setIsLoadingss(false);
+      return; // Block everything — don't send OTP, keep field editable
+    }
+
+    // Step 2: Send OTP only if number is available
+    try {
+      await sendFirebaseOtp(fullNumber);
       setIsOtpSent(true);
       setCountdown(180);
     } catch (err) {
-      setError({ mobile: err.message });
+      setError({ mobile: err.message || "Failed to send OTP. Please try again." });
     } finally {
       setIsLoadingss(false);
     }
@@ -748,7 +767,7 @@ const SignUp = () => {
                       type="tel"
                       value={formData.mobile}
                       onChange={(e) => handleInputChange("mobile", e.target.value.replace(/\D/g, ''))}
-                      maxLength={10}
+                      maxLength={15}
                       className="absolute top-[17px] left-[87px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px] disabled:opacity-50"
                       placeholder="Enter your mobile number"
                       required
@@ -769,10 +788,9 @@ const SignUp = () => {
                     )}
                   </div>
                   {error.mobile && <p className="text-red-400 text-xs mt-1 ml-2 max-w-[314px] break-words">{error.mobile}</p>}
+                  {/* reCAPTCHA — inside mobile field wrapper so it doesn't create extra gap */}
+                  <div id="recaptcha-container" className={`flex justify-center ${isOtpSent || isMobileVerified ? 'hidden' : 'mt-1 '}`}></div>
                 </div>
-
-                {/* reCAPTCHA — always in DOM for resend, hidden after OTP sent or verified */}
-                <div id="recaptcha-container" className={`flex justify-center ${isOtpSent || isMobileVerified ? 'hidden' : ''}`}></div>
 
                 {/* OTP SECTION */}
                 {isOtpSent && !isMobileVerified && (

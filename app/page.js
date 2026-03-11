@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export default function AppLoader() {
   const router = useRouter();
@@ -141,7 +142,15 @@ export default function AppLoader() {
     }
   }, [router]);
 
-  // Industry standard: No loading screen, just redirect immediately
-  // The native splash screen handles the visual feedback
-  return null;
+  return (
+    <div className="fixed inset-0 w-full h-full bg-[#272052]">
+      <Image
+        src="/loadingimage.jpg"
+        alt="Loading"
+        fill
+        className="object-cover"
+        priority
+      />
+    </div>
+  );
 }
