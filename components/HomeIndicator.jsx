@@ -127,6 +127,8 @@ const MoreMenu = ({ onClose }) => {
                 alt=""
                 src={item.icon}
                 aria-hidden="true"
+                loading="eager"
+                decoding="async"
               />
             )}
             <span
@@ -223,6 +225,8 @@ export const HomeIndicator = ({ activeTab }) => {
                   src="/assets/animaapp/Tbz6Qwwg/img/home.svg"
                   role="presentation"
                   style={getActiveIconStyle("home")}
+                  loading="eager"
+                  decoding="async"
                 />
                 <span className={`text-[10px] font-normal z-10 ${currentActiveTab === "home" ? "text-white" : "text-[#ffffffb2]"}`}>
                   Home
@@ -247,6 +251,8 @@ export const HomeIndicator = ({ activeTab }) => {
                   src="/game.png"
                   role="presentation"
                   style={getActiveIconStyle("games")}
+                  loading="eager"
+                  decoding="async"
                 />
                 <span className={`text-[10px] font-normal text-center z-10 ${currentActiveTab === "games" ? "text-white" : "text-[#ffffffb2]"}`}>
                   My Games
@@ -269,6 +275,8 @@ export const HomeIndicator = ({ activeTab }) => {
                     alt=""
                     src="/assets/animaapp/Tbz6Qwwg/img/more.svg"
                     role="presentation"
+                    loading="eager"
+                    decoding="async"
                   />
                 </button>
 
@@ -297,6 +305,8 @@ export const HomeIndicator = ({ activeTab }) => {
                     src="/assets/animaapp/Tbz6Qwwg/img/wallet-2x.png"
                     role="presentation"
                     style={getActiveIconStyle("wallet")}
+                    loading="eager"
+                    decoding="async"
                   />
                 </div>
                 <span className={`text-[10px] font-normal text-center z-10 ${currentActiveTab === "wallet" ? "text-white" : "text-[#ffffffb2]"}`}>
@@ -322,6 +332,8 @@ export const HomeIndicator = ({ activeTab }) => {
                   src="/assets/animaapp/Tbz6Qwwg/img/money.svg"
                   role="presentation"
                   style={getActiveIconStyle("cash")}
+                  loading="eager"
+                  decoding="async"
                 />
                 <span className={`text-[10px] font-normal text-center whitespace-nowrap z-10 ${currentActiveTab === "cash" ? "text-white" : "text-[#ffffffb2]"}`}>
                   Cash Coach
