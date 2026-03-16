@@ -80,7 +80,7 @@ export const PrivacyPolicy = ({
         <div className="relative w-full min-h-screen bg-black">
             {/* Header */}
             {showHeader && (
-                <header className="absolute top-0 left-0 w-full h-11 bg-[url(https://c.animaapp.com/A0aDsc87/img/iphone-x--11-pro---black.svg)] bg-[100%_100%]" />
+                <header className="absolute top-0 left-0 w-full h-11 bg-[url(/assets/animaapp/A0aDsc87/img/iphone-x--11-pro---black.svg)] bg-[100%_100%]" />
             )}
 
             {/* Navigation */}
@@ -97,7 +97,7 @@ export const PrivacyPolicy = ({
                                 <img
                                     className="w-full h-full"
                                     alt=""
-                                    src="https://c.animaapp.com/A0aDsc87/img/arrow-back-ios-new@2x.png"
+                                    src="/assets/animaapp/A0aDsc87/img/arrow-back-ios-new-2x.png"
                                 />
                             </button>
                         )}

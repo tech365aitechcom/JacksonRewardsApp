@@ -96,7 +96,7 @@ export default function ContactUsPage() {
                         <img
                             className="w-full h-full"
                             alt=""
-                            src="https://c.animaapp.com/A0aDsc87/img/arrow-back-ios-new@2x.png"
+                            src="/assets/animaapp/A0aDsc87/img/arrow-back-ios-new-2x.png"
                         />
                     </button>
 
@@ -112,7 +112,7 @@ export default function ContactUsPage() {
                 <img
                     className="w-full max-w-[335px] h-[184px] object-cover rounded-lg mt-6"
                     alt="Map showing location at 2972 Westheimer Rd. Santa Ana, Illinois"
-                    src="https://c.animaapp.com/A0aDsc87/img/image-4031@2x.png"
+                    src="/assets/animaapp/A0aDsc87/img/image-4031-2x.png"
                 />
 
                 {/* Content Container */}

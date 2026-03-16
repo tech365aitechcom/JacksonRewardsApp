@@ -51,7 +51,7 @@ const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
                         width={20}
                         height={20}
                         alt="Edit"
-                        src="https://c.animaapp.com/V1uc3arn/img/line-design-edit-line.svg"
+                        src="/assets/animaapp/V1uc3arn/img/line-design-edit-line.svg"
                         loading="eager"
                         decoding="async"
                         priority

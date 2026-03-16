@@ -253,7 +253,7 @@ export default function LocationPage() {
             <img
               className="w-full h-full"
               alt=""
-              src="https://c.animaapp.com/gGYGC01x/img/arrow-back-ios-new@2x.png"
+              src="/assets/animaapp/gGYGC01x/img/arrow-back-ios-new-2x.png"
             />
           </button>
 
@@ -271,7 +271,7 @@ export default function LocationPage() {
               <img
                 className="w-full h-full object-contain"
                 alt="Location access illustration"
-                src="https://c.animaapp.com/gGYGC01x/img/image-4028@2x.png"
+                src="/assets/animaapp/gGYGC01x/img/image-4028-2x.png"
                 loading="eager"
               />
             </div>

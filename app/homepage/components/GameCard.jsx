@@ -448,14 +448,14 @@ const GameCard = ({ onClose: onCloseProp }) => {
     const actionButtons = [
         {
             id: 1,
-            src: "https://c.animaapp.com/DfFsihWg/img/group-2@2x.png",
+            src: "/assets/animaapp/DfFsihWg/img/group-2-2x.png",
             alt: "Close",
             position: "left-0",
             onClick: handleXButton,
         },
         {
             id: 2,
-            src: "https://c.animaapp.com/DfFsihWg/img/group-4@2x.png",
+            src: "/assets/animaapp/DfFsihWg/img/group-4-2x.png",
             alt: "Undo",
             position: "left-24",
             label: {
@@ -466,14 +466,14 @@ const GameCard = ({ onClose: onCloseProp }) => {
         },
         {
             id: 3,
-            src: "https://c.animaapp.com/DfFsihWg/img/group-3@2x.png",
+            src: "/assets/animaapp/DfFsihWg/img/group-3-2x.png",
             alt: "Download",
             position: "left-48",
             onClick: handleDownload,
         },
         // {
         //     id: 4,
-        //     src: "https://c.animaapp.com/DfFsihWg/img/group-2@2x.png",
+        //     src: "/assets/animaapp/DfFsihWg/img/group-2-2x.png",
         //     alt: "Reject",
         //     position: "left-72",
         //     onClick: handleReject,
@@ -601,14 +601,14 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         <img
                             className="absolute w-[400px] max-w-full h-[344px] top-[-2px] aspect-[1] object-cover"
                             alt={`${gameData?.title || 'Game'} artwork`}
-                            src={gameData?.image || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
+                            src={gameData?.image || "/assets/animaapp/DfFsihWg/img/image-3930-2x.png"}
                             loading="eager"
                             decoding="async"
                             onLoad={() => setImageLoading(false)}
                             onError={(e) => {
                                 setImageError(true);
                                 setImageLoading(false);
-                                e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
+                                e.target.src = "/assets/animaapp/DfFsihWg/img/image-3930-2x.png";
                             }}
                         />
                         <div className="absolute w-[210px] min-h-[40px] max-h-[60px] top-[30px] left-11 flex items-center justify-center px-2 py-1" style={{ minWidth: '180px', maxWidth: '210px' }}>
@@ -734,7 +734,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         aria-label="Close"
                         onClick={handleClose}
                     >
-                        <img className="w-full h-full" alt="Close" src="https://c.animaapp.com/DfFsihWg/img/group-2@2x.png" loading="eager" decoding="async" width="62" height="62" />
+                        <img className="w-full h-full" alt="Close" src="/assets/animaapp/DfFsihWg/img/group-2-2x.png" loading="eager" decoding="async" width="62" height="62" />
                     </button>
                 </section>
 
@@ -811,14 +811,14 @@ const GameCard = ({ onClose: onCloseProp }) => {
                         <img
                             className="absolute w-[400px] max-w-full h-[344px] top-[-2px] object-cover"
                             alt={`${gameData?.title || 'Game'} artwork`}
-                            src={gameData?.image || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
+                            src={gameData?.image || "/assets/animaapp/DfFsihWg/img/image-3930-2x.png"}
                             loading="eager"
                             decoding="async"
                             onLoad={() => setImageLoading(false)}
                             onError={(e) => {
                                 setImageError(true);
                                 setImageLoading(false);
-                                e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
+                                e.target.src = "/assets/animaapp/DfFsihWg/img/image-3930-2x.png";
                             }}
                         />
                         {/* <div className="absolute w-[210px] h-10 top-[30px] left-11 flex items-center justify-center">

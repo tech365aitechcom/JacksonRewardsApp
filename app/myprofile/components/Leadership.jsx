@@ -151,7 +151,7 @@ const Leadership = () => {
             >
                 {leadershipGames.map((game, index) => {
                     const images = normalizeGameImages(game);
-                    const displayImage = images.square_image || images.icon || game.images?.icon || game.icon || game.square_image || game.image || 'https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png';
+                    const displayImage = images.square_image || images.icon || game.images?.icon || game.icon || game.square_image || game.image || '/assets/animaapp/DfFsihWg/img/image-3930-2x.png';
                     const displayTitle = normalizeGameTitle(game);
 
                     // Coins and total XP from tasks (single source: getTotalPromisedPoints)
@@ -219,7 +219,7 @@ const Leadership = () => {
                                             <img
                                                 className="w-4 h-4 ml-1 flex-shrink-0"
                                                 alt="Coin"
-                                                src="https://c.animaapp.com/3btkjiTJ/img/image-3937@2x.png"
+                                                src="/assets/animaapp/3btkjiTJ/img/image-3937-2x.png"
                                                 loading="eager"
                                                 decoding="async"
                                                 width="16"
@@ -233,7 +233,7 @@ const Leadership = () => {
                                             <img
                                                 className="w-4 h-4 ml-1 flex-shrink-0"
                                                 alt="XP"
-                                                src="https://c.animaapp.com/3btkjiTJ/img/pic.svg"
+                                                src="/assets/animaapp/3btkjiTJ/img/pic.svg"
                                                 loading="eager"
                                                 decoding="async"
                                                 width="16"

@@ -110,7 +110,7 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                             <Image
                                 className="absolute w-[55px] h-[55px] top-4 left-4"
                                 alt="Group"
-                                src="https://c.animaapp.com/3mn7waJw/img/group-4@2x.png"
+                                src="/assets/animaapp/3mn7waJw/img/group-4-2x.png"
                                 width={55}
                                 height={55}
                             />
@@ -167,7 +167,7 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                                         <Image
                                             className="w-[18px] h-[18px] sm:w-[23px] sm:h-[23px]"
                                             alt="Coin"
-                                            src="https://c.animaapp.com/3mn7waJw/img/image-3937-4@2x.png"
+                                            src="/assets/animaapp/3mn7waJw/img/image-3937-4-2x.png"
                                             width={20}
                                             height={20}
                                         />
@@ -183,7 +183,7 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                                         <Image
                                             className="w-[18px] h-[18px] sm:w-[23px] sm:h-[18px]"
                                             alt="XP"
-                                            src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                                            src="/assets/animaapp/3mn7waJw/img/pic-7.svg"
                                             width={18}
                                             height={18}
                                         />

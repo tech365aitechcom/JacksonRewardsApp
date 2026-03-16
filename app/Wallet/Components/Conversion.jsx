@@ -404,7 +404,7 @@ export const Conversion = () => {
                         <img
                             className="w-[23px] h-[23px] flex-shrink-0"
                             alt="Coin"
-                            src="https://c.animaapp.com/GgG4W9O5/img/image-3937@2x.png"
+                            src="/assets/animaapp/GgG4W9O5/img/image-3937-2x.png"
                             loading="eager"
                             decoding="async"
                             width={23}
@@ -501,7 +501,7 @@ export const Conversion = () => {
                                 <img
                                     className="w-7 h-7 mr-2"
                                     alt="Convert now icon"
-                                    src="https://c.animaapp.com/GgG4W9O5/img/image-3941@2x.png"
+                                    src="/assets/animaapp/GgG4W9O5/img/image-3941-2x.png"
                                     loading="eager"
                                     decoding="async"
                                     width={28}

@@ -1009,7 +1009,7 @@ function GameDetailsContent() {
                                     <img
                                         className="w-[20px] h-[19px] object-contain flex-shrink-0"
                                         alt="Coin icon"
-                                        src="https://c.animaapp.com/ltgoa7L3/img/image-3937-7@2x.png"
+                                        src="/assets/animaapp/ltgoa7L3/img/image-3937-7-2x.png"
                                     />
                                 </span>
                                 <span className="whitespace-nowrap">and</span>
@@ -1024,7 +1024,7 @@ function GameDetailsContent() {
                                     <img
                                         className="w-[19px]  mb-[2px] h-[20px] object-contain flex-shrink-0"
                                         alt="XP icon"
-                                        src="https://c.animaapp.com/ltgoa7L3/img/pic-7.svg"
+                                        src="/assets/animaapp/ltgoa7L3/img/pic-7.svg"
                                     />
                                 </span>
                             </span>

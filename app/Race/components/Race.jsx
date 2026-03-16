@@ -8,7 +8,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
 
     const platformImages = [
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-3@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-3-2x.png",
             alt: "Group",
             top: "88.22%",
             left: "55.18%",
@@ -17,7 +17,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-13@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-13-2x.png",
             alt: "Group",
             top: "78.20%",
             left: "7.05%",
@@ -26,7 +26,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-14@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-14-2x.png",
             alt: "Group",
             top: "73.61%",
             left: "51.73%",
@@ -35,7 +35,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-15@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-15-2x.png",
             alt: "Group",
             top: "65.17%",
             left: "9.02%",
@@ -44,7 +44,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-16@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-16-2x.png",
             alt: "Group",
             top: "57.99%",
             left: "51.33%",
@@ -53,7 +53,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-17@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-17-2x.png",
             alt: "Group",
             top: "49.56%",
             left: "10.72%",
@@ -62,7 +62,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-18@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-18-2x.png",
             alt: "Group",
             top: "43.38%",
             left: "51.23%",
@@ -71,7 +71,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-19@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-19-2x.png",
             alt: "Group",
             top: "36.22%",
             left: "5.21%",
@@ -80,7 +80,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: true,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-20@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-20-2x.png",
             alt: "Group",
             top: "28.76%",
             left: "50.52%",
@@ -89,7 +89,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             glow: false,
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/group-21@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/group-21-2x.png",
             alt: "Group",
             top: "21.89%",
             left: "5.10%",
@@ -101,7 +101,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
 
     const friendsImages = [
         {
-            src: "https://c.animaapp.com/j8smgVil/img/friends@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/friends-2x.png",
             alt: "Friends",
             top: "0",
             left: "33px",
@@ -111,7 +111,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             bgColor: "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)", // Blue gradient
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/friends-1@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/friends-1-2x.png",
             alt: "Friends",
             top: "22px",
             left: "0",
@@ -121,7 +121,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             bgColor: "linear-gradient(135deg, #10b981 0%, #059669 100%)", // Green gradient
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/friends-2@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/friends-2-2x.png",
             alt: "Friends",
             top: "6",
             left: "67px",
@@ -131,7 +131,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
             bgColor: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)", // Indigo gradient
         },
         {
-            src: "https://c.animaapp.com/j8smgVil/img/friends-3@2x.png",
+            src: "/assets/animaapp/j8smgVil/img/friends-3-2x.png",
             alt: "Friends",
             top: "35px",
             left: "33px",
@@ -169,7 +169,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                 <img
                     className="absolute top-[86px] left-0 w-[334px] h-[612px]"
                     alt="Image"
-                    src="https://c.animaapp.com/j8smgVil/img/image-4037.png"
+                    src="/assets/animaapp/j8smgVil/img/image-4037.png"
                     loading="eager"
                     decoding="async"
                     width="334"
@@ -251,7 +251,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                 <img
                     className="absolute top-[124px] left-24 w-[47px] h-10 object-cover"
                     alt="Image"
-                    src="https://c.animaapp.com/j8smgVil/img/-@2x.png"
+                    src="/assets/animaapp/j8smgVil/img/--2x.png"
                     loading="eager"
                     decoding="async"
                     width="47"
@@ -265,7 +265,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                 <img
                     className="absolute top-24 left-[17px] w-[83px] h-[72px] object-cover"
                     alt="Image"
-                    src="https://c.animaapp.com/j8smgVil/img/--1@2x.png"
+                    src="/assets/animaapp/j8smgVil/img/--1-2x.png"
                     loading="eager"
                     decoding="async"
                     width="83"
@@ -284,7 +284,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                     <img
                         className="absolute w-[99.91%] h-[96.90%] top-0 left-0 rotate-[-0.36deg]"
                         alt=""
-                        src="https://c.animaapp.com/iHEgzz6R/img/rectangle-274.svg"
+                        src="/assets/animaapp/iHEgzz6R/img/rectangle-274.svg"
                         role="presentation"
                         loading="eager"
                         decoding="async"
@@ -295,7 +295,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                     <img
                         className="absolute w-[100.00%] h-[97.92%] top-0 left-0 rotate-[-0.36deg]"
                         alt=""
-                        src="https://c.animaapp.com/iHEgzz6R/img/group-649@2x.png"
+                        src="/assets/animaapp/iHEgzz6R/img/group-649-2x.png"
                         role="presentation"
                         loading="eager"
                         decoding="async"

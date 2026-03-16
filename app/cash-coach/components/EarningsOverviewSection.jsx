@@ -20,7 +20,7 @@ export const EarningsOverviewSection = () => {
             amount: summary.salary ?? 0,
             period: "month",
             hasIcon: true,
-            iconSrc: "https://c.animaapp.com/1jLgqlGD/img/polygon-1.svg",
+            iconSrc: "/assets/animaapp/1jLgqlGD/img/polygon-1.svg",
         },
         {
             id: 2,
@@ -29,7 +29,7 @@ export const EarningsOverviewSection = () => {
             amount: summary.expense ?? 0,
             period: "month",
             hasIcon: true,
-            iconSrc: "https://c.animaapp.com/1jLgqlGD/img/polygon-1-1.svg",
+            iconSrc: "/assets/animaapp/1jLgqlGD/img/polygon-1-1.svg",
         },
         {
             id: 3,

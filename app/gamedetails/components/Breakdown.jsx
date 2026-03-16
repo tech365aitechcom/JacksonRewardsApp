@@ -69,9 +69,9 @@ export const Breakdown = ({ game, sessionCoins = 0, sessionXP = 0 }) => {
             bonus: `+${formatXP(firstTaskXP)}`,
             bgColor: "bg-[linear-gradient(180deg,rgba(220,195,34,1)_0%,rgba(80,50,146,0.7)_100%)] ",
             textColor: "text-white",
-            vectorLeft: "https://c.animaapp.com/OGuKwK7i/img/vector-4235-2.svg",
-            vectorRight: "https://c.animaapp.com/OGuKwK7i/img/vector-4234-2.svg",
-            pic: "https://c.animaapp.com/OGuKwK7i/img/pic-2.svg",
+            vectorLeft: "/assets/animaapp/OGuKwK7i/img/vector-4235-2.svg",
+            vectorRight: "/assets/animaapp/OGuKwK7i/img/vector-4234-2.svg",
+            pic: "/assets/animaapp/OGuKwK7i/img/pic-2.svg",
         },
         {
             id: 2,
@@ -80,9 +80,9 @@ export const Breakdown = ({ game, sessionCoins = 0, sessionXP = 0 }) => {
             bonus: `+${totalXPDisplay}`,
             bgColor: "bg-[linear-gradient(180deg,rgba(255,0,238,0.4)_0%,rgba(113,106,231,0.4)_100%)] ",
             textColor: "text-white",
-            vectorLeft: "https://c.animaapp.com/OGuKwK7i/img/vector-4235-3.svg",
-            vectorRight: "https://c.animaapp.com/OGuKwK7i/img/vector-4234-3.svg",
-            pic: "https://c.animaapp.com/OGuKwK7i/img/pic-3.svg",
+            vectorLeft: "/assets/animaapp/OGuKwK7i/img/vector-4235-3.svg",
+            vectorRight: "/assets/animaapp/OGuKwK7i/img/vector-4234-3.svg",
+            pic: "/assets/animaapp/OGuKwK7i/img/pic-3.svg",
         }
     ];
 
@@ -120,7 +120,7 @@ export const Breakdown = ({ game, sessionCoins = 0, sessionXP = 0 }) => {
                             <img
                                 className="w-[23px] h-6 aspect-[0.97]"
                                 alt="Coin icon"
-                                src="https://c.animaapp.com/OGuKwK7i/img/image-3937-6@2x.png"
+                                src="/assets/animaapp/OGuKwK7i/img/image-3937-6-2x.png"
                             />
                         </div>
 

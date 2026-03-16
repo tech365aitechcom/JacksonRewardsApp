@@ -375,14 +375,14 @@ function AuthCallbackContent() {
             <Image
               className="absolute w-[83px] h-[125px] top-[140px] left-3.5"
               alt="Front shapes"
-              src="https://c.animaapp.com/bkGH9LUL/img/front-shapes@2x.png"
+              src="/assets/animaapp/bkGH9LUL/img/front-shapes-2x.png"
               width={83}
               height={125}
             />
             <Image
               className="absolute w-[18px] h-[275px] top-[160px] left-[371px]"
               alt="Saly"
-              src="https://c.animaapp.com/bkGH9LUL/img/saly-16@2x.png"
+              src="/assets/animaapp/bkGH9LUL/img/saly-16-2x.png"
               width={18}
               height={275}
             />

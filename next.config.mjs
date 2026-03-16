@@ -14,6 +14,9 @@ const nextConfig = {
     unoptimized: true,
     domains: ["c.animaapp.com", "rewardsapi.hireagent.co"],
   },
+  compiler: {
+    removeConsole: true,
+  },
 };
 
 export default nextConfig;

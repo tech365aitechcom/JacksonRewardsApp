@@ -101,14 +101,14 @@ const Achievements = () => {
                 >
                     <div
                         className="absolute w-16 h-16 top-3.5 left-4 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${achievement.bgImage || 'https://c.animaapp.com/V1uc3arn/img/oval@2x.png'})` }}
+                        style={{ backgroundImage: `url(${achievement.bgImage || '/assets/animaapp/V1uc3arn/img/oval-2x.png'})` }}
                     >
                         <Image
                             width={63}
                             height={49}
                             className="absolute top-[15px] left-0"
                             alt={achievement.title || achievement.name}
-                            src={achievement.image || achievement.icon || 'https://c.animaapp.com/V1uc3arn/img/image-3926@2x.png'}
+                            src={achievement.image || achievement.icon || '/assets/animaapp/V1uc3arn/img/image-3926-2x.png'}
                             loading="lazy"
                             decoding="async"
                         />

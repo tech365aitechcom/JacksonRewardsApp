@@ -10,7 +10,7 @@ const MoreMenu = ({ onClose }) => {
   const menuItems = [
     {
       id: 1,
-      icon: "https://c.animaapp.com/vuiLipjk/img/vector.svg",
+      icon: "/assets/animaapp/vuiLipjk/img/vector.svg",
       label: "Daily Challenges",
       iconWidth: "w-5",
       iconHeight: "h-[18px]",
@@ -22,7 +22,7 @@ const MoreMenu = ({ onClose }) => {
 
     {
       id: 2,
-      icon: "https://c.animaapp.com/vuiLipjk/img/vector.svg",
+      icon: "/assets/animaapp/vuiLipjk/img/vector.svg",
       label: "DEALS",
       iconWidth: "w-5",
       iconHeight: "h-[18px]",
@@ -34,7 +34,7 @@ const MoreMenu = ({ onClose }) => {
 
     {
       id: 3,
-      icon: "https://c.animaapp.com/vuiLipjk/img/group@2x.png",
+      icon: "/assets/animaapp/vuiLipjk/img/group-2x.png",
       label: "Daily Rewards",
       iconWidth: "w-[20px]",
       iconHeight: "h-[20px]",
@@ -220,7 +220,7 @@ export const HomeIndicator = ({ activeTab }) => {
                 <img
                   className="w-6 h-6 z-10"
                   alt=""
-                  src="https://c.animaapp.com/Tbz6Qwwg/img/home.svg"
+                  src="/assets/animaapp/Tbz6Qwwg/img/home.svg"
                   role="presentation"
                   style={getActiveIconStyle("home")}
                 />
@@ -267,7 +267,7 @@ export const HomeIndicator = ({ activeTab }) => {
                   <img
                     className="w-[62px] h-[62px]"
                     alt=""
-                    src="https://c.animaapp.com/Tbz6Qwwg/img/more.svg"
+                    src="/assets/animaapp/Tbz6Qwwg/img/more.svg"
                     role="presentation"
                   />
                 </button>
@@ -294,7 +294,7 @@ export const HomeIndicator = ({ activeTab }) => {
                   <img
                     className="absolute w-5 h-[18px] top-[3px] left-0.5"
                     alt=""
-                    src="https://c.animaapp.com/Tbz6Qwwg/img/wallet@2x.png"
+                    src="/assets/animaapp/Tbz6Qwwg/img/wallet-2x.png"
                     role="presentation"
                     style={getActiveIconStyle("wallet")}
                   />
@@ -319,7 +319,7 @@ export const HomeIndicator = ({ activeTab }) => {
                 <img
                   className="w-6 h-6 z-10"
                   alt=""
-                  src="https://c.animaapp.com/Tbz6Qwwg/img/money.svg"
+                  src="/assets/animaapp/Tbz6Qwwg/img/money.svg"
                   role="presentation"
                   style={getActiveIconStyle("cash")}
                 />

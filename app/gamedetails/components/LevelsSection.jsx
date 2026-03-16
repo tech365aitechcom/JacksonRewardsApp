@@ -335,7 +335,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                         vectorLeft: getVectorLeft(index),
                         vectorRight: getVectorRight(index),
                         pic: getPicIcon(index),
-                        rewardImage: "https://c.animaapp.com/ABnBdu2U/img/image-3937@2x.png",
+                        rewardImage: "/assets/animaapp/ABnBdu2U/img/image-3937-2x.png",
                         coinReward,
                         xpReward,
                         taskType: getTaskType(goal.section),
@@ -428,33 +428,33 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
     const getVectorLeft = (index) => {
         const vectors = [
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4235.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4235-1.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4235-2.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4235-3.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4235-4.svg"
+            "/assets/animaapp/ABnBdu2U/img/vector-4235.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4235-1.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4235-2.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4235-3.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4235-4.svg"
         ];
         return vectors[index % vectors.length];
     };
 
     const getVectorRight = (index) => {
         const vectors = [
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4234.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4234-1.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4234-2.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4234-3.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/vector-4234-4.svg"
+            "/assets/animaapp/ABnBdu2U/img/vector-4234.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4234-1.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4234-2.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4234-3.svg",
+            "/assets/animaapp/ABnBdu2U/img/vector-4234-4.svg"
         ];
         return vectors[index % vectors.length];
     };
 
     const getPicIcon = (index) => {
         const pics = [
-            "https://c.animaapp.com/ABnBdu2U/img/pic.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/pic-1.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/pic-2.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/pic-3.svg",
-            "https://c.animaapp.com/ABnBdu2U/img/pic-4.svg"
+            "/assets/animaapp/ABnBdu2U/img/pic.svg",
+            "/assets/animaapp/ABnBdu2U/img/pic-1.svg",
+            "/assets/animaapp/ABnBdu2U/img/pic-2.svg",
+            "/assets/animaapp/ABnBdu2U/img/pic-3.svg",
+            "/assets/animaapp/ABnBdu2U/img/pic-4.svg"
         ];
         return pics[index % pics.length];
     };
@@ -625,7 +625,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                         <img
                             className={`w-[12.19px] h-[12.19px] transition-transform ${showDropdown ? 'rotate-180' : ''}`}
                             alt="Arrow back ios new"
-                            src="https://c.animaapp.com/ABnBdu2U/img/arrow-back-ios-new@2x.png"
+                            src="/assets/animaapp/ABnBdu2U/img/arrow-back-ios-new-2x.png"
                         />
                     </button>
 
@@ -814,7 +814,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                     <img
                                         className="w-[14px] h-[14px] flex-shrink-0"
                                         alt="Clock"
-                                        src="https://c.animaapp.com/ABnBdu2U/img/clock-10.svg"
+                                        src="/assets/animaapp/ABnBdu2U/img/clock-10.svg"
                                     />
                                     <span className={`font-normal text-[11px] ${level.isExpired ? 'text-red-300 font-semibold' :
                                         level.days_left && level.days_left <= 3 ? 'text-orange-300 font-medium' :
@@ -860,7 +860,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                 <img
                                     className="w-[23px] h-[23px]"
                                     alt="Arrow back ios new"
-                                    src="https://c.animaapp.com/ABnBdu2U/img/arrow-back-ios-new-3@2x.png"
+                                    src="/assets/animaapp/ABnBdu2U/img/arrow-back-ios-new-3-2x.png"
                                 />
                             </div>
                         )}
@@ -960,7 +960,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                 <img
                                     className="w-[28px] h-[28px]"
                                     alt="Lock Icon"
-                                    src="https://c.animaapp.com/ABnBdu2U/img/image-3943-3@2x.png"
+                                    src="/assets/animaapp/ABnBdu2U/img/image-3943-3-2x.png"
                                     loading="eager"
                                     decoding="async"
                                     width={28}
@@ -997,7 +997,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                     <img
                                         className="w-[14px] h-[14px] flex-shrink-0"
                                         alt="Clock"
-                                        src="https://c.animaapp.com/ABnBdu2U/img/clock-10.svg"
+                                        src="/assets/animaapp/ABnBdu2U/img/clock-10.svg"
                                     />
                                     <span className="font-normal text-[11px] text-[#f4f3fc]">
                                         {level.timeLimit}
@@ -1032,7 +1032,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                 <img
                                     className="w-[23px] h-[23px]"
                                     alt="Arrow back ios new"
-                                    src="https://c.animaapp.com/ABnBdu2U/img/arrow-back-ios-new-3@2x.png"
+                                    src="/assets/animaapp/ABnBdu2U/img/arrow-back-ios-new-3-2x.png"
                                 />
                             </div>
                         )}

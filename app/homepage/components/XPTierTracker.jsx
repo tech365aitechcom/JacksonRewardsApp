@@ -382,7 +382,7 @@ const XPTierTracker = ({ stats, token }) => {
                     <img
                         className="w-full h-full"
                         alt="XP icon"
-                        src="https://c.animaapp.com/mHRmJGe1/img/pic.svg"
+                        src="/assets/animaapp/mHRmJGe1/img/pic.svg"
                         loading="eager"
                         decoding="async"
                         width="40"
@@ -398,7 +398,7 @@ const XPTierTracker = ({ stats, token }) => {
                     <img
                         className="w-5 h-[18px] mx-1"
                         alt="XP points icon"
-                        src="https://c.animaapp.com/mHRmJGe1/img/pic-1.svg"
+                        src="/assets/animaapp/mHRmJGe1/img/pic-1.svg"
                         loading="eager"
                         decoding="async"
                         width="20"
@@ -464,7 +464,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[35px] right-[15%] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -474,7 +474,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[95px] left-[10px] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -484,7 +484,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[170px] right-[15%] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -494,7 +494,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[42px] left-[12px] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-5.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-5.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -504,7 +504,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[80px] right-[12px] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-7.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-7.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -514,7 +514,7 @@ const XPTierTracker = ({ stats, token }) => {
                             <img
                                 className="absolute w-3 h-3 top-[28px] left-[28%] pointer-events-none opacity-60 z-0"
                                 alt=""
-                                src="https://c.animaapp.com/rTwEmiCB/img/vector-8.svg"
+                                src="/assets/animaapp/rTwEmiCB/img/vector-8.svg"
                                 aria-hidden="true"
                                 loading="eager"
                                 decoding="async"
@@ -527,7 +527,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="w-[90px] h-[78px]"
                                     alt="XP Points Logo"
-                                    src="https://c.animaapp.com/rTwEmiCB/img/pic.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/pic.svg"
                                     loading="eager"
                                     decoding="async"
                                     width="90"
@@ -546,7 +546,7 @@ const XPTierTracker = ({ stats, token }) => {
                                     <img
                                         className="w-[14px] h-[14px]"
                                         alt=""
-                                        src="https://c.animaapp.com/rTwEmiCB/img/vector-8.svg"
+                                        src="/assets/animaapp/rTwEmiCB/img/vector-8.svg"
                                         aria-hidden="true"
                                         loading="eager"
                                         decoding="async"
@@ -712,7 +712,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[35px] sm:top-[40px] right-[15%] sm:right-[20%] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -722,7 +722,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[95px] sm:top-[105px] left-[10px] sm:left-[15px] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -732,7 +732,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[170px] sm:top-[190px] right-[15%] sm:right-[20%] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-2.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-2.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -742,7 +742,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[42px] sm:top-[48px] left-[12px] sm:left-[15px] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-5.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-5.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -752,7 +752,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[80px] sm:top-[90px] right-[12px] sm:right-[15px] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-7.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-7.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -762,7 +762,7 @@ const XPTierTracker = ({ stats, token }) => {
                                 <img
                                     className="absolute w-3 h-3 sm:w-4 sm:h-4 top-[28px] sm:top-[32px] left-[28%] sm:left-[30%] pointer-events-none opacity-60 z-0"
                                     alt=""
-                                    src="https://c.animaapp.com/rTwEmiCB/img/vector-8.svg"
+                                    src="/assets/animaapp/rTwEmiCB/img/vector-8.svg"
                                     aria-hidden="true"
                                     loading="eager"
                                     decoding="async"
@@ -777,7 +777,7 @@ const XPTierTracker = ({ stats, token }) => {
                                     type="button"
                                     onClick={handleModalClose}
                                 >
-                                    <img alt="Close" src="https://c.animaapp.com/rTwEmiCB/img/close.svg" className="w-full h-full" loading="eager" decoding="async" width="24" height="24" />
+                                    <img alt="Close" src="/assets/animaapp/rTwEmiCB/img/close.svg" className="w-full h-full" loading="eager" decoding="async" width="24" height="24" />
                                 </button>
 
                                 {/* Main Logo - Smaller and Responsive */}
@@ -785,7 +785,7 @@ const XPTierTracker = ({ stats, token }) => {
                                     <img
                                         className="w-[90px] h-[78px] sm:w-[100px] sm:h-[86px] md:w-[110px] md:h-[95px]"
                                         alt="XP Points Logo"
-                                        src="https://c.animaapp.com/rTwEmiCB/img/pic.svg"
+                                        src="/assets/animaapp/rTwEmiCB/img/pic.svg"
                                         loading="eager"
                                         decoding="async"
                                         width="110"
@@ -804,7 +804,7 @@ const XPTierTracker = ({ stats, token }) => {
                                         <img
                                             className="w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]"
                                             alt=""
-                                            src="https://c.animaapp.com/rTwEmiCB/img/vector-8.svg"
+                                            src="/assets/animaapp/rTwEmiCB/img/vector-8.svg"
                                             aria-hidden="true"
                                             loading="eager"
                                             decoding="async"

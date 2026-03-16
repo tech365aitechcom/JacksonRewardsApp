@@ -80,13 +80,13 @@ export const ProgressSection = ({
         if (shouldShowChestBox(day)) {
             return {
                 type: 'chest',
-                src: 'https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png', // Using the actual treasure chest from ChallengeGroupSection
+                src: '/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png', // Using the actual treasure chest from ChallengeGroupSection
                 alt: 'Treasure Chest'
             };
         } else {
             return {
                 type: 'leaf',
-                src: 'https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png', // Using the actual leaf icon from decorative images
+                src: '/assets/animaapp/1RFP1hGC/img/image-4016-2x.png', // Using the actual leaf icon from decorative images
                 alt: 'Leaf with Tick'
             };
         }
@@ -182,24 +182,11 @@ export const ProgressSection = ({
 
     // Preload images for faster display - optimized with link preload and early loading
     useEffect(() => {
-        // Add preconnect for external image domains to establish early connections
-        const preconnectDomains = [
-            'https://c.animaapp.com'
-        ];
-
-        preconnectDomains.forEach(domain => {
-            const link = document.createElement('link');
-            link.rel = 'preconnect';
-            link.href = domain;
-            link.crossOrigin = 'anonymous';
-            document.head.appendChild(link);
-        });
-
         // Add link preload tags for critical images (browser-level preloading)
         const imageUrls = [
             { url: "/tree.png", as: "image" },
-            { url: "https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png", as: "image" },
-            { url: "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png", as: "image" }
+            { url: "/assets/animaapp/1RFP1hGC/img/image-4016-2x.png", as: "image" },
+            { url: "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png", as: "image" }
         ];
 
         imageUrls.forEach(({ url, as }) => {
@@ -220,12 +207,12 @@ export const ProgressSection = ({
         treeImage.fetchPriority = 'high';
 
         const leafImage = new Image();
-        leafImage.src = "https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png";
+        leafImage.src = "/assets/animaapp/1RFP1hGC/img/image-4016-2x.png";
         leafImage.crossOrigin = 'anonymous';
         leafImage.fetchPriority = 'high';
 
         const chestImage = new Image();
-        chestImage.src = "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png";
+        chestImage.src = "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png";
         chestImage.crossOrigin = 'anonymous';
         chestImage.fetchPriority = 'high';
 
@@ -450,7 +437,7 @@ export const ProgressSection = ({
                                         {/* Leaf background - natural proportions - increased size */}
                                         <img
                                             className="w-[140px] h-[100px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
-                                            src="https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png"
+                                            src="/assets/animaapp/1RFP1hGC/img/image-4016-2x.png"
                                             alt="Leaf with Treasure Box"
                                             style={{ aspectRatio: 'auto' }}
                                             loading="eager"
@@ -490,7 +477,7 @@ export const ProgressSection = ({
                                     <div className="relative group">
                                         <img
                                             className="w-[150px] h-[80px] drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
-                                            src="https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png"
+                                            src="/assets/animaapp/1RFP1hGC/img/image-4016-2x.png"
                                             alt="Leaf with Tick"
                                             loading="eager"
                                             decoding="async"

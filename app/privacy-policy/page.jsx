@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
                         <img
                             className="w-full h-full mt-[1px]"
                             alt=""
-                            src="https://c.animaapp.com/A0aDsc87/img/arrow-back-ios-new@2x.png"
+                            src="/assets/animaapp/A0aDsc87/img/arrow-back-ios-new-2x.png"
                         />
                     </button>
 

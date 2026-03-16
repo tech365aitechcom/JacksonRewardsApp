@@ -622,7 +622,7 @@ const SignUp = () => {
                 <Image
                   className="absolute w-[83px] h-[125px] top-[-22px] left-3.5"
                   alt="Front shapes"
-                  src="https://c.animaapp.com/bkGH9LUL/img/front-shapes@2x.png"
+                  src="/assets/animaapp/bkGH9LUL/img/front-shapes-2x.png"
                   width={83}
                   height={125}
                 />
@@ -631,7 +631,7 @@ const SignUp = () => {
                   <Image
                     className="absolute w-[43px] h-[106px] top-0 left-1.5"
                     alt="Front shapes"
-                    src="https://c.animaapp.com/bkGH9LUL/img/front-shapes-1@2x.png"
+                    src="/assets/animaapp/bkGH9LUL/img/front-shapes-1-2x.png"
                     width={43}
                     height={106}
                   />
@@ -639,7 +639,7 @@ const SignUp = () => {
                   <Image
                     className="absolute w-[18px] h-[275px] top-[13px] left-[23px]"
                     alt="Saly"
-                    src="https://c.animaapp.com/bkGH9LUL/img/saly-16@2x.png"
+                    src="/assets/animaapp/bkGH9LUL/img/saly-16-2x.png"
                     width={18}
                     height={275}
                   />
@@ -649,7 +649,7 @@ const SignUp = () => {
               <Image
                 className="absolute w-[26px] h-[23px] top-[187px] left-[338px]"
                 alt="Gem"
-                src="https://c.animaapp.com/bkGH9LUL/img/gem-1@2x.png"
+                src="/assets/animaapp/bkGH9LUL/img/gem-1-2x.png"
                 width={21}
                 height={22}
               />
@@ -666,7 +666,7 @@ const SignUp = () => {
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="User icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                      src="/assets/animaapp/bkGH9LUL/img/vector-2.svg"
                       width={17}
                       height={17}
                     />
@@ -696,7 +696,7 @@ const SignUp = () => {
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="User icon"
-                      src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg"
+                      src="/assets/animaapp/bkGH9LUL/img/vector-2.svg"
                       width={17}
                       height={17}
                     />
@@ -726,7 +726,7 @@ const SignUp = () => {
                     <Image
                       className="absolute w-[17px] h-[17px] top-5 left-5"
                       alt="Email icon"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/vector.svg" // Using the correct email icon from your login example
+                      src="/assets/animaapp/2Y7fJDnh/img/vector.svg" // Using the correct email icon from your login example
                       width={17}
                       height={17}
                     />
@@ -753,7 +753,7 @@ const SignUp = () => {
                     Mobile Number <span className="text-red-400">*</span>
                   </label>
                   <div className="relative w-[314px] h-[55px] rounded-[12px] bg-white/10 backdrop-blur-lg border border-white/20 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
-                    <Image className="absolute w-[17px] h-[17px] top-5 left-5" alt="Phone icon" src="https://c.animaapp.com/bkGH9LUL/img/vector-2.svg" width={17} height={17} />
+                    <Image className="absolute w-[17px] h-[17px] top-5 left-5" alt="Phone icon" src="/assets/animaapp/bkGH9LUL/img/vector-2.svg" width={17} height={17} />
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}

@@ -854,7 +854,7 @@ export default function FaceVerificationPage() {
                         <img
                             className="w-full h-full"
                             alt=""
-                            src="https://c.animaapp.com/gGYGC01x/img/arrow-back-ios-new@2x.png"
+                            src="/assets/animaapp/gGYGC01x/img/arrow-back-ios-new-2x.png"
                         />
                     </button>
 

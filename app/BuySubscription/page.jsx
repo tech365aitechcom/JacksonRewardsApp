@@ -23,9 +23,9 @@ const tierData = {
       'linear-gradient(331deg, rgba(237,131,0,1) 0%, rgba(237,215,0,1) 100%)',
     iconColor: '#F5D800',
     features: [
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3941@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3944@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image@2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3941-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3944-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-2x.png' },
     ],
   },
   bronze: {
@@ -33,9 +33,9 @@ const tierData = {
     gradient: 'linear-gradient(331deg, #6D5C4B 0%, #C4B3A1 100%)',
     iconColor: '#C4B3A1',
     features: [
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3941@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3944@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image@2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3941-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3944-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-2x.png' },
     ],
   },
   platinum: {
@@ -43,9 +43,9 @@ const tierData = {
     gradient: 'linear-gradient(331deg, #8A89E6 0%, #C2C1FF 100%)',
     iconColor: '#C2C1FF',
     features: [
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3941@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image-3944@2x.png' },
-      { icon: 'https://c.animaapp.com/aGU3sKRJ/img/image@2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3941-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-3944-2x.png' },
+      { icon: '/assets/animaapp/aGU3sKRJ/img/image-2x.png' },
     ],
   },
 }
@@ -662,7 +662,7 @@ export default function BuySubscription() {
                   <img
                     className='absolute w-[165px] h-[153px] top-0 left-[27px]'
                     alt='VIP Crown illustration'
-                    src='https://c.animaapp.com/aGU3sKRJ/img/-group-@2x.png'
+                    src='/assets/animaapp/aGU3sKRJ/img/-group--2x.png'
                   />
                 </div>
                 <SparkleIcon

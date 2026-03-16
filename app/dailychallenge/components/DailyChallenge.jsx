@@ -318,8 +318,8 @@ export const DailyChallenge = () => {
                 left: positions[i],
                 top: "527px",
                 // image: hasStreak
-                //     ? "https://c.animaapp.com/b23YVSTi/img/image-3943-7@2x.png"
-                //     : "https://c.animaapp.com/b23YVSTi/img/image-3943-6@2x.png",
+                //     ? "/assets/animaapp/b23YVSTi/img/image-3943-7-2x.png"
+                //     : "/assets/animaapp/b23YVSTi/img/image-3943-6-2x.png",
                 hasStreak,
             });
         }
@@ -340,9 +340,9 @@ export const DailyChallenge = () => {
         ];
 
         const images = [
-            "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png",
-            "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-3@2x.png",
-            "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-4@2x.png",
+            "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png",
+            "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-3-2x.png",
+            "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-4-2x.png",
         ];
 
         streak.milestones.forEach((milestone, index) => {
@@ -370,8 +370,8 @@ export const DailyChallenge = () => {
         const badges = [];
         const positions = ["56.80%", "84.53%"];
         const images = [
-            "https://c.animaapp.com/b23YVSTi/img/ellipse-35-1.svg",
-            "https://c.animaapp.com/b23YVSTi/img/ellipse-35-2.svg",
+            "/assets/animaapp/b23YVSTi/img/ellipse-35-1.svg",
+            "/assets/animaapp/b23YVSTi/img/ellipse-35-2.svg",
         ];
 
         // Get actual rewards from challenge data
@@ -457,7 +457,7 @@ export const DailyChallenge = () => {
                         <img
                             className="relative w-6 h-6"
                             alt="Arrow back ios new"
-                            src="https://c.animaapp.com/b23YVSTi/img/arrow-back-ios-new@2x.png"
+                            src="/assets/animaapp/b23YVSTi/img/arrow-back-ios-new-2x.png"
                         />
                     </button>
 

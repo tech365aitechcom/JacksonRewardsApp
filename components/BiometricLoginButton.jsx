@@ -568,7 +568,7 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
                     <Image
                         className="w-7 h-[30px] object-cover"
                         alt="Apple logo"
-                        src="https://c.animaapp.com/2Y7fJDnh/img/image-3961@2x.png"
+                        src="/assets/animaapp/2Y7fJDnh/img/image-3961-2x.png"
                         width={28}
                         height={30}
                     />

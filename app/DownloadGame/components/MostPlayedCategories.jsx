@@ -91,7 +91,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
                 name: cleanGameName,
                 genre: category,
                 // Use normalized images
-                image: images.square_image || images.icon || game.images?.banner || game.images?.large_image || game.details?.square_image || game.details?.image || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png",
+                image: images.square_image || images.icon || game.images?.banner || game.images?.large_image || game.details?.square_image || game.details?.image || "/assets/animaapp/DfFsihWg/img/image-3930-2x.png",
                 overlayImage: images.icon || images.square_image || game.details?.image || game.details?.square_image,
                 amount: amountValue, // Coins without $ sign
                 xp: xpValue, // Total XP from tasks (getTotalPromisedPoints)

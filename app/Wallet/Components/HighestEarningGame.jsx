@@ -166,7 +166,7 @@ export const HighestEarningGame = () => {
                                 <div className="relative w-full h-[180px] rounded-[20px] overflow-hidden bg-gray-800">
                                     <img
                                         className="w-full h-full object-cover rounded-[20px]"
-                                        src={game.image || game.square_image || 'https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png'}
+                                        src={game.image || game.square_image || '/assets/animaapp/DfFsihWg/img/image-3930-2x.png'}
                                         alt={game.title || 'Game Image'}
                                         loading="eager"
                                         decoding="async"

@@ -25,19 +25,19 @@ export default function PhoneLoginPage() {
       <img
         className="absolute w-[80px] h-[80px] top-[50px] left-[30px] object-cover"
         alt="Coins decoration"
-        src="https://c.animaapp.com/TCUof8k2/img/coins-1@2x.png"
+        src="/assets/animaapp/TCUof8k2/img/coins-1-2x.png"
       />
       
       <img
         className="absolute w-[120px] h-[100px] top-[80px] right-[20px] object-cover"
         alt="Treasure chest decoration"
-        src="https://c.animaapp.com/TCUof8k2/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png"
+        src="/assets/animaapp/TCUof8k2/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png"
       />
       
       <img
         className="absolute w-[50px] h-[40px] top-[200px] right-[40px]"
         alt="Gem decoration"
-        src="https://c.animaapp.com/TCUof8k2/img/gem-1@2x.png"
+        src="/assets/animaapp/TCUof8k2/img/gem-1-2x.png"
       />
 
       {/* Main content */}

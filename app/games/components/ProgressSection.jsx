@@ -45,7 +45,7 @@ const ProgressSection = ({
                         <div className="w-[18px] h-[19px] flex items-center justify-center">
                             <Image
                                 alt="Coin"
-                                src="https://c.animaapp.com/3mn7waJw/img/image-3937-12@2x.png"
+                                src="/assets/animaapp/3mn7waJw/img/image-3937-12-2x.png"
                                 width={18}
                                 height={19}
                             />
@@ -53,7 +53,7 @@ const ProgressSection = ({
                         <div className="w-5 h-5 flex items-center justify-center">
                             <Image
                                 alt="XP"
-                                src="https://c.animaapp.com/3mn7waJw/img/pic-7.svg"
+                                src="/assets/animaapp/3mn7waJw/img/pic-7.svg"
                                 width={17}
                                 height={14}
                             />

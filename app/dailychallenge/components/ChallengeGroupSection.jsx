@@ -160,9 +160,9 @@ export const ChallengeGroupSection = ({ streak }) => {
 
                             // Green treasure chest images (for all except last)
                             const greenChestImages = [
-                                "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2@2x.png", // Small green chest
-                                "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-3@2x.png", // Medium green chest
-                                "https://c.animaapp.com/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-4@2x.png", // Large green chest
+                                "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png", // Small green chest
+                                "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-3-2x.png", // Medium green chest
+                                "/assets/animaapp/b23YVSTi/img/2211-w030-n003-510b-p1-510--converted--02-4-2x.png", // Large green chest
                             ];
 
                             // Golden treasure chest image (for last milestone) - use tesurebox.png

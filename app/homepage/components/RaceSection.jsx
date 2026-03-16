@@ -88,7 +88,7 @@ const RaceSection = () => {
                         <img
                             className="absolute w-[198px] h-[198px] top-0 left-[173px] aspect-[1] object-cover pointer-events-none"
                             alt="Race character"
-                            src="https://c.animaapp.com/xCaMzUYh/img/image-219@2x.png"
+                            src="/assets/animaapp/xCaMzUYh/img/image-219-2x.png"
                             loading="eager"
                             decoding="async"
                             width="198"
@@ -97,7 +97,7 @@ const RaceSection = () => {
                         <img
                             className="absolute w-[211px] h-[42px] top-[38px] left-0 mix-blend-lighten pointer-events-none"
                             alt="Race banner"
-                            src="https://c.animaapp.com/xCaMzUYh/img/banner---don-t-remove@2x.png"
+                            src="/assets/animaapp/xCaMzUYh/img/banner---don-t-remove-2x.png"
                             loading="eager"
                             decoding="async"
                             width="211"

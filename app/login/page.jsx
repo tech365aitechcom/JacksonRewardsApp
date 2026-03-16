@@ -572,7 +572,7 @@ function LoginPageContent() {
                 <Image
                   className="absolute w-[83px] h-[125px]  left-14"
                   alt="Front shapes"
-                  src="https://c.animaapp.com/2Y7fJDnh/img/front-shapes@2x.png"
+                  src="/assets/animaapp/2Y7fJDnh/img/front-shapes-2x.png"
                   width={83}
                   height={125}
                 />
@@ -581,7 +581,7 @@ function LoginPageContent() {
                   <Image
                     className="absolute w-[41px] h-[106px] top-[58px] ml-13"
                     alt="Front shapes"
-                    src="https://c.animaapp.com/2Y7fJDnh/img/front-shapes-1@2x.png"
+                    src="/assets/animaapp/2Y7fJDnh/img/front-shapes-1-2x.png"
                     width={41}
                     height={106}
                   />
@@ -589,7 +589,7 @@ function LoginPageContent() {
                   <Image
                     className="absolute w-[18px] h-[215px] top-0 left-[23px]"
                     alt="Saly"
-                    src="https://c.animaapp.com/2Y7fJDnh/img/saly-16@2x.png"
+                    src="/assets/animaapp/2Y7fJDnh/img/saly-16-2x.png"
                     width={18}
                     height={215}
                   />
@@ -659,7 +659,7 @@ function LoginPageContent() {
                   <Image
                     className="absolute w-[17px] h-[17px] top-5 left-5"
                     alt="Email icon"
-                    src="https://c.animaapp.com/2Y7fJDnh/img/vector.svg"
+                    src="/assets/animaapp/2Y7fJDnh/img/vector.svg"
                     width={17}
                     height={17}
                   />
@@ -762,7 +762,7 @@ function LoginPageContent() {
               <Image
                 className="absolute w-[52px] h-[43px] top-[310px] left-[79%]"
                 alt="Gem"
-                src="https://c.animaapp.com/2Y7fJDnh/img/gem-1.png"
+                src="/assets/animaapp/2Y7fJDnh/img/gem-1.png"
                 width={52}
                 height={43}
               />
@@ -793,7 +793,7 @@ function LoginPageContent() {
                     <Image
                       className="absolute w-[98px] h-px top-2 left-0"
                       alt="Divider line"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/rectangle-3.svg"
+                      src="/assets/animaapp/2Y7fJDnh/img/rectangle-3.svg"
                       width={98}
                       height={1}
                     />
@@ -801,7 +801,7 @@ function LoginPageContent() {
                     <Image
                       className="absolute w-[98px] h-px top-2 left-[205px]"
                       alt="Divider line"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/rectangle-4.svg"
+                      src="/assets/animaapp/2Y7fJDnh/img/rectangle-4.svg"
                       width={98}
                       height={1}
                     />
@@ -893,7 +893,7 @@ function LoginPageContent() {
                     <Image
                       className="absolute w-[137px] h-px top-2 left-0"
                       alt="Divider line"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/rectangle-3-1.svg"
+                      src="/assets/animaapp/2Y7fJDnh/img/rectangle-3-1.svg"
                       width={137}
                       height={1}
                     />
@@ -901,7 +901,7 @@ function LoginPageContent() {
                     <Image
                       className="absolute w-[139px] h-px top-2 left-[164px]"
                       alt="Divider line"
-                      src="https://c.animaapp.com/2Y7fJDnh/img/rectangle-4-1.svg"
+                      src="/assets/animaapp/2Y7fJDnh/img/rectangle-4-1.svg"
                       width={139}
                       height={1}
                     />

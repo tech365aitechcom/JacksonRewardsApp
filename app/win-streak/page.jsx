@@ -55,13 +55,13 @@ export default function WinStreakPage() {
             "/treasure.png",
             "/dollor.png",
             "/xp.svg",
-            "https://c.animaapp.com/1RFP1hGC/img/image-4016@2x.png",
-            "https://c.animaapp.com/1RFP1hGC/img/image-3996@2x.png",
-            "https://c.animaapp.com/1RFP1hGC/img/close.svg",
-            "https://c.animaapp.com/1RFP1hGC/img/vector-349.svg",
-            "https://c.animaapp.com/1RFP1hGC/img/vector-350.svg",
-            "https://c.animaapp.com/1RFP1hGC/img/vector-351.svg",
-            "https://c.animaapp.com/1RFP1hGC/img/vector-352.svg"
+            "/assets/animaapp/1RFP1hGC/img/image-4016-2x.png",
+            "/assets/animaapp/1RFP1hGC/img/image-3996-2x.png",
+            "/assets/animaapp/1RFP1hGC/img/close.svg",
+            "/assets/animaapp/1RFP1hGC/img/vector-349.svg",
+            "/assets/animaapp/1RFP1hGC/img/vector-350.svg",
+            "/assets/animaapp/1RFP1hGC/img/vector-351.svg",
+            "/assets/animaapp/1RFP1hGC/img/vector-352.svg"
         ];
 
         criticalImages.forEach((src) => {

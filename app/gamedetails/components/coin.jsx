@@ -436,7 +436,7 @@ export const Coin = ({
                     <img
                         className="w-[18px] h-[18px] object-contain flex-shrink-0"
                         alt="Coin icon"
-                        src="https://c.animaapp.com/WucpRujl/img/image-3937@2x.png"
+                        src="/assets/animaapp/WucpRujl/img/image-3937-2x.png"
                     />
 
                     <span className={`[font-family:'Poppins',Helvetica] font-bold text-[15px] tracking-[0] leading-[17px] whitespace-nowrap transition-all duration-500 ${locallyClaimed ? 'text-green-400' : 'text-white'
@@ -447,7 +447,7 @@ export const Coin = ({
                     <img
                         className="w-[18px] h-[18px] object-contain flex-shrink-0"
                         alt="Level icon"
-                        src="https://c.animaapp.com/WucpRujl/img/pic.svg"
+                        src="/assets/animaapp/WucpRujl/img/pic.svg"
                     />
                 </div>
 
@@ -494,7 +494,7 @@ export const Coin = ({
                 >
                     <img
                         alt="Information icon"
-                        src="https://c.animaapp.com/WucpRujl/img/frame-1000005263.svg"
+                        src="/assets/animaapp/WucpRujl/img/frame-1000005263.svg"
                         className="w-6 h-6"
                         loading="eager"
                         decoding="async"
@@ -521,7 +521,7 @@ export const Coin = ({
                             <img
                                 className="w-[22px] h-[23px] object-contain"
                                 alt="Coin icon"
-                                src="https://c.animaapp.com/WucpRujl/img/image-3938@2x.png"
+                                src="/assets/animaapp/WucpRujl/img/image-3938-2x.png"
                             />
                         </div>
                     </div>

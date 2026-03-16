@@ -201,7 +201,7 @@ const DealsPage = () => {
                         className="relative w-6 h-6 flex items-center justify-center"
                     >
                         <img
-                            src="https://c.animaapp.com/ciot1lOr/img/arrow-back-ios-new-1@2x.png"
+                            src="/assets/animaapp/ciot1lOr/img/arrow-back-ios-new-1-2x.png"
                             alt="Back"
                             className="w-full h-full"
                         />
