@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useLayoutEffect, useMemo, useCallback, useState } from "react";
+import React, { useEffect, useMemo, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameAmount, normalizeGameCategory, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 
 const EMPTY_ARRAY = [];
 
@@ -12,11 +12,7 @@ const MostPlayedGames = () => {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Horizontal scroll / drag (same pattern as WithdrawalOption)
     const scrollContainerRef = React.useRef(null);
-    const mostPlayedTrackRef = React.useRef(null);
-    const [isAndroid, setIsAndroid] = useState(false);
-    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
     // Get data for "Most Played" section specifically. Same fetch pattern as HighestEarningGame; user from localStorage (no profile).
     const sectionName = "Most Played";
     const CACHE_STALE_MS = 5 * 60 * 1000;
@@ -33,8 +29,6 @@ const MostPlayedGames = () => {
 
     // OPTIMIZED: Map games using normalizer for both besitos and bitlab (coins + total XP from tasks)
     const filteredGames = useMemo(() => {
-        const { normalizeGameImages, normalizeGameTitle, normalizeGameAmount, normalizeGameCategory, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
-
         return allGames.map(game => {
             // Normalize game data for both besitos and bitlab
             const images = normalizeGameImages(game);
@@ -112,24 +106,6 @@ const MostPlayedGames = () => {
         router.push(`/gamedetails?gameId=${gameId}&source=mostPlayed`);
     }, [router, dispatch]);
 
-    // Detect Android (for Framer Motion drag scroll — same pattern as WithdrawalOption)
-    useEffect(() => {
-        const android =
-            (typeof window !== "undefined" && window.Capacitor?.getPlatform?.() === "android") ||
-            (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || ""));
-        setIsAndroid(!!android);
-    }, []);
-
-    // Measure drag bounds for Android Framer Motion track (same as WithdrawalOption)
-    useLayoutEffect(() => {
-        if (!isAndroid || !scrollContainerRef.current || !mostPlayedTrackRef.current || filteredGames.length === 0) return;
-        const container = scrollContainerRef.current;
-        const track = mostPlayedTrackRef.current;
-        const contentWidth = track.scrollWidth;
-        const containerWidth = container.clientWidth;
-        const maxScroll = Math.max(0, contentWidth - containerWidth);
-        setDragConstraints({ left: -maxScroll, right: 0 });
-    }, [isAndroid, filteredGames]);
 
     // One discover call only on mount. Guard loading/failed to prevent unnecessary calls.
     useEffect(() => {
@@ -142,6 +118,47 @@ const MostPlayedGames = () => {
             limit: 10
         }));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // JS direction-lock touch handler for Android WebView carousel scroll
+    const touchStartRef = useRef({ x: 0, y: 0, scrollLeft: 0 });
+    const directionRef = useRef(null);
+    const hasGames = filteredGames.length > 0;
+
+    useEffect(() => {
+        // Re-runs when games load so the ref is populated (conditional render guard)
+        if (!hasGames) return;
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        const onTouchStart = (e) => {
+            const t = e.touches[0];
+            touchStartRef.current = { x: t.clientX, y: t.clientY, scrollLeft: el.scrollLeft };
+            directionRef.current = null;
+        };
+        const onTouchMove = (e) => {
+            const t = e.touches[0];
+            const dx = t.clientX - touchStartRef.current.x;
+            const dy = t.clientY - touchStartRef.current.y;
+            if (!directionRef.current) {
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 5) directionRef.current = 'h';
+                else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 5) directionRef.current = 'v';
+                else return;
+            }
+            if (directionRef.current === 'h') {
+                e.preventDefault();
+                el.scrollLeft = touchStartRef.current.scrollLeft - dx;
+            }
+            // 'v': do nothing — browser handles native page scroll via touch-action: pan-y
+        };
+        const onTouchEnd = () => { directionRef.current = null; };
+        el.addEventListener('touchstart', onTouchStart, { passive: true });
+        el.addEventListener('touchmove', onTouchMove, { passive: false });
+        el.addEventListener('touchend', onTouchEnd, { passive: true });
+        return () => {
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend', onTouchEnd);
+        };
+    }, [hasGames]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Return to app (focus): one discover call only if cache older than 2 min. User from localStorage.
     useEffect(() => {
@@ -184,26 +201,19 @@ const MostPlayedGames = () => {
 
     return (
         <div className="flex flex-col items-start gap-4 relative w-full animate-fade-in">
-            {/* Scoped styles: horizontal scroll (same pattern as WithdrawalOption - pan-x for reliable horizontal scroll) */}
+            {/* Scoped styles: touch-action only on the container — children must NOT override
+                so vertical page scroll still works when finger enters this section */}
             <style dangerouslySetInnerHTML={{
                 __html: `
-                    .most-played-games-scroll,
-                    .most-played-games-scroll * {
-                        touch-action: pan-x !important;
-                    }
                     .most-played-games-scroll {
+                        touch-action: pan-y;
                         min-width: 0;
-                        -webkit-overflow-scrolling: touch !important;
-                        overflow-x: scroll !important;
+                        -webkit-overflow-scrolling: touch;
+                        overflow-x: scroll;
                         overflow-y: hidden;
                         scroll-behavior: auto;
-                        scroll-snap-type: x proximity;
-                        scroll-padding-inline: 0;
+                        overscroll-behavior-x: contain;
                         will-change: scroll-position;
-                    }
-                    .most-played-games-scroll > * {
-                        scroll-snap-align: center;
-                        scroll-snap-stop: normal;
                     }
                 `
             }} />
@@ -220,118 +230,52 @@ const MostPlayedGames = () => {
                 </Link>
             </div>
             {filteredGames.length > 0 ? (
-                isAndroid ? (
-                    <div
-                        ref={scrollContainerRef}
-                        className="most-played-games-scroll flex h-[110px] min-w-0 w-full overflow-x-hidden overflow-y-hidden touch-pan-x"
-                        style={{ touchAction: 'pan-x' }}
-                    >
-                        <motion.div
-                            ref={mostPlayedTrackRef}
-                            drag="x"
-                            dragConstraints={dragConstraints}
-                            dragElastic={0.02}
-                            dragMomentum={true}
-                            dragTransition={{ power: 0.2, timeConstant: 250 }}
-                            className="flex h-[110px] items-start gap-1 justify-start flex-shrink-0"
-                            style={{ cursor: 'grab' }}
-                            whileTap={{ cursor: 'grabbing' }}
+                <div
+                    ref={scrollContainerRef}
+                    className="most-played-games-scroll flex h-[110px] min-w-0 items-start gap-1 w-full justify-start"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                    {filteredGames.map((game, index) => (
+                        <div
+                            key={game._id || game.id}
+                            data-game-index={index}
+                            className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer"
+                            onClick={() => handleGameClick(game)}
                         >
-                            {filteredGames.map((game, index) => (
-                                <div
-                                    key={game._id || game.id}
-                                    data-game-index={index}
-                                    className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer active:scale-[0.98] transition-transform duration-150 snap-center touch-pan-x"
-                                    onClick={() => handleGameClick(game)}
-                                >
-                                    <div
-                                        className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
-                                        style={{
-                                            boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px #983EFF40`,
-                                        }}
-                                    >
-                                        <div className="w-full h-full rounded-full bg-black p-[1.8px]">
-                                            <img
-                                                className="w-full h-full object-cover rounded-full"
-                                                alt={game.displayTitle || game.details?.name}
-                                                src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
-                                                loading="eager"
-                                                decoding="async"
-                                                width="72"
-                                                height="72"
-                                                onError={(e) => {
-                                                    if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
-                                                        e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-                                        {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
-                                    </div>
-                                    <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
-                                        <span>{game.displayAmount ?? '$0'}</span>
-                                        <span>·</span>
-                                        <span>{game.displayXP ?? 0} XP</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </motion.div>
-                    </div>
-                ) : (
-                    <div
-                        ref={scrollContainerRef}
-                        className="most-played-games-scroll flex h-[110px] min-w-0 items-start gap-1 w-full justify-start scrollbar-hide overscroll-x-contain"
-                        style={{
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                            WebkitOverflowScrolling: 'touch',
-                            scrollBehavior: 'auto',
-                        }}
-                    >
-                        {filteredGames.map((game, index) => (
                             <div
-                                key={game._id || game.id}
-                                data-game-index={index}
-                                className="items-start inline-flex flex-col gap-1.5 relative flex-shrink-0 w-[80px] cursor-pointer hover:opacity-90 transition-opacity duration-200 snap-center touch-pan-x"
-                                onClick={() => handleGameClick(game)}
+                                className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
+                                style={{
+                                    boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px #983EFF40`,
+                                }}
                             >
-                                <div
-                                    className="relative w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#983EFF] to-[#FFB700] p-[2.5px]"
-                                    style={{
-                                        boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3), 0 0 8px #983EFF40`,
-                                    }}
-                                >
-                                    <div className="w-full h-full rounded-full bg-black p-[1.8px]">
-                                        <img
-                                            className="w-full h-full object-cover rounded-full"
-                                            alt={game.displayTitle || game.details?.name}
-                                            src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
-                                            loading="eager"
-                                            decoding="async"
-                                            width="72"
-                                            height="72"
-                                            onError={(e) => {
-                                                if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
-                                                    e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-                                    {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
-                                </div>
-                                <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
-                                    <span>{game.displayAmount ?? '$0'}</span>
-                                    <span>·</span>
-                                    <span>{game.displayXP ?? 0} XP</span>
+                                <div className="w-full h-full rounded-full bg-black p-[1.8px]">
+                                    <img
+                                        className="w-full h-full object-cover rounded-full"
+                                        alt={game.displayTitle || game.details?.name}
+                                        src={game.optimizedImage || "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png"}
+                                        loading="eager"
+                                        decoding="async"
+                                        width="72"
+                                        height="72"
+                                        onError={(e) => {
+                                            if (e.target.src !== "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png") {
+                                                e.target.src = "https://c.animaapp.com/DfFsihWg/img/image-3930@2x.png";
+                                            }
+                                        }}
+                                    />
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )
+                            <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
+                                {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
+                            </div>
+                            <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
+                                <span>{game.displayAmount ?? '$0'}</span>
+                                <span>·</span>
+                                <span>{game.displayXP ?? 0} XP</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : (
                 <div className="flex h-[110px] min-w-0 w-full items-center justify-center py-4">
                     <div className="flex flex-col items-center justify-center">

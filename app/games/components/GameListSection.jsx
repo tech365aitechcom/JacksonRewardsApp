@@ -105,32 +105,26 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     return null;
   };
 
-  // Refresh user data in background when app comes to foreground (admin might have updated)
+  // Refresh user data when app comes to foreground — stale check prevents redundant calls.
+  // Only visibilitychange is used (focus also fires on return causing double fetchUserData).
   useEffect(() => {
     if (!isClient) return;
 
-    const handleFocus = () => {
-      const userId = getUserId();
-      if (userId) {
-        dispatch(fetchUserData({ userId, token, force: true, background: true }));
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-
+    const STALE_MS = 2 * 60 * 1000;
     const handleVisibilityChange = () => {
-      if (!document.hidden && isClient) {
-        const userId = getUserId();
-        if (userId) {
-          dispatch(fetchUserData({ userId, token, force: true, background: true }));
-        }
-      }
+      if (document.hidden) return;
+      const userId = getUserId();
+      if (!userId) return;
+      const lastFetch = safeLocalStorage.getItem(`userData_lastFetch_${userId}`);
+      const isStale = !lastFetch || Date.now() - parseInt(lastFetch, 10) > STALE_MS;
+      if (!isStale) return;
+      safeLocalStorage.setItem(`userData_lastFetch_${userId}`, String(Date.now()));
+      dispatch(fetchUserData({ userId, token, force: true, background: true }));
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isClient, dispatch, token]);

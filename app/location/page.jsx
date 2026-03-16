@@ -157,7 +157,7 @@ export default function LocationPage() {
             city: locationData.city,
           },
         };
-        updateProfile(locationUpdate, token).catch(() => {});
+        updateProfile(locationUpdate, token).catch(() => { });
 
         // Update user in context immediately
         if (user) {

@@ -5,10 +5,10 @@ import { Capacitor } from "@capacitor/core";
 import { SplashScreen as CapSplashScreen } from "@capacitor/splash-screen";
 import Image from "next/image";
 
-const SPLASH_MIN_MS  = 2500;
-const FADE_MS        = 500;
+const SPLASH_MIN_MS = 2500;
+const FADE_MS = 500;
 const NATIVE_FADE_MS = 400;
-const NATIVE_MAX_MS  = 8000;
+const NATIVE_MAX_MS = 8000;
 const SPLASH_SHOWN_KEY = "jr_splash_shown";
 
 // Decide synchronously on first render whether to show the splash.
@@ -16,7 +16,7 @@ const SPLASH_SHOWN_KEY = "jr_splash_shown";
 function shouldShowSplash() {
   try {
     if (typeof window === "undefined") return false;   // SSR
-    if (Capacitor.isNativePlatform?.())  return false;  // native: Capacitor handles it
+    if (Capacitor.isNativePlatform?.()) return false;  // native: Capacitor handles it
     return !sessionStorage.getItem(SPLASH_SHOWN_KEY);   // web: once per session
   } catch {
     return false;
@@ -27,7 +27,7 @@ export default function SplashScreen({ children }) {
   // Initialised lazily — reads sessionStorage before the first paint so there is
   // never a frame where a stale splash is visible and then instantly hidden.
   const [visible, setVisible] = useState(shouldShowSplash);
-  const [fading, setFading]   = useState(false);
+  const [fading, setFading] = useState(false);
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform?.();
@@ -37,7 +37,7 @@ export default function SplashScreen({ children }) {
     // minimum branding time.  No web overlay is used so visible is already false.
     if (isNative) {
       const hide = () =>
-        CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS }).catch(() => {});
+        CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS }).catch(() => { });
       const min = setTimeout(hide, SPLASH_MIN_MS);
       const max = setTimeout(hide, NATIVE_MAX_MS);
       return () => { clearTimeout(min); clearTimeout(max); };
@@ -72,13 +72,13 @@ export default function SplashScreen({ children }) {
         <div
           aria-hidden="true"
           style={{
-            position:   "fixed",
-            inset:      0,
-            zIndex:     9999,
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
             // Solid colour that matches the dominant green of splash.jpg.
             // Visible for the ~50 ms before the image loads — no transparent flash.
             backgroundColor: "#3a9e42",
-            opacity:    fading ? 0 : 1,
+            opacity: fading ? 0 : 1,
             transition: fading
               ? `opacity ${FADE_MS}ms ease-out`
               : "none",

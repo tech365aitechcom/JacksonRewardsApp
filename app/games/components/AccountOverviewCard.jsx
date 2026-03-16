@@ -139,7 +139,7 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
                         />
 
                         <ProgressSection
-                            title={`${challengesCompleted}/${challengesTarget} Challenges Finished (Daily)`}
+                            title={`${challengesCompleted}/${challengesTarget} Challenges Finished `}
                             progress={calculateProgressPercentage(challengesCompleted, challengesTarget)}
                             mainValue={`${accountData?.rewardBadges?.[2]?.reward?.coins || 0}`}
                             bonusValue={`${accountData?.rewardBadges?.[2]?.reward?.xp || 0}`}

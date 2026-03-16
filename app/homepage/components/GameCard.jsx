@@ -654,12 +654,12 @@ const GameCard = ({ onClose: onCloseProp }) => {
                 </article>
 
                 {/* Footer */}
-                <footer className="relative w-full max-w-[335px] min-h-[80px] flex-shrink-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px' }}>
-                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
+                <footer className="relative w-full flex-shrink-0 rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-start px-3 py-3">
+                    <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1 pr-10">
                         {/* Line 1: Game Name */}
-                        <div className="flex items-start gap-2 w-full min-w-0">
+                        <div className="flex items-start w-full min-w-0">
                             <h3
-                                className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
+                                className="font-bold text-base leading-[1.3] text-white break-words hyphens-auto w-full"
                                 style={{
                                     wordBreak: 'break-word',
                                     overflowWrap: 'break-word',
@@ -671,8 +671,6 @@ const GameCard = ({ onClose: onCloseProp }) => {
                                     lineHeight: '1.3',
                                     letterSpacing: '0.01em',
                                     textAlign: 'left',
-                                    width: '100%',
-                                    maxWidth: '100%'
                                 }}
                             >
                                 {(() => {
@@ -683,11 +681,11 @@ const GameCard = ({ onClose: onCloseProp }) => {
                             </h3>
                         </div>
                         {/* Line 2: Complete task and earn */}
-                        <div className="flex items-center text-sm sm:text-base leading-[1.4]">
+                        <div className="flex items-center text-sm leading-[1.4]">
                             <span className="text-white/90 font-normal">Complete task and earn</span>
                         </div>
                         {/* Line 3: Coins and XP points */}
-                        <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
+                        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm leading-[1.4]">
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                 <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
                                 <img
@@ -719,7 +717,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
 
                     <button
                         onClick={toggleTooltip}
-                        className="absolute w-8 h-8 top-[9px] right-[-2px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
+                        className="absolute w-8 h-8 top-2 right-[-4px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
                         aria-label="More information"
                     >
                         <svg width="24" height="24" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -867,12 +865,12 @@ const GameCard = ({ onClose: onCloseProp }) => {
             </article>
             <>
                 <div className="flex flex-col flex-shrink-0 w-full max-w-[335px] items-center" style={{ flex: '0 0 auto' }}>
-                    <footer className="relative w-full max-w-[335px] min-h-[80px] rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center justify-between py-3 safe-area-inset px-2" style={{ paddingLeft: '7px', paddingRight: '6px', flex: '0 0 auto' }}>
-                        <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1" style={{ minWidth: '0', minHeight: '50px', maxWidth: 'calc(100% - 40px)' }}>
+                    <footer className="relative w-full rounded-[0px_0px_10px_10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-start px-3 py-3" style={{ flex: '0 0 auto' }}>
+                        <div className="flex flex-col text-white [font-family:'Poppins',Helvetica] flex-1 min-w-0 gap-1 pr-10">
                             {/* Line 1: Game Name */}
-                            <div className="flex items-start gap-2 w-full min-w-0">
+                            <div className="flex items-start w-full min-w-0">
                                 <h3
-                                    className="font-bold text-base sm:text-lg leading-[1.3] text-white break-words hyphens-auto w-full"
+                                    className="font-bold text-base leading-[1.3] text-white break-words hyphens-auto w-full"
                                     style={{
                                         wordBreak: 'break-word',
                                         overflowWrap: 'break-word',
@@ -884,8 +882,6 @@ const GameCard = ({ onClose: onCloseProp }) => {
                                         lineHeight: '1.3',
                                         letterSpacing: '0.01em',
                                         textAlign: 'left',
-                                        width: '100%',
-                                        maxWidth: '100%'
                                     }}
                                 >
                                     {(() => {
@@ -896,11 +892,11 @@ const GameCard = ({ onClose: onCloseProp }) => {
                                 </h3>
                             </div>
                             {/* Line 2: Complete task and earn */}
-                            <div className="flex items-center text-sm sm:text-base leading-[1.4]">
+                            <div className="flex items-center text-sm leading-[1.4]">
                                 <span className="text-white/90 font-normal">Complete task and earn</span>
                             </div>
                             {/* Line 3: Coins and XP points */}
-                            <div className="flex items-center gap-2 text-sm sm:text-base leading-[1.4]">
+                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm leading-[1.4]">
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className="font-semibold text-white whitespace-nowrap">{formatCoins(currentGameRewards.coins)}</span>
                                     <img
@@ -932,7 +928,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
 
                         <button
                             onClick={toggleTooltip}
-                            className="absolute w-8 h-8 top-[9px] right-[-2px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
+                            className="absolute w-8 h-8 top-2 right-[-4px] z-20 cursor-pointer hover:opacity-80 transition-opacity duration-200 rounded-tl-lg rounded-bl-lg overflow-hidden flex items-center justify-center"
                             aria-label="More information"
                         >
                             <svg width="24" height="24" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">

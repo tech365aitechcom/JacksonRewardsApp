@@ -527,7 +527,7 @@ export default function FaceVerificationPage() {
             if (result.error || !result.success) {
                 const errorMessage = result.error || result.message || "Failed to register biometric";
                 console.error("❌ [CONTINUE] Backend registration error:", errorMessage);
-                
+
                 // Provide user-friendly error messages
                 if (errorMessage.includes("already registered") || errorMessage.includes("already exists")) {
                     throw new Error("Biometric authentication is already set up for this device. You can use it to log in.");
@@ -546,17 +546,17 @@ export default function FaceVerificationPage() {
 
             // Update faceVerificationStatus on backend and in context
             if (token) {
-                updateProfile({ faceVerificationStatus: true }, token).catch(() => {});
+                updateProfile({ faceVerificationStatus: true }, token).catch(() => { });
             }
             if (user) {
                 updateUserInContext({ ...user, faceVerificationStatus: true });
             }
             localStorage.setItem("biometricType", biometricTypeString); // Store actual biometric type
-            
+
             // Get username FIRST - needed for all storage operations
             const username = user?.email || user?.mobile;
             console.log("💾 [CONTINUE] Username for credential storage:", username);
-            
+
             if (token) {
                 localStorage.setItem("biometricToken", token);
                 if (user) {
@@ -576,7 +576,7 @@ export default function FaceVerificationPage() {
                         value: username
                     });
                     console.log("✅ [CONTINUE] Stored username in Preferences for biometric login:", username);
-                    
+
                     // Also store as backup (used by getCredentials fallback)
                     await Preferences.set({
                         key: "biometric_username_backup",
@@ -600,7 +600,7 @@ export default function FaceVerificationPage() {
                     console.log("💾 [CONTINUE] User keys:", user ? Object.keys(user) : 'null/undefined');
                     console.log("💾 [CONTINUE] User _id:", user?._id);
                     console.log("💾 [CONTINUE] Username:", username);
-                    
+
                     const { setCredentials, enableBiometricLocally } = await import("@/lib/biometricAuth");
 
                     // Validate token before creating payload
@@ -656,10 +656,10 @@ export default function FaceVerificationPage() {
                     } else {
                         console.warn("⚠️ [CONTINUE] Failed to save biometric credentials to Keystore:", credentialResult.error);
                         console.warn("⚠️ [CONTINUE] Credentials are stored in Preferences backup - biometric login will still work");
-                        
+
                         // Still enable biometric locally since credentials are in Preferences backup
                         enableBiometricLocally(biometricTypeString);
-                        
+
                         // If device authentication is required, store a flag to retry later
                         if (credentialResult.requiresDeviceAuth) {
                             console.warn("⚠️ [CONTINUE] Device authentication required - credentials will be saved on next login");
@@ -676,7 +676,7 @@ export default function FaceVerificationPage() {
                     // Credentials might still be in Preferences backup
                     console.warn("⚠️ [CONTINUE] Face verification completed, but credential storage had an error.");
                     console.warn("⚠️ [CONTINUE] Checking if credentials exist in Preferences backup...");
-                    
+
                     // Check if password backup was saved before the error
                     try {
                         const { Preferences } = await import("@capacitor/preferences");
@@ -760,7 +760,7 @@ export default function FaceVerificationPage() {
 
                 if (availability.isAvailable) {
                     console.log("💾 [SKIP] Biometric available, saving credentials...");
-                    
+
                     const username = user.email || user.mobile;
                     if (!username || !token) {
                         console.warn("⚠️ [SKIP] Missing username or token, skipping credential save");
@@ -804,7 +804,7 @@ export default function FaceVerificationPage() {
                         console.warn("⚠️ [SKIP] Keystore save failed, but Preferences backup exists");
                         // Still enable biometric since credentials are in Preferences
                         enableBiometricLocally(availability.biometryTypeName);
-                        
+
                         if (credentialResult.requiresDeviceAuth) {
                             localStorage.setItem("biometricCredentialsPending", "true");
                             localStorage.setItem("biometricCredentialsData", JSON.stringify({
@@ -1020,7 +1020,7 @@ export default function FaceVerificationPage() {
                         >
                             Skip for now
                         </button>
-                        
+
                         {/* Security notice - Following industry best practices */}
                         <p className="text-[#A4A4A4] text-xs text-center px-4 leading-relaxed">
                             Your biometric data is stored securely on your device and never shared with our servers.

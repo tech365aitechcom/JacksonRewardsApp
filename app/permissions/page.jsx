@@ -112,7 +112,7 @@ export default function PermissionsPage() {
         ...(onboardingState.ageRange != null && { age: onboardingState.ageRange }),
         ...(onboardingState.gender != null && { gender: onboardingState.gender }),
       };
-      updateProfile(profileUpdate, authToken).catch(() => {});
+      updateProfile(profileUpdate, authToken).catch(() => { });
 
       // Update user in context immediately so app reflects latest state
       if (user) {

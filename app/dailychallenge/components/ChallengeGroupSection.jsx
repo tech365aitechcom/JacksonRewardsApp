@@ -1,36 +1,17 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../../contexts/AuthContext";
-import { fetchBonusDays } from "../../../lib/redux/slice/dailyChallengeSlice";
+import { useSelector } from "react-redux";
 
 export const ChallengeGroupSection = ({ streak }) => {
-    const dispatch = useDispatch();
-    const { token } = useAuth() || {};
-
-    // Get bonus days data from Redux store (same cache format as Leadership / DailyChallenge)
+    // Read-only — DailyChallenge.jsx owns all fetchBonusDays dispatches
     const {
         bonusDays: bonusDaysData,
         bonusDaysStatus,
-        bonusDaysCacheTimestamp,
     } = useSelector((state) => state.dailyChallenge || {});
 
     // Extract bonus days array and current streak from Redux state
     const bonusDays = bonusDaysData?.bonusDays || [];
     const apiCurrentStreak = bonusDaysData?.currentStreak || null;
-
-    // Same cache format as DailyChallenge: only fetch when no fresh cache (or not already loading)
-    const CACHE_STALE_MS = 5 * 60 * 1000; // 5 min - match slice TTL
-    // Use primitive timestamp + status as deps — avoids re-running on every bonusDaysData reference change
-    const hasBonusData = !!bonusDaysData;
-    useEffect(() => {
-        if (!token) return;
-
-        const hasFreshBonus = hasBonusData && bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
-        if (hasFreshBonus || bonusDaysStatus === "loading" || bonusDaysStatus === "failed") return;
-
-        dispatch(fetchBonusDays({ token }));
-    }, [token, bonusDaysStatus, hasBonusData, bonusDaysCacheTimestamp, dispatch]);
 
     // Generate milestones dynamically from bonus days - only use API data, no fallbacks
     const generateMilestones = () => {

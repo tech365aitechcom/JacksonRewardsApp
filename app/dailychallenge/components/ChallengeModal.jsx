@@ -8,7 +8,8 @@ import {
     startTodayChallenge,
     completeTodayChallenge,
     fetchCalendar,
-    fetchToday
+    fetchToday,
+    fetchBonusDays
 } from "../../../lib/redux/slice/dailyChallengeSlice";
 import { SimpleSpinWheel } from "./SimpleSpinWheel";
 import { spinForChallenge } from "../../../lib/api";
@@ -147,7 +148,6 @@ export const ChallengeModal = ({
                 return;
             }
 
-            // Refresh calendar + today
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
@@ -155,6 +155,7 @@ export const ChallengeModal = ({
             await Promise.all([
                 dispatch(fetchCalendar({ year, month, token: effectiveToken, force: true })),
                 dispatch(fetchToday({ token: effectiveToken, force: true })),
+                dispatch(fetchBonusDays({ token: effectiveToken, force: true })),
             ]);
 
             setShowCompletionSuccess(true);
@@ -539,12 +540,14 @@ export const ChallengeModal = ({
 
             // Check if claim was successful
             if (result.type.includes('fulfilled')) {
-                // Refresh calendar and today's data
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = now.getMonth();
-                await dispatch(fetchCalendar({ year, month, token }));
-                await dispatch(fetchToday({ token }));
+                await Promise.all([
+                    dispatch(fetchCalendar({ year, month, token, force: true })),
+                    dispatch(fetchToday({ token, force: true })),
+                    dispatch(fetchBonusDays({ token, force: true })),
+                ]);
             }
 
             onClose();

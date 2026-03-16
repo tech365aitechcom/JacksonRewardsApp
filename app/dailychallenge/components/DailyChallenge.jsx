@@ -5,6 +5,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import {
     fetchCalendar,
     fetchToday,
+    fetchBonusDays,
     setModalOpen,
     clearError
 } from "../../../lib/redux/slice/dailyChallengeSlice";
@@ -22,6 +23,8 @@ export const DailyChallenge = () => {
         streak,
         calendarStatus,
         todayStatus,
+        bonusDaysStatus,
+        bonusDaysCacheTimestamp,
         modalOpen,
         error
     } = useSelector((state) => state.dailyChallenge || {});
@@ -82,20 +85,25 @@ export const DailyChallenge = () => {
         }
     };
 
-    // Fetch data on component mount (only if not already prefetched)
+    // Fetch all data on component mount — calendar, today, and bonus days (progress bar)
     useEffect(() => {
         if (!token) return;
 
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
+        const CACHE_STALE_MS = 5 * 60 * 1000;
 
-        // Avoid duplicate requests if prefetch already ran
         if (calendarStatus === "idle") {
             dispatch(fetchCalendar({ year, month, token }));
         }
         if (todayStatus === "idle") {
             dispatch(fetchToday({ token }));
+        }
+        // fetchBonusDays is owned here — ChallengeGroupSection only reads Redux, never dispatches
+        const hasFreshBonus = bonusDaysCacheTimestamp && Date.now() - bonusDaysCacheTimestamp < CACHE_STALE_MS;
+        if (!hasFreshBonus && bonusDaysStatus !== "loading") {
+            dispatch(fetchBonusDays({ token }));
         }
     }, [dispatch, token]); // Only depend on dispatch and token to prevent infinite loops
 
@@ -246,7 +254,7 @@ export const DailyChallenge = () => {
         }));
     };
 
-    // Handle refresh - force refresh both calendar and today data
+    // Handle refresh - force refresh calendar, today, and bonus days together
     const handleRefresh = () => {
         if (!token) return;
 
@@ -254,10 +262,9 @@ export const DailyChallenge = () => {
         const year = now.getFullYear();
         const month = now.getMonth();
 
-        // Force refresh calendar
         dispatch(fetchCalendar({ year, month, token, force: true }));
-        // Force refresh today
         dispatch(fetchToday({ token, force: true }));
+        dispatch(fetchBonusDays({ token, force: true }));
     };
 
     // Handle today click - navigate to current month and open today's challenge

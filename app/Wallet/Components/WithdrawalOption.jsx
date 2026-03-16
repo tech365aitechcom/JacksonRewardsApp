@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
 import ServiceCard from './ServiceCard';
 import { MoneyTransfer } from './MoneyTransfer';
 import { Charity } from './Charity';
@@ -70,18 +69,18 @@ export const WithdrawalOption = () => {
     const [error, setError] = useState(null);
     const [token, setToken] = useState(null);
 
-    // Horizontal scroll / drag (same pattern as MostPlayedGames)
+    // Scroll container ref
     const scrollContainerRef = useRef(null);
-    const withdrawalTrackRef = useRef(null);
-    const [isAndroid, setIsAndroid] = useState(false);
-    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
-    // Redux state — use default reference equality (Redux already uses shallow comparison)
+    // JS direction-lock touch handler refs (same pattern as MostPlayedGames)
+    const touchStartRef = useRef({ x: 0, y: 0, scrollLeft: 0 });
+    const directionRef = useRef(null);
+
+    // Redux state
     const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {});
 
-    // Constants - Use coins directly without USD conversion
     const coinBalance = walletScreen?.wallet?.balance || 0;
-    const MINIMUM_WITHDRAWAL_COINS = 20; // 20 coins = $2 USD (10:1 ratio)
+    const MINIMUM_WITHDRAWAL_COINS = 20;
 
     const getScaleClass = useCallback((width) => {
         for (let i = SCALE_CONFIG.length - 1; i >= 0; i--) {
@@ -97,29 +96,45 @@ export const WithdrawalOption = () => {
             setCurrentScaleClass(getScaleClass(window.innerWidth));
         };
         updateScale();
-
         window.addEventListener('resize', updateScale);
         return () => window.removeEventListener('resize', updateScale);
     }, [getScaleClass]);
 
-    // Detect Android for Framer Motion drag scroll (same as MostPlayedGames)
+    // JS direction-lock touch handler for Android WebView
+    // SERVICE_CARDS is a constant so the container is always in the DOM — [] dep is safe
     useEffect(() => {
-        const android =
-            (typeof window !== "undefined" && window.Capacitor?.getPlatform?.() === "android") ||
-            (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || ""));
-        setIsAndroid(!!android);
-    }, []);
-
-    // Measure drag bounds for Android Framer Motion track
-    useLayoutEffect(() => {
-        if (!isAndroid || !scrollContainerRef.current || !withdrawalTrackRef.current || SERVICE_CARDS.length === 0) return;
-        const container = scrollContainerRef.current;
-        const track = withdrawalTrackRef.current;
-        const contentWidth = track.scrollWidth;
-        const containerWidth = container.clientWidth;
-        const maxScroll = Math.max(0, contentWidth - containerWidth);
-        setDragConstraints({ left: -maxScroll, right: 0 });
-    }, [isAndroid]);
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        const onTouchStart = (e) => {
+            const t = e.touches[0];
+            touchStartRef.current = { x: t.clientX, y: t.clientY, scrollLeft: el.scrollLeft };
+            directionRef.current = null;
+        };
+        const onTouchMove = (e) => {
+            const t = e.touches[0];
+            const dx = t.clientX - touchStartRef.current.x;
+            const dy = t.clientY - touchStartRef.current.y;
+            if (!directionRef.current) {
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 5) directionRef.current = 'h';
+                else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 5) directionRef.current = 'v';
+                else return;
+            }
+            if (directionRef.current === 'h') {
+                e.preventDefault();
+                el.scrollLeft = touchStartRef.current.scrollLeft - dx;
+            }
+            // 'v': do nothing — browser handles native page scroll via touch-action: pan-y
+        };
+        const onTouchEnd = () => { directionRef.current = null; };
+        el.addEventListener('touchstart', onTouchStart, { passive: true });
+        el.addEventListener('touchmove', onTouchMove, { passive: false });
+        el.addEventListener('touchend', onTouchEnd, { passive: true });
+        return () => {
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend', onTouchEnd);
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Load authentication token
     useEffect(() => {
@@ -144,12 +159,10 @@ export const WithdrawalOption = () => {
                 return;
             }
 
-            // Don't show loading state - show UI immediately
             setLoading(false);
             setError(null);
 
             try {
-                // Load data in background without blocking UI
                 const [methodsResult, fundingResult] = await Promise.all([
                     getTremendousMethods(token),
                     getTremendousFundingSources(token)
@@ -164,7 +177,6 @@ export const WithdrawalOption = () => {
                 }
 
             } catch (err) {
-                // Only show error if both requests fail
                 // Don't show error to user - let them try withdrawal options
             }
         };
@@ -196,37 +208,17 @@ export const WithdrawalOption = () => {
         }
     };
 
-    const handleCloseMoneyTransferModal = () => {
-        setIsMoneyTransferModalOpen(false);
-    };
+    const handleCloseMoneyTransferModal = () => setIsMoneyTransferModalOpen(false);
+    const handleCloseCharityModal = () => setIsCharityModalOpen(false);
+    const handleCloseDebitTransferModal = () => setIsDebitTransferModalOpen(false);
+    const handleCloseCardModal = () => setIsCardModalOpen(false);
+    const handlePlayToEarnMore = () => setIsInsufficientBalanceModalOpen(false);
+    const handleCloseInsufficientBalanceModal = () => setIsInsufficientBalanceModalOpen(false);
 
-    const handleCloseCharityModal = () => {
-        setIsCharityModalOpen(false);
-    };
-
-    const handleCloseDebitTransferModal = () => {
-        setIsDebitTransferModalOpen(false);
-    };
-
-    const handleCloseCardModal = () => {
-        setIsCardModalOpen(false);
-    };
-
-    const handlePlayToEarnMore = () => {
-        setIsInsufficientBalanceModalOpen(false);
-        // TODO: Navigate to games or earning section
-    };
-
-    const handleCloseInsufficientBalanceModal = () => {
-        setIsInsufficientBalanceModalOpen(false);
-    };
-
-    // Filter methods for each category (US only)
     const getMethodsForCategory = (category) => {
         if (!allPayoutMethods.length) return [];
 
         return allPayoutMethods.filter(method => {
-            // Check if it's a US method
             const isUSMethod = method.currency === 'USD' &&
                 (method.countries?.includes('US') ||
                     method.countries?.includes('USA') ||
@@ -236,7 +228,6 @@ export const WithdrawalOption = () => {
 
             if (!isUSMethod) return false;
 
-            // Check category match
             switch (category) {
                 case 'cash':
                     return ['paypal', 'ach', 'venmo', 'cash_app'].includes(method.category);
@@ -282,26 +273,18 @@ export const WithdrawalOption = () => {
                             </div>
                         </div>
                     </div>
-                    {/* Scoped styles for horizontal scroll (same pattern as MostPlayedGames) */}
+                    {/* Scoped styles: touch-action pan-y on container only — same as MostPlayedGames */}
                     <style dangerouslySetInnerHTML={{
                         __html: `
-                            .withdrawal-options-scroll,
-                            .withdrawal-options-scroll * {
-                                touch-action: pan-x !important;
-                            }
                             .withdrawal-options-scroll {
+                                touch-action: pan-y;
                                 min-width: 0;
-                                -webkit-overflow-scrolling: touch !important;
-                                overflow-x: scroll !important;
+                                -webkit-overflow-scrolling: touch;
+                                overflow-x: scroll;
                                 overflow-y: hidden;
                                 scroll-behavior: auto;
-                                scroll-snap-type: x proximity;
-                                scroll-padding-inline: 0;
+                                overscroll-behavior-x: contain;
                                 will-change: scroll-position;
-                            }
-                            .withdrawal-options-scroll > * {
-                                scroll-snap-align: center;
-                                scroll-snap-stop: normal;
                             }
                         `
                     }} />
@@ -315,60 +298,17 @@ export const WithdrawalOption = () => {
                                 Retry
                             </button>
                         </div>
-                    ) : isAndroid ? (
-                        <div
-                            ref={scrollContainerRef}
-                            className={`withdrawal-options-scroll flex min-h-[120px] min-w-0 w-full max-w-[335px] overflow-x-hidden overflow-y-hidden touch-pan-x ${currentScaleClass}`}
-                            style={{ touchAction: 'pan-x' }}
-                        >
-                            <motion.div
-                                ref={withdrawalTrackRef}
-                                drag="x"
-                                dragConstraints={dragConstraints}
-                                dragElastic={0.02}
-                                dragMomentum={true}
-                                dragTransition={{ power: 0.2, timeConstant: 250 }}
-                                className="flex items-stretch gap-3 pb-2 justify-start flex-shrink-0"
-                                style={{ cursor: 'grab' }}
-                                whileTap={{ cursor: 'grabbing' }}
-                            >
-                                {SERVICE_CARDS.map((card) => (
-                                    <div
-                                        key={card.id}
-                                        onClick={() => handleWithdrawOption(card)}
-                                        className="flex-shrink-0 cursor-pointer active:scale-[0.98] transition-transform duration-150 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg touch-pan-x"
-                                        style={{ minWidth: '90px', maxWidth: '90px' }}
-                                        role="button"
-                                        tabIndex={0}
-                                        aria-label={`Select ${card.title} withdrawal option`}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                handleWithdrawOption(card);
-                                            }
-                                        }}
-                                    >
-                                        <ServiceCard card={card} />
-                                    </div>
-                                ))}
-                            </motion.div>
-                        </div>
                     ) : (
                         <div
                             ref={scrollContainerRef}
-                            className={`withdrawal-options-scroll flex min-h-[120px] min-w-0 w-full max-w-[335px] items-stretch gap-3 pb-2 justify-start scrollbar-hide overscroll-x-contain ${currentScaleClass}`}
-                            style={{
-                                scrollbarWidth: 'none',
-                                msOverflowStyle: 'none',
-                                WebkitOverflowScrolling: 'touch',
-                                scrollBehavior: 'auto',
-                            }}
+                            className={`withdrawal-options-scroll flex min-h-[120px] min-w-0 w-full max-w-[335px] items-stretch gap-3 pb-2 justify-start ${currentScaleClass}`}
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {SERVICE_CARDS.map((card) => (
                                 <div
                                     key={card.id}
                                     onClick={() => handleWithdrawOption(card)}
-                                    className="flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity duration-200 snap-center focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg touch-pan-x"
+                                    className="flex-shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-opacity-50 rounded-lg"
                                     style={{ minWidth: '90px', maxWidth: '90px' }}
                                     role="button"
                                     tabIndex={0}
@@ -454,7 +394,6 @@ export const WithdrawalOption = () => {
                                 </svg>
                             </button>
                             <div className="flex flex-col items-center ">
-                                {/* Image at the top, 3x original size */}
                                 <img
                                     src="/bodtdollor.png"
                                     alt=""
@@ -465,7 +404,6 @@ export const WithdrawalOption = () => {
                                     loading="eager"
                                     decoding="async"
                                 />
-                                {/* Text immediately below the image, with no gap */}
                                 <p className="text-[#A4A4A4] text-sm mt-0 mb-4 text-center">
                                     Withdrawal can be done $20 above only
                                 </p>

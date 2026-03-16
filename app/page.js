@@ -58,7 +58,10 @@ export default function AppLoader() {
               } else if (!state.gender) {
                 router.replace("/select-gender");
                 return;
-              } else if (!state.gamePreferences || state.gamePreferences.length === 0) {
+              } else if (
+                !state.gamePreferences ||
+                state.gamePreferences.length === 0
+              ) {
                 router.replace("/game-preferences");
                 return;
               } else if (!state.gameStyle) {

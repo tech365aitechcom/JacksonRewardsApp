@@ -407,12 +407,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   const handleDownloadedGameClick = (game, e) => {
     // GameItemCard passes (game, e), so game should always be the first parameter
     const actualGame = game;
-    
-    console.log('🔵 [GameListSection] handleDownloadedGameClick called:', { 
-      game: actualGame, 
-      hasFullData: !!actualGame?.fullData,
-      gameId: actualGame?.id 
-    });
 
     if (!actualGame) {
       console.error('❌ [GameListSection] No game provided to handleDownloadedGameClick');
@@ -421,7 +415,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
 
     // Use fullData if available, otherwise use the game object itself
     const gameData = actualGame.fullData || actualGame;
-    
+
     if (!gameData) {
       console.error('❌ [GameListSection] No game data available');
       return;
@@ -446,11 +440,11 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   const handleFeaturedGameClick = (game, e) => {
     // GameItemCard passes (game, e), so game should always be the first parameter
     const actualGame = game;
-    
-    console.log('🟢 [GameListSection] handleFeaturedGameClick called:', { 
-      game: actualGame, 
+
+    console.log('🟢 [GameListSection] handleFeaturedGameClick called:', {
+      game: actualGame,
       hasFullData: !!actualGame?.fullData,
-      gameId: actualGame?.id 
+      gameId: actualGame?.id
     });
 
     if (!actualGame) {
@@ -460,7 +454,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
 
     // Use fullData if available, otherwise use the game object itself
     const gameData = actualGame.fullData || actualGame;
-    
+
     if (!gameData) {
       console.error('❌ [GameListSection] No game data available');
       return;

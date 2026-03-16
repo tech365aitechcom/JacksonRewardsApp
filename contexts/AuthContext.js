@@ -928,8 +928,7 @@ export function AuthProvider({ children }) {
                   );
 
                   const sessionAuthData = {
-                    accountId:
-                      user.email || user.mobile || user._id || user.id,
+                    accountId: user.email || user.mobile || user._id || user.id,
                     email: user.email || "",
                     metadata: {
                       deviceId: deviceMetadata.deviceId,
@@ -1024,7 +1023,14 @@ export function AuthProvider({ children }) {
     if (isAuthenticated && isProtectedRoute && isNewUserFlow) {
       setIsNewUserFlow(false);
     }
-  }, [isLoading, user, pathname, router, isNewUserFlow, isLoginRedirectPending]);
+  }, [
+    isLoading,
+    user,
+    pathname,
+    router,
+    isNewUserFlow,
+    isLoginRedirectPending,
+  ]);
 
   // Hardware back button handler for Capacitor - prevents logout on back navigation
   useEffect(() => {
@@ -2194,10 +2200,18 @@ export function AuthProvider({ children }) {
           ...savedUser,
           ...(signupData.gender != null && { gender: signupData.gender }),
           ...(signupData.ageRange != null && { age: signupData.ageRange }),
-          ...(signupData.gamePreferences != null && { gamePreferences: signupData.gamePreferences }),
-          ...(signupData.gameStyle != null && { gameStyle: signupData.gameStyle }),
-          ...(signupData.improvementArea != null && { improvementArea: signupData.improvementArea }),
-          ...(signupData.dailyEarningGoal != null && { dailyEarningGoal: signupData.dailyEarningGoal }),
+          ...(signupData.gamePreferences != null && {
+            gamePreferences: signupData.gamePreferences,
+          }),
+          ...(signupData.gameStyle != null && {
+            gameStyle: signupData.gameStyle,
+          }),
+          ...(signupData.improvementArea != null && {
+            improvementArea: signupData.improvementArea,
+          }),
+          ...(signupData.dailyEarningGoal != null && {
+            dailyEarningGoal: signupData.dailyEarningGoal,
+          }),
         };
         setUser(mergedUser);
         localStorage.setItem("user", JSON.stringify(mergedUser));

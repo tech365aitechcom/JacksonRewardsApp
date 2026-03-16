@@ -471,32 +471,25 @@ function GameDetailsContent() {
     };
 
 
-    // Refresh user data when page regains focus (after user downloads game)
+    // Refresh user data when page regains focus (after user downloads game).
+    // Stale check: only refetch if last fetch was more than 2 minutes ago to prevent
+    // multiple simultaneous calls that freeze the Android WebView.
     useEffect(() => {
-        const handleFocus = () => {
+        const STALE_MS = 2 * 60 * 1000;
+        const handleVisibilityChange = () => {
+            if (document.hidden) return;
             const userId = getUserId();
             const token = localStorage.getItem('authToken');
-            if (userId && token) {
-                dispatch(fetchUserData({ userId, token }));
-            }
+            if (!userId || !token) return;
+            const lastFetch = localStorage.getItem(`userData_lastFetch_${userId}`);
+            const isStale = !lastFetch || Date.now() - parseInt(lastFetch, 10) > STALE_MS;
+            if (!isStale) return;
+            localStorage.setItem(`userData_lastFetch_${userId}`, String(Date.now()));
+            dispatch(fetchUserData({ userId, token, force: true, background: true }));
         };
 
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
-    }, [dispatch]);
-
-    // Listen for gameDownloaded event to refresh list immediately
-    useEffect(() => {
-        const handleGameDownloaded = (event) => {
-            const userId = getUserId();
-            const token = localStorage.getItem('authToken');
-            if (userId && token) {
-                dispatch(fetchUserData({ userId, token }));
-            }
-        };
-
-        window.addEventListener('gameDownloaded', handleGameDownloaded);
-        return () => window.removeEventListener('gameDownloaded', handleGameDownloaded);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, [dispatch]);
 
     // Check game installation status - Check if game is in downloaded games list
