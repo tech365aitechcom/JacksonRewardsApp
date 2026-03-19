@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { fetchUserData, fetchGamesBySection, loadUserDataFromCache } from "@/lib/redux/slice/gameSlice";
 import { useAuth } from "@/contexts/AuthContext";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, normalizeGameUrl } from "@/lib/gameDataNormalizer";
 import GameItemCard from "./GameItemCard";
 import WatchAdCard from "./WatchAdCard";
 // Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
@@ -262,7 +263,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
 
   // Process games from new API into the same format - using normalizer for both besitos and bitlab
   const processNewApiGames = (games) => {
-    const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, normalizeGameUrl } = require('@/lib/gameDataNormalizer');
     const userId = getUserId();
 
     return games.map((game, index) => {

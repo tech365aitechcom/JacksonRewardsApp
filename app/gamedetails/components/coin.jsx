@@ -7,6 +7,7 @@ import { CoinInfoModal } from "./CoinInfoModal";
 import { OptInModal } from "./OptInModal";
 import { transferGameEarnings, getBatchStatus } from "../../../lib/api";
 import { fetchWalletTransactions, fetchFullWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
+import { normalizeGameTitle } from "@/lib/gameDataNormalizer";
 
 
 export const Coin = ({
@@ -298,7 +299,6 @@ export const Coin = ({
 
             // Calculate starting batch number (1-indexed: first batch is 1, second is 2, etc.)
             const startingBatchNumber = claimedGroups + 1;
-            const { normalizeGameTitle } = require('@/lib/gameDataNormalizer');
             const gameTitle = normalizeGameTitle(game);
 
             // Prepare earning data for API call with batch fields for backend integration

@@ -1,4 +1,5 @@
 import React from "react";
+import { normalizeGameGoals } from "@/lib/gameDataNormalizer";
 
 // Format coins to 2 decimals; format XP so it adapts to any value (integer or decimal)
 const formatTwoDecimals = (n) => Number(n).toFixed(2);
@@ -13,7 +14,6 @@ export const Breakdown = ({ game, sessionCoins = 0, sessionXP = 0 }) => {
     const goals = React.useMemo(() => {
         if (!game) return [];
         try {
-            const { normalizeGameGoals } = require("@/lib/gameDataNormalizer");
             const normalized = normalizeGameGoals(game);
             if (Array.isArray(normalized) && normalized.length > 0) return normalized;
         } catch (_) { }

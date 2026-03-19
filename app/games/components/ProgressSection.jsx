@@ -34,7 +34,7 @@ const ProgressSection = ({
                 <div className="flex items-center justify-center gap-x-1.5 w-full">
                     <div className="flex flex-col items-start justify-center ">
                         <div className="text-[14px] font-semibold text-white tabular-nums">
-                            {120}
+                            {mainValue}
                         </div>
                         <div className="text-[14px] font-semibold text-white tabular-nums">
                             {bonusValue}

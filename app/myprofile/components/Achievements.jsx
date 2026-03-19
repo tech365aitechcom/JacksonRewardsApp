@@ -132,9 +132,8 @@ const Achievements = () => {
                             className="absolute top-1 left-[38px]"
                             alt="Coin"
                             src="/dollor.png"
-                            loading="eager"
+                            loading="lazy"
                             decoding="async"
-                            priority
                         />
                         <div className="absolute w-[59px] h-6 top-[33px] left-0 bg-[#201f58] rounded">
                             <div className="relative w-[49px] h-[15px] top-[5px] left-[5px] flex items-center">

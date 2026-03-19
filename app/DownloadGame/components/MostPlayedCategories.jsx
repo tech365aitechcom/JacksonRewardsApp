@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { fetchMostPlayedScreenGames } from "@/lib/redux/slice/gameSlice";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserFromLocalStorage } from "@/lib/utils";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, normalizeGameGoals, normalizeGameUrl, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 import GameItemCard from "./GameItemCard";
 import WatchAdCard from "./WatchAdCard";
 
@@ -65,11 +66,8 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
 
     // Process games from API into the same format - using normalizer for both besitos and bitlab
     const processGames = (games) => {
-        const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, normalizeGameGoals, normalizeGameUrl } = require('@/lib/gameDataNormalizer');
-
         return games.map((game, index) => {
             // Normalize game data for both besitos and bitlab
-            const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, normalizeGameUrl, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
             const images = normalizeGameImages(game);
             const title = normalizeGameTitle(game);
             const category = normalizeGameCategory(game);

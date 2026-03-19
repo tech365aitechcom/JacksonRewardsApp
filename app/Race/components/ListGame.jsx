@@ -1,9 +1,10 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { fetchGamesBySection } from "@/lib/redux/slice/gameSlice";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 // Removed getAgeGroupFromProfile and getGenderFromProfile - now passing user object directly
 
 const RecommendationCard = React.memo(({ card, onCardClick }) => {
@@ -91,6 +92,7 @@ export const ListGame = () => {
     const dispatch = useDispatch();
     const [currentScaleClass, setCurrentScaleClass] = useState("scale-100");
     const [loadingTimeout, setLoadingTimeout] = useState(false);
+    const backgroundRefreshDoneRef = useRef(false); // fire background refresh only once per mount
 
     // Check if user came from race banner
     const fromRace = searchParams.get('fromRace') === 'true';
@@ -137,7 +139,6 @@ export const ListGame = () => {
                 })
                 .map((game, index) => {
                     // Use normalizer for both besitos and bitlab
-                    const { normalizeGameImages, normalizeGameTitle, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
                     const images = normalizeGameImages(game);
                     const title = normalizeGameTitle(game);
                     const category = normalizeGameCategory(game);
@@ -152,7 +153,7 @@ export const ListGame = () => {
 
                     const apiGameId = game.gameId || game.details?.id || game.id || game._id;
                     return {
-                        id: apiGameId || `api-game-${index}`,
+                        id: apiGameId ? `api-${apiGameId}` : `api-game-${index}`,
                         originalId: apiGameId,
                         title: title,
                         category: category,
@@ -178,13 +179,12 @@ export const ListGame = () => {
                 const earnings = Number.isFinite(raw) ? (raw === Math.round(raw) ? String(Math.round(raw)) : (Math.round(raw * 100) / 100).toString()) : '0';
                 let xpPoints = '0';
                 try {
-                    const { getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
                     const { totalXP } = getTotalPromisedPoints(game);
                     xpPoints = Number.isFinite(totalXP) ? Math.floor(totalXP).toString() : '0';
                 } catch (_) {}
 
                 return {
-                    id: game.id || game._id || `downloaded-game-${index}`,
+                    id: (game.id || game._id) ? `dl-${game.id || game._id}` : `downloaded-game-${index}`,
                     originalId: game.id || game._id,
                     title: game.title || game.name || 'Downloaded Game',
                     category: game.categories?.[0]?.name || 'Action',
@@ -256,23 +256,25 @@ export const ListGame = () => {
     // The games are already loaded in the homepage GameCard component
     // This prevents duplicate API calls and improves performance
 
-    // Fetch games from multiple sections if not already loaded
-    useEffect(() => {
-        if (!userProfile) return;
+    // Ref to ensure initial fetch only fires once per mount
+    const initialFetchDoneRef = useRef(false);
 
-        // Use available sections from Redux if available, otherwise use common sections
+    // Fetch games from sections that have no data — runs once on mount only
+    // Deps are [] to prevent re-running when Redux objects update after fetch completes
+    useEffect(() => {
+        if (initialFetchDoneRef.current) return;
+        initialFetchDoneRef.current = true;
+
+        // Read current Redux state snapshot via closure — safe since this is mount-only
         const sectionsToFetch = availableUiSections && availableUiSections.length > 0
             ? availableUiSections
             : ["Swipe", "Most Played", "Cash Coach Recommendation", "New Games", "Trending"];
 
-        // Fetch games from sections that don't have games loaded yet
         sectionsToFetch.forEach(section => {
             const sectionGames = gamesBySection?.[section] || [];
             const sectionStatus = gamesBySectionStatus?.[section] || "idle";
 
-            // Only fetch if section is idle and has no games
             if (sectionStatus === 'idle' && sectionGames.length === 0) {
-
                 dispatch(fetchGamesBySection({
                     uiSection: section,
                     user: userProfile,
@@ -281,20 +283,17 @@ export const ListGame = () => {
                 }));
             }
         });
-    }, [dispatch, gamesBySection, gamesBySectionStatus, availableUiSections, userProfile]);
+    }, []);
 
-    // Refresh games in background after showing cached data (to get admin updates)
-    // Do this in background without blocking UI - show cached data immediately
+    // Refresh games in background once on mount — guard with ref to prevent re-running on Redux updates
     useEffect(() => {
-        if (!userProfile) return;
+        if (!userProfile || backgroundRefreshDoneRef.current) return;
+        backgroundRefreshDoneRef.current = true;
 
-        // Use available sections from Redux if available, otherwise use common sections
         const sectionsToRefresh = availableUiSections && availableUiSections.length > 0
             ? availableUiSections
             : ["Swipe", "Most Played", "Cash Coach Recommendation", "New Games", "Trending"];
 
-        // Use setTimeout to refresh in background after showing cached data
-        // This ensures smooth UX - cached data shows immediately, fresh data loads in background
         const refreshTimer = setTimeout(() => {
             sectionsToRefresh.forEach(section => {
                 dispatch(fetchGamesBySection({
@@ -306,22 +305,16 @@ export const ListGame = () => {
                     background: true
                 }));
             });
-        }, 100); // Small delay to let cached data render first
+        }, 100);
 
         return () => clearTimeout(refreshTimer);
-    }, [dispatch, availableUiSections, userProfile]);
+    }, []);
 
-    // Refresh games in background when app comes to foreground (admin might have updated)
+    // Refresh games when app comes to foreground — deps are stable (dispatch never changes, [] omits Redux arrays)
     useEffect(() => {
-        if (!userProfile) return;
-
-        // Use available sections from Redux if available, otherwise use common sections
-        const sectionsToRefresh = availableUiSections && availableUiSections.length > 0
-            ? availableUiSections
-            : ["Swipe", "Most Played", "Cash Coach Recommendation", "New Games", "Trending"];
-
         const handleFocus = () => {
-            sectionsToRefresh.forEach(section => {
+            const sections = ["Swipe", "Most Played", "Cash Coach Recommendation", "New Games", "Trending"];
+            sections.forEach(section => {
                 dispatch(fetchGamesBySection({
                     uiSection: section,
                     user: userProfile,
@@ -333,30 +326,18 @@ export const ListGame = () => {
             });
         };
 
-        window.addEventListener("focus", handleFocus);
-
         const handleVisibilityChange = () => {
-            if (!document.hidden && userProfile) {
-                sectionsToRefresh.forEach(section => {
-                    dispatch(fetchGamesBySection({
-                        uiSection: section,
-                        user: userProfile,
-                        page: 1,
-                        limit: 50,
-                        force: true,
-                        background: true
-                    }));
-                });
-            }
+            if (!document.hidden) handleFocus();
         };
 
+        window.addEventListener("focus", handleFocus);
         document.addEventListener("visibilitychange", handleVisibilityChange);
 
         return () => {
             window.removeEventListener("focus", handleFocus);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [dispatch, availableUiSections, userProfile]);
+    }, []);
 
     // Loading timeout handling
     useEffect(() => {

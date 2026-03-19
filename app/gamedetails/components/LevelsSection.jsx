@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RulesModal } from "./RulesModal";
 import sessionManager from "@/lib/sessionManager";
+import { normalizeGameGoals, getSdkProvider } from "@/lib/gameDataNormalizer";
 
 export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdate, claimedBatches = [], isDownloadedGame = false }) => {
     const [processedGoals, setProcessedGoals] = useState([]);
@@ -111,7 +112,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
             }
 
             // Use normalizer to get goals/events for both besitos and bitlab
-            const { normalizeGameGoals, getSdkProvider } = require('@/lib/gameDataNormalizer');
             const goalsToUse = normalizeGameGoals(game) || game.goals || [];
             const provider = getSdkProvider(game);
             const isBitLab = provider === 'bitlab';

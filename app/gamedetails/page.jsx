@@ -14,25 +14,17 @@ import { Breakdown } from "./components/Breakdown";
 import { HomeIndicator } from "@/components/HomeIndicator";
 import { SessionStatus } from "./components/SessionStatus";
 import { LoadingOverlay } from "@/components/AndroidOptimizedLoader";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameDescription, normalizeGameGoals, normalizeGameUrl, normalizeGameAmount, getSdkProvider, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 
 // Optimized Image Component for Android - using normalizer for both besitos and bitlab
 const OptimizedGameImage = ({ game, isLoaded, onLoad, onError, className }) => {
     // Use normalizer to get images for both besitos and bitlab
-    const { normalizeGameImages, normalizeGameTitle, getSdkProvider } = require('@/lib/gameDataNormalizer');
     const images = normalizeGameImages(game);
     const provider = getSdkProvider(game);
     const imageUrl = images.large_image || images.banner || images.square_image || images.icon ||
         game?.images?.large_image || game?.large_image || game?.image || game?.square_image || game?.images?.banner;
 
     const displayTitle = normalizeGameTitle(game);
-
-    console.log('🖼️ OptimizedGameImage - Image URLs:', {
-        provider,
-        normalizedImages: images,
-        finalImageUrl: imageUrl,
-        rawCreatives: game?.besitosRawData?.creatives,
-        rawIconUrl: game?.besitosRawData?.icon_url
-    });
 
     if (!imageUrl) return null;
 
@@ -269,7 +261,6 @@ function GameDetailsContent() {
         if (!rawGame) return null;
 
         // Use normalizer to get correct values for both besitos and bitlab
-        const { normalizeGameImages, normalizeGameTitle, normalizeGameDescription, normalizeGameGoals, normalizeGameUrl, normalizeGameAmount, getSdkProvider, getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
 
         // Use besitosRawData if available; else use rawGame (e.g. BitLabs offer from localStorage)
         const rawData = rawGame.besitosRawData || rawGame;
@@ -397,7 +388,6 @@ function GameDetailsContent() {
     useEffect(() => {
         if (displayGame) {
             // Use normalizer to get images for both besitos and bitlab
-            const { normalizeGameImages } = require('@/lib/gameDataNormalizer');
             const images = normalizeGameImages(displayGame);
             const imageUrl = images.large_image || images.banner || images.square_image || images.icon ||
                 displayGame.images?.large_image || displayGame.large_image || displayGame.image ||
@@ -544,7 +534,6 @@ function GameDetailsContent() {
             const gameToDownload = displayGame || selectedGame;
             try {
                 // Use normalizer to get correct URL for both besitos and bitlab
-                const { normalizeGameUrl } = require('@/lib/gameDataNormalizer');
                 const downloadUrl = normalizeGameUrl(gameToDownload) || gameToDownload?.url || gameToDownload?.details?.downloadUrl;
                 const gameWithUrl = downloadUrl ? { ...gameToDownload, url: downloadUrl } : gameToDownload;
 

@@ -40,13 +40,8 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
         }
     };
 
-    const profile = useSelector((state) => state?.profile?.profile || {}, (left, right) => {
-        return JSON.stringify(left) === JSON.stringify(right);
-    });
-
-    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {}, (left, right) => {
-        return JSON.stringify(left) === JSON.stringify(right);
-    });
+    const profile = useSelector((state) => state?.profile?.profile ?? null);
+    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen ?? null);
 
     const coinBalance = walletScreen?.wallet?.balance || 1000; // Set to 1000 coins = $100 USD for testing
     const balanceInUSD = Math.floor(coinBalance / 10);

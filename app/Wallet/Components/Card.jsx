@@ -39,15 +39,8 @@ export const Card = ({ isOpen, onClose, methods, fundingSources, token }) => {
         }
     };
 
-    const profile = useSelector((state) => state?.profile?.profile || {}, (left, right) => {
-        // Memoize the selector to prevent unnecessary rerenders
-        return JSON.stringify(left) === JSON.stringify(right);
-    });
-
-    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen || {}, (left, right) => {
-        // Memoize the selector to prevent unnecessary rerenders
-        return JSON.stringify(left) === JSON.stringify(right);
-    });
+    const profile = useSelector((state) => state?.profile?.profile ?? null);
+    const walletScreen = useSelector((state) => state?.walletTransactions?.walletScreen ?? null);
 
     const coinBalance = walletScreen?.wallet?.balance || 0;
 

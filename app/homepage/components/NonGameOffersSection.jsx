@@ -33,12 +33,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
         const { nonGameOffers: currentOffers, nonGameOffersCacheTimestamp: currentTs, nonGameOffersStatus: currentStatus } = currentState;
 
         const hasFreshCache = currentOffers?.length && currentTs && (Date.now() - currentTs < CACHE_STALE_MS);
-        console.log("[DEBUG-NONGAME-OFFERS] mount effect fired | currentStatus:", currentStatus, "| hasFreshCache:", hasFreshCache, "| currentTs:", currentTs);
-        if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") {
-            console.log("[DEBUG-NONGAME-OFFERS] skipping dispatch — reason:", hasFreshCache ? "fresh cache" : currentStatus);
-            return;
-        }
-        console.log("[DEBUG-NONGAME-OFFERS] dispatching fetchNonGameOffers");
+        if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") return;
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
     }, [token, skipFetch]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -50,9 +45,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
             const state = require("@/lib/redux/store").store.getState();
             const ts = state.surveys.nonGameOffersCacheTimestamp;
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
-            console.log("[DEBUG-NONGAME-OFFERS] focus/visibility fired | isStale:", isStale, "| ts:", ts, "| at:", new Date().toISOString());
             if (!isStale) return;
-            console.log("[DEBUG-NONGAME-OFFERS] focus: dispatching fetchNonGameOffers (background)");
             dispatch(fetchNonGameOffers({ token, force: true, background: true, offerType: "cashback_shopping" }));
         };
 

@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from "next/image";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { fetchStreakStatus } from "@/lib/redux/slice/streakSlice";
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import useOnboardingStore from '@/stores/useOnboardingStore';
@@ -35,6 +37,7 @@ const validateName = (name, fieldName = 'Name') => {
 const SignUp = () => {
   const router = useRouter();
   const { signUpAndSignIn, signIn } = useAuth();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -144,10 +147,7 @@ const SignUp = () => {
 
           });
 
-          // Mark as loaded after widget renders (usually takes ~500ms)
-          setTimeout(() => {
-            setIsTurnstileLoading(false);
-          }, 800);
+          setIsTurnstileLoading(false);
 
           // Store widget ID for cleanup
           turnstileWidgetId.current = widgetId;
@@ -396,6 +396,10 @@ const SignUp = () => {
 
       const result = await signUpAndSignIn(fullSignupData);
 
+      if (result.ok) {
+        dispatch(fetchStreakStatus());
+      }
+
       // CHANGE: The AuthProvider now handles the redirect.
       // We only need to handle the error case here.
       if (!result.ok) {
@@ -597,10 +601,7 @@ const SignUp = () => {
                 });
                 turnstileWidgetId.current = widgetId;
 
-                // Mark as loaded after widget renders
-                setTimeout(() => {
-                  setIsTurnstileLoading(false);
-                }, 800);
+                setIsTurnstileLoading(false);
               } catch (err) {
                 console.error('Failed to render Turnstile widget on script load:', err);
               }

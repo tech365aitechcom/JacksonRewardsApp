@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+import { getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 
 const GameItemCard = ({
     game,
@@ -126,7 +127,6 @@ const GameItemCard = ({
     const displayCoins = Number.isFinite(coinsNum) ? (coinsNum === Math.round(coinsNum) ? String(Math.round(coinsNum)) : (Math.round(coinsNum * 100) / 100).toString()) : "0";
     let displayXP = "0";
     try {
-        const { getTotalPromisedPoints } = require('@/lib/gameDataNormalizer');
         const { totalXP } = getTotalPromisedPoints(game);
         displayXP = Number.isFinite(totalXP) ? String(Math.round(totalXP)) : "0";
     } catch (_) {

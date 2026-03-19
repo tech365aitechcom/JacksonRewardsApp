@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
+import { useDispatch } from "react-redux";
+import { fetchStreakStatus } from "@/lib/redux/slice/streakSlice";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -18,6 +20,7 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -156,10 +159,7 @@ function LoginPageContent() {
             size: 'normal',
           });
 
-          // Mark as loaded after widget renders (usually takes ~500ms)
-          setTimeout(() => {
-            setIsTurnstileLoading(false);
-          }, 800);
+          setIsTurnstileLoading(false);
 
           // Store widget ID for cleanup
           turnstileWidgetId.current = widgetId;
@@ -275,20 +275,21 @@ function LoginPageContent() {
       const result = await signIn(emailOrMobile, password, turnstileToken);
 
       if (result?.ok) {
-        // Wait 16 s so all prefetch API calls in handleAuthSuccess finish loading
-        // before navigating — homepage arrives with data ready, no loading states.
-        // Safety check: only redirect if the user hasn't navigated to another screen.
+        dispatch(fetchStreakStatus());
+        // Safety fallback: if prefetch takes longer than 5s, redirect anyway.
+        // The gatekeeper in AuthContext (isLoginRedirectPending) is the primary
+        // redirect trigger — it fires as soon as critical data is ready.
         setTimeout(() => {
           if (autoRegister) {
             router.push("/face-verification?autoRegister=true");
           } else {
             const currentPath =
               typeof window !== "undefined" ? window.location.pathname : "";
-            if (currentPath === "/login" || currentPath === "/homepage") {
+            if (currentPath === "/login") {
               router.push("/homepage");
             }
           }
-        }, 16000);
+        }, 5000);
       }
       else {
         const backendError = result?.error;

@@ -26,12 +26,7 @@ const SurveysSection = () => {
         if (!token) return;
 
         const hasFreshCache = surveys?.length && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_STALE_MS);
-        console.log("[DEBUG-SURVEYS] mount effect fired | status:", status, "| hasFreshCache:", hasFreshCache, "| cacheTimestamp:", cacheTimestamp);
-        if (hasFreshCache || status === "loading" || status === "failed") {
-            console.log("[DEBUG-SURVEYS] skipping dispatch — reason:", hasFreshCache ? "fresh cache" : status);
-            return;
-        }
-        console.log("[DEBUG-SURVEYS] dispatching fetchSurveys");
+        if (hasFreshCache || status === "loading" || status === "failed") return;
         dispatch(fetchSurveys({ token }));
     }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -44,9 +39,7 @@ const SurveysSection = () => {
             const ts = state.surveys.cacheTimestamp;
             const existing = state.surveys.surveys;
             const isStale = !ts || Date.now() - ts > FOCUS_REFRESH_STALE_MS;
-            console.log("[DEBUG-SURVEYS] focus/visibility fired | isStale:", isStale, "| ts:", ts, "| at:", new Date().toISOString());
             if (!isStale) return;
-            console.log("[DEBUG-SURVEYS] focus: dispatching fetchSurveys (background)");
             dispatch(fetchSurveys({ token, force: true, background: true }));
         };
 

@@ -5,16 +5,15 @@ import { XPPointsModal } from "../../../components/XPPointsModal";
 import { useWalletUpdates } from "@/hooks/useWalletUpdates";
 import { getXPTierProgressBar } from "@/lib/api";
 
-// XP from profile API (https://rewardsapi.hireagent.co/api/profile) -> xp.current, xp.total, xp.tier
+// XP from walletScreen (https://rewardsapi.hireagent.co/api/wallet-screen) -> xp.current
 const XPTierTracker = ({ stats, token }) => {
     const [isXPModalOpen, setIsXPModalOpen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const buttonRef = useRef(null);
-    const profile = useSelector((state) => state.profile.details);
+    const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
     const { realTimeXP } = useWalletUpdates(token);
-    const profileXP = profile?.xp ?? profile?.data?.xp;
-    const xpCurrent = profileXP?.current ?? realTimeXP;
+    const xpCurrent = walletScreen?.xp?.current ?? realTimeXP ?? 0;
 
     // Cache key for localStorage
     const CACHE_KEY = 'xpTierProgressBar';
@@ -167,12 +166,12 @@ const XPTierTracker = ({ stats, token }) => {
         };
     }, [token]);
 
-    // OPTIMIZED: Memoize progress data from API response; prefer profile API (xp.current, xp.total) for numbers
+    // OPTIMIZED: Memoize progress data from API response; xp.current from walletScreen
     const progressData = useMemo(() => {
         // Use API data if available, otherwise fallback to stats prop
         if (xpTierData) {
             const currentXP = (xpCurrent !== null && xpCurrent !== undefined) ? xpCurrent : (xpTierData.currentXP || 0);
-            const totalXPFromProfile = profileXP?.total;
+            const totalXPFromProfile = undefined; // walletScreen.xp has no total — use xpTierData tiers instead
             const currentTier = xpTierData.currentTier || null;
             const tiers = xpTierData.tiers || [];
 
@@ -270,9 +269,9 @@ const XPTierTracker = ({ stats, token }) => {
             };
         }
 
-        // Fallback to stats prop or profile API if API data not loaded yet
-        const currentXp = (xpCurrent !== null && xpCurrent !== undefined) ? xpCurrent : (stats?.currentXP ?? profileXP?.current ?? 0);
-        const totalXpGoal = profileXP?.total ?? 1000;
+        // Fallback to stats prop or walletScreen xp if xpTierData not loaded yet
+        const currentXp = (xpCurrent !== null && xpCurrent !== undefined) ? xpCurrent : (stats?.currentXP ?? 0);
+        const totalXpGoal = 1000;
         const progressPercentage = Math.min((currentXp / totalXpGoal) * 100, 100);
         const BAR_WIDTH = 288;
         const progressBarWidth = (BAR_WIDTH * progressPercentage) / 100;
@@ -289,7 +288,7 @@ const XPTierTracker = ({ stats, token }) => {
             progressBarWidth: progressBarWidth,
             indicatorPosition: progressBarWidth,
         };
-    }, [xpTierData, stats?.currentXP, xpCurrent, profileXP?.current, profileXP?.total]);
+    }, [xpTierData, stats?.currentXP, xpCurrent]);
 
     // OPTIMIZED: Memoize event handler with smooth animation
     const handleModalOpen = useCallback(() => {

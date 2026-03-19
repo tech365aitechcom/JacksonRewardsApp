@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { handleGameDownload } from "@/lib/gameDownloadUtils";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { trackUndoUsage, getUndoUsage } from "@/lib/api";
+import { normalizeGameImages, normalizeGameTitle, normalizeGameDescription, normalizeGameCategory, normalizeGameAmount, getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
 
 const EMPTY_ARRAY = [];
 
@@ -507,7 +508,6 @@ const GameCard = ({ onClose: onCloseProp }) => {
     const currentGameRewards = useMemo(() => {
         if (!currentGame) return { coins: 0, totalXP: 0 };
         try {
-            const { getTotalPromisedPoints } = require("@/lib/gameDataNormalizer");
             const { totalCoins, totalXP } = getTotalPromisedPoints(currentGame);
             const coins = typeof totalCoins === "number" ? totalCoins : (parseFloat(totalCoins) || 0);
             const xp = typeof totalXP === "number" ? totalXP : (parseFloat(totalXP) || 0);
@@ -527,9 +527,6 @@ const GameCard = ({ onClose: onCloseProp }) => {
     // OPTIMIZED: Memoize game data processing with image optimization - using normalizer for both besitos and bitlab
     const gameData = useMemo(() => {
         if (!currentGame) return null;
-
-        // Import normalizer functions
-        const { normalizeGameImages, normalizeGameTitle, normalizeGameDescription, normalizeGameCategory, normalizeGameAmount } = require('@/lib/gameDataNormalizer');
 
         // Normalize game data for both besitos and bitlab
         const images = normalizeGameImages(currentGame);

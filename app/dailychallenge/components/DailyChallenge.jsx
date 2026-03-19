@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getDailyChallengeCalendar } from "@/lib/api";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
     fetchCalendar,
@@ -16,6 +17,7 @@ import { ChallengeModal } from "./ChallengeModal";
 export const DailyChallenge = () => {
     // Redux state and dispatch
     const dispatch = useDispatch();
+    const router = useRouter();
     const { token } = useAuth() || {};
     const {
         calendar,
@@ -37,6 +39,7 @@ export const DailyChallenge = () => {
     const [isMonthLoading, setIsMonthLoading] = useState(false);
     const [pendingCalendar, setPendingCalendar] = useState(null);
     const [showCompletedModal, setShowCompletedModal] = useState(false);
+    const [showNoChallengeModal, setShowNoChallengeModal] = useState(false);
     const calendarCacheRef = useRef({});
     const isLoading = calendarStatus === "loading" || todayStatus === "loading" || isMonthLoading;
 
@@ -301,8 +304,7 @@ export const DailyChallenge = () => {
                     dispatch(setModalOpen(true));
                 }
             } else {
-                // Show message that no challenge is available today
-                alert("No challenge available for today. Check back tomorrow!");
+                setShowNoChallengeModal(true);
             }
         }
     };
@@ -513,7 +515,7 @@ export const DailyChallenge = () => {
                                         dispatch(setModalOpen(true));
                                     }
                                 } else {
-                                    alert("No challenge available for today. Check back tomorrow!");
+                                    setShowNoChallengeModal(true);
                                 }
                             }
                         }}
@@ -639,6 +641,41 @@ export const DailyChallenge = () => {
                             className="w-full mt-2 py-3 rounded-lg bg-gradient-to-b from-[#9EADF7] to-[#716AE7] text-white font-semibold text-sm"
                         >
                             Got it
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* No Challenge Available Modal */}
+            {showNoChallengeModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 rounded-lg p-6 w-full max-w-sm border border-gray-700">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-white">No Challenge Today</h2>
+                            <button
+                                onClick={() => setShowNoChallengeModal(false)}
+                                className="text-gray-400 hover:text-white text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="flex flex-col items-center gap-3 py-4">
+                            <span className="text-4xl">🎮</span>
+                            <p className="text-white text-base font-semibold text-center">
+                                No challenge available for today.
+                            </p>
+                            <p className="text-gray-400 text-sm text-center">
+                                You can select a game and start playing to earn more exciting rewards. Check back tomorrow!
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setShowNoChallengeModal(false);
+                                router.push("/Race/ListGame");
+                            }}
+                            className="w-full mt-2 py-3 rounded-lg bg-gradient-to-b from-[#9EADF7] to-[#716AE7] text-white font-semibold text-sm"
+                        >
+                            Select a Game
                         </button>
                     </div>
                 </div>

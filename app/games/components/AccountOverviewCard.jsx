@@ -35,6 +35,8 @@ const AccountOverviewCard = ({ userStats = null, className = "" }) => {
         } catch (e) {
             // ignore
         }
+        // Fetch fresh data on every navigation to this screen (background so cached data shows immediately)
+        dispatch(fetchAccountOverview({ force: false, background: true }));
     }, [isClient, dispatch]);
 
     // Loading and error states from Redux

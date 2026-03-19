@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
       '*.firebasejs.com',
       // '*.google.com'              // Firebase JS library
     ],
-    cleartext: true
+    cleartext: false
   },
   plugins: {
     FirebaseAuthentication: {
