@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSpinConfig, getSpinStatus, performSpin, redeemSpinReward } from "@/lib/api";
+import { onSpinnerUse } from "@/lib/adjustService";
+import { incrementAndGet } from "@/lib/adjustCounters";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWalletScreen } from "@/lib/redux/slice/walletTransactionsSlice";
 import { fetchProfileStats } from "@/lib/redux/slice/profileSlice";
@@ -518,6 +520,9 @@ export default function SpinWheel() {
 
                 if (redeemResponse.success && redeemResponse.data) {
                     const redeemData = redeemResponse.data;
+
+                    // Track spinner use milestone (Adjust) — counter seeded from server at login
+                    try { onSpinnerUse(incrementAndGet("spin")); } catch { /* never block spin flow */ }
 
                     // Update spinReward with the actual credited amount from redemption
                     if (spinReward && redeemData.reward) {

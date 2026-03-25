@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSurveys } from "@/lib/redux/slice/surveysSlice";
+import { onSurveyComplete } from "@/lib/adjustService";
+import { incrementAndGet } from "@/lib/adjustCounters";
 
 const SurveysSection = () => {
     const { token } = useAuth();
@@ -43,9 +45,21 @@ const SurveysSection = () => {
             dispatch(fetchSurveys({ token, force: true, background: true }));
         };
 
-        const handleFocus = () => handleRefreshIfStale();
+        // Check if user is returning from a survey — fire completion event once per survey opened
+        const checkSurveyReturn = () => {
+            try {
+                const surveyId = localStorage.getItem("adjust_survey_opened");
+                if (surveyId) {
+                    localStorage.removeItem("adjust_survey_opened");
+                    // counter seeded from server at login — survives reinstalls
+                    onSurveyComplete(incrementAndGet("survey"), surveyId);
+                }
+            } catch {}
+        };
+
+        const handleFocus = () => { checkSurveyReturn(); handleRefreshIfStale(); };
         const handleVisibility = () => {
-            if (!document.hidden) handleRefreshIfStale();
+            if (!document.hidden) { checkSurveyReturn(); handleRefreshIfStale(); }
         };
 
         window.addEventListener("focus", handleFocus);
@@ -69,7 +83,10 @@ const SurveysSection = () => {
     const handleSurveyClick = (survey) => {
         // Directly redirect to clickUrl from survey response
         if (survey.clickUrl) {
-            // Open in new tab/window
+            // Flag that a survey was opened — completion event fires when user returns
+            try {
+                localStorage.setItem("adjust_survey_opened", survey.id || survey.surveyId || "1");
+            } catch {}
             window.open(survey.clickUrl, '_blank', 'noopener,noreferrer');
         }
     };

@@ -54,6 +54,8 @@ import sessionManager from "@/lib/sessionManager";
 import { transferGameEarnings, getBatchStatus } from "@/lib/api";
 import { fetchGameById, fetchUserData } from "@/lib/redux/slice/gameSlice";
 import { fetchWalletTransactions, fetchFullWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
+import { onGameDownload } from "@/lib/adjustService";
+import { incrementAndGet } from "@/lib/adjustCounters";
 
 /**
  * Game Details Page - Main content component
@@ -539,6 +541,9 @@ function GameDetailsContent() {
 
                 await handleGameDownload(gameWithUrl);
 
+                // Track game download milestone (Adjust) — counter seeded from server at login
+                try { onGameDownload(incrementAndGet("gameDownload")); } catch { /* never block download flow */ }
+
                 // Refresh downloaded games list after a short delay to allow server to update
                 // This ensures the button updates to "Start Playing" after download
                 setTimeout(() => {
@@ -665,6 +670,9 @@ function GameDetailsContent() {
             // Update local state - only mark as fully claimed if claiming all rewards
             // Otherwise, keep session active for remaining rewards
             const isFullyClaimed = claimData.coins === undefined || coinsToClaim >= sessionData.sessionCoins;
+
+            // Adjust: track game earnings (no per-batch event — download events tracked separately)
+            // Game download milestone events are fired from the download button handler
             setSessionData(prev => ({
                 ...prev,
                 isClaimed: isFullyClaimed,

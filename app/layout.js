@@ -3,6 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ReduxProvider } from "@/lib/redux/ReduxProvider";
 import StatusBarSetter from "@/components/StatusBarSetter";
 import SplashScreen from "@/components/SplashScreen";
+import AdjustInitializer from "@/components/AdjustInitializer";
 
 export const metadata = {
   title: "Create Next App",
@@ -97,6 +98,7 @@ export default function RootLayout({ children }) {
         <SplashScreen>
           <ReduxProvider>
             <AuthProvider>
+              <AdjustInitializer />
               <StatusBarSetter />
               {children}
             </AuthProvider>

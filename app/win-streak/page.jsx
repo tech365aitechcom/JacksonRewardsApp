@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
+import { onStreakMilestone } from "@/lib/adjustService";
 import { Capacitor } from "@capacitor/core";
 import { fetchStreakStatus } from "@/lib/redux/slice/streakSlice";
 // import { getStreakHistory, getStreakLeaderboard } from "@/lib/api"; // commented — /api/streak/status now provides all data
@@ -52,6 +53,7 @@ export default function WinStreakPage() {
     // Ref for scrollable container
     const scrollContainerRef = useRef(null);
     const retryCountRef = useRef(0); // max 3 silent retries on failure
+    const firedStreakMilestonesRef = useRef(new Set()); // prevent re-firing on re-fetch
 
     // Ads — same pattern as ChallengeModal
     const isWeb = !Capacitor.isNativePlatform();
@@ -205,7 +207,9 @@ export default function WinStreakPage() {
         const reachedItem = streakTree.find(
             item => item.isMilestone && item.isCompleted && item.rewards?.length > 0
         );
-        if (reachedItem) {
+        if (reachedItem && !firedStreakMilestonesRef.current.has(reachedItem.day)) {
+            firedStreakMilestonesRef.current.add(reachedItem.day);
+            onStreakMilestone(reachedItem.day);
             const coins = reachedItem.rewards.find(r => r.type === 'coins')?.value || 0;
             const xp = reachedItem.rewards.find(r => r.type === 'xp')?.value || 0;
             setRewardData({ milestone: reachedItem.day, coins, xp, badge: `Day ${reachedItem.day} Champion!` });

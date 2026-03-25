@@ -25,6 +25,7 @@ import {
 } from "@/lib/api";
 import { setDealsCache, clearDealsCache } from "@/lib/dealsCache";
 import { getDeviceMetadata, clearVerisoulSessionId } from "@/lib/deviceUtils";
+import { resetCounters as resetAdjustCounters } from "@/lib/adjustCounters";
 import {
   initializeVerisoulSDK,
   getVerisoulSessionId,
@@ -2291,6 +2292,7 @@ export function AuthProvider({ children }) {
     dispatch(clearNonGameOffers()); // Clear non-game offers data
     dispatch(resetDailyChallengeState()); // Clear daily challenge (today, calendar, etc.) so new account doesn't see previous user's "Claim reward" / completed state
     clearDealsCache(); // Clear in-memory deals page cache (not in localStorage, must be cleared explicitly)
+    resetAdjustCounters(); // Reset per-user Adjust milestone counters (industry standard: clear on logout)
 
     // Purge all Redux persist data to prevent QuotaExceededError
     // Use persistor.purge() which properly handles cleanup without serialization issues

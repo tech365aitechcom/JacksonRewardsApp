@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.webkit.WebView;
 import androidx.core.splashscreen.SplashScreen;
+import com.adjust.sdk.Adjust;
 import com.getcapacitor.BridgeActivity;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
@@ -20,8 +21,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Register custom plugin before bridge is created (BridgeActivity builds bridge in super.onCreate)
+        // Register custom plugins before bridge is created (BridgeActivity builds bridge in super.onCreate)
         registerPlugin(UmpConsentPlugin.class);
+        registerPlugin(AdjustPlugin.class);
 
         // Hide the action bar before splash screen
         if (getSupportActionBar() != null) {
@@ -128,6 +130,18 @@ public class MainActivity extends BridgeActivity {
                 Log.d(TAG, "[AdMob/UMP] ========== UMP consent flow finished (mob side error – form not shown) ==========");
             }
         );
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Adjust.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Adjust.onPause();
     }
 
     /**

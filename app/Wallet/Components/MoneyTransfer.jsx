@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { createTremendousPayout } from '../../../lib/api';
 import { fetchWalletTransactions, fetchFullWalletTransactions, fetchWalletScreen } from '../../../lib/redux/slice/walletTransactionsSlice';
+import { onCashWithdrawal } from '../../../lib/adjustService';
+import { incrementAndGet } from '../../../lib/adjustCounters';
 
 export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token }) => {
     const dispatch = useDispatch();
@@ -197,6 +199,8 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
             if (result.success) {
                 setSuccess('Money transfer request submitted successfully!');
                 setIsSubmitting(false);
+                // Track withdrawal milestone (Adjust) — counter seeded from server at login
+                try { onCashWithdrawal(incrementAndGet("withdrawal")); } catch { /* never block withdrawal flow */ }
 
                 // Show success modal
                 setShowSuccessModal(true);

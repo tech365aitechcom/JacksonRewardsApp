@@ -10,6 +10,7 @@ import useOnboardingStore from '@/stores/useOnboardingStore';
 import { sendOtp, verifyOtp, checkMobileAvailability } from '@/lib/api';
 import Script from 'next/script';
 import { sendFirebaseOtp, verifyFirebaseOtp } from "@/lib/firebaseOtp";
+import { onRegistrationStart, onRegistrationComplete } from "@/lib/adjustService";
 
 const validateName = (name, fieldName = 'Name') => {
   const trimmedName = name.trim();
@@ -373,6 +374,9 @@ const SignUp = () => {
       return;
     }
 
+    // Track registration started (Adjust) — only after all validation passes
+    onRegistrationStart();
+
     setIsLoading(true);
     const fullMobile = `${countryCode}${formData.mobile}`;
 
@@ -398,6 +402,8 @@ const SignUp = () => {
 
       if (result.ok) {
         dispatch(fetchStreakStatus());
+        // Track registration completed (Adjust)
+        onRegistrationComplete();
       }
 
       // CHANGE: The AuthProvider now handles the redirect.

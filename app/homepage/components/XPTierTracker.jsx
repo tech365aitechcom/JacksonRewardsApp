@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { XPPointsModal } from "../../../components/XPPointsModal";
 import { useWalletUpdates } from "@/hooks/useWalletUpdates";
 import { getXPTierProgressBar } from "@/lib/api";
+import { onXPLevelReached } from "@/lib/adjustService";
 
 // XP from walletScreen (https://rewardsapi.hireagent.co/api/wallet-screen) -> xp.current
 const XPTierTracker = ({ stats, token }) => {
@@ -11,6 +12,7 @@ const XPTierTracker = ({ stats, token }) => {
     const [isAnimating, setIsAnimating] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const buttonRef = useRef(null);
+    const prevTierNameRef = useRef(null); // tracks last known tier to detect upgrades
     const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
     const { realTimeXP } = useWalletUpdates(token);
     const xpCurrent = walletScreen?.xp?.current ?? realTimeXP ?? 0;
@@ -39,6 +41,25 @@ const XPTierTracker = ({ stats, token }) => {
         }
         return null;
     });
+
+    // Initialize prevTierNameRef from cached data so we don't fire on first load
+    useEffect(() => {
+        if (xpTierData?.currentTier?.name) {
+            prevTierNameRef.current = xpTierData.currentTier.name;
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fire onXPLevelReached when tier upgrades to mid or senior (never on first load)
+    const detectTierUpgrade = (newData) => {
+        const newTierName = newData?.currentTier?.name || "";
+        const prevTierName = prevTierNameRef.current;
+        if (prevTierName && newTierName && prevTierName !== newTierName) {
+            const lower = newTierName.toLowerCase();
+            if (lower.includes("mid")) onXPLevelReached("mid");
+            else if (lower.includes("senior")) onXPLevelReached("senior");
+        }
+        prevTierNameRef.current = newTierName;
+    };
 
     // Prevent body scroll when modal is open
     useEffect(() => {
@@ -96,6 +117,7 @@ const XPTierTracker = ({ stats, token }) => {
                 const response = await getXPTierProgressBar(token);
 
                 if (response.success && response.data) {
+                    detectTierUpgrade(response.data);
                     // Update cache and state silently
                     const cacheData = {
                         data: response.data,
@@ -144,6 +166,7 @@ const XPTierTracker = ({ stats, token }) => {
             try {
                 const response = await getXPTierProgressBar(token);
                 if (response.success && response.data) {
+                    detectTierUpgrade(response.data);
                     const cacheData = {
                         data: response.data,
                         timestamp: Date.now(),

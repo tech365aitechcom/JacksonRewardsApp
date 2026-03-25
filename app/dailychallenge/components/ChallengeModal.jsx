@@ -13,6 +13,8 @@ import {
 } from "../../../lib/redux/slice/dailyChallengeSlice";
 import { SimpleSpinWheel } from "./SimpleSpinWheel";
 import { spinForChallenge } from "../../../lib/api";
+import { onDailyChallengeComplete } from "../../../lib/adjustService";
+import { incrementAndGet } from "../../../lib/adjustCounters";
 import { useAppLovinAds } from "@/hooks/useAppLovinAds";
 import MockAdOverlay from "@/app/games/components/MockAdOverlay";
 import {
@@ -153,6 +155,9 @@ export const ChallengeModal = ({
                 alert(errorMessage);
                 return;
             }
+
+            // Track daily challenge completion milestone (Adjust) — counter seeded from server at login
+            try { onDailyChallengeComplete(incrementAndGet("challenge"), today?.challenge?.id); } catch { /* never block completion flow */ }
 
             const now = new Date();
             const year = now.getFullYear();
