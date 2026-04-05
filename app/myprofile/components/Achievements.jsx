@@ -69,7 +69,9 @@ const Achievements = () => {
                         See All
                     </button>
                 </div>
-                <div className="flex items-center justify-center w-full h-32">
+                <div className="flex items-center justify-center w-full h-22
+                
+                ">
                     <p className="text-gray-400 text-sm">No achievements yet</p>
                 </div>
             </section>

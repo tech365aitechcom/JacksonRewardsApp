@@ -13,20 +13,18 @@ import { PageHeader } from "@/components/PageHeader";
 const CoinBalance = ({ coinBalance, onClick }) => (
     <button
         onClick={onClick}
-        className="h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center px-2.5 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+        className="min-w-[87px] max-w-[140px] h-9 rounded-3xl bg-[linear-gradient(180deg,rgba(158,173,247,0.4)_0%,rgba(113,106,231,0.4)_100%)] flex items-center gap-2 px-3 hover:opacity-80 transition-opacity duration-200 cursor-pointer flex-shrink-0"
         type="button"
         aria-label="Navigate to Wallet"
     >
-        <div className="flex items-center gap-2 min-w-0">
-            <span className="text-white text-lg [font-family:'Poppins',Helvetica] font-semibold leading-[normal] break-all">
-                {coinBalance || 0}
-            </span>
-            <img
-                className="w-[23px] h-6 flex-shrink-0"
-                alt="Coin"
-                src="/dollor.png"
-            />
-        </div>
+        <span className="text-white text-base [font-family:'Poppins',Helvetica] font-semibold leading-normal truncate">
+            {coinBalance || 0}
+        </span>
+        <img
+            className="w-[23px] h-6 flex-shrink-0"
+            alt="Coin"
+            src="/dollor.png"
+        />
     </button>
 );
 

@@ -130,11 +130,11 @@ const Leadership = () => {
         return (
             <section className="flex flex-col w-full max-w-[335px] items-start gap-2.5 mx-auto">
                 <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">
-                    Gaming - Leadership
+                    Leadership
                 </h3>
-                <div className="flex items-center justify-center w-full h-32">
+                <div className="flex items-center justify-center w-full h-26">
                     <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">
-                        No games available
+                        No games available now
                     </p>
                 </div>
             </section>

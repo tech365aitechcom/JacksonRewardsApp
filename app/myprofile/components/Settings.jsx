@@ -10,7 +10,7 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
     }
 
     const handlePrivacyPolicy = () => {
-        router.push('/privacy-policy')
+        window.open('https://indoviaholdings.com/privacy-policy', '_blank')
     }
 
     // Fast navigation to Ticket form for Android
