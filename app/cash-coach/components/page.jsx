@@ -57,7 +57,7 @@ export default function CashCoachPage() {
         }
     }, []);
 
-    if (status === 'loading' || status === 'idle') {
+    if (status === 'loading') {
         return (
             <div className="w-full h-screen bg-black flex flex-col justify-center items-center">
                 <div className="text-white text-center text-lg font-medium">

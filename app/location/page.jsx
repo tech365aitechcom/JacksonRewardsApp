@@ -7,9 +7,13 @@ import { getCityAndCountry } from "@/lib/locationUtils";
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import { useSplash } from "@/components/SplashScreen";
 
 export default function LocationPage() {
+  const { hideSplash } = useSplash();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => { hideSplash(); }, [hideSplash]);
 
   // Block Android hardware back button — user must grant or skip location to proceed
   useEffect(() => {

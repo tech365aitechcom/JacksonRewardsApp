@@ -11,8 +11,10 @@ import Script from "next/script";
 
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { useSplash } from "@/components/SplashScreen";
 
 function LoginPageContent() {
+  const { hideSplash } = useSplash();
   const [emailOrMobile, setEmailOrMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState({});
@@ -29,6 +31,9 @@ function LoginPageContent() {
   const [isTurnstileLoading, setIsTurnstileLoading] = useState(true);
   const turnstileRef = useRef(null);
   const turnstileWidgetId = useRef(null);
+
+
+  useEffect(() => { hideSplash(); }, [hideSplash]);
 
   // Show Google login error passed via query param (from native deep link error flow)
   // Uses useSearchParams() so it re-runs even when router.replace() navigates to the
@@ -111,35 +116,21 @@ function LoginPageContent() {
   useEffect(() => {
     const renderTurnstile = () => {
       if (typeof window !== 'undefined' && window.turnstile && turnstileRef.current) {
-        // Check if widget is already rendered by checking for existing widget ID
         if (turnstileWidgetId.current) {
-          return; // Widget already rendered
+          return;
         }
-
-        // Check if element already has a widget rendered (from previous navigation)
         const existingWidget = turnstileRef.current.querySelector('[data-widget-id]');
         if (existingWidget) {
           const existingId = existingWidget.getAttribute('data-widget-id');
           if (existingId) {
-            try {
-              window.turnstile.remove(existingId);
-            } catch (e) {
-              // Ignore errors when removing
-            }
+            try { window.turnstile.remove(existingId); } catch (e) { }
           }
         }
-
         try {
-          // Clear the container first
           turnstileRef.current.innerHTML = '';
-
-          // Manually render the widget
           setIsTurnstileLoading(true);
           const widgetId = window.turnstile.render(turnstileRef.current, {
-            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
-              console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
-              return '1x00000000000000000000AA'; // Test key - replace with production key
-            })(),
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
             callback: (token) => {
               setTurnstileToken(token);
               setIsTurnstileLoading(false);
@@ -158,10 +149,7 @@ function LoginPageContent() {
             theme: 'dark',
             size: 'normal',
           });
-
           setIsTurnstileLoading(false);
-
-          // Store widget ID for cleanup
           turnstileWidgetId.current = widgetId;
         } catch (err) {
           console.error('Failed to render Turnstile widget:', err);
@@ -169,7 +157,6 @@ function LoginPageContent() {
       }
     };
 
-    // Function to check and render when both script and DOM are ready
     const checkAndRender = () => {
       if (typeof window !== 'undefined' && window.turnstile && turnstileRef.current) {
         renderTurnstile();
@@ -178,52 +165,35 @@ function LoginPageContent() {
       return false;
     };
 
-    // Try immediate render if script is already loaded
     if (checkAndRender()) {
       return () => {
         if (turnstileWidgetId.current && typeof window !== 'undefined' && window.turnstile) {
-          try {
-            window.turnstile.remove(turnstileWidgetId.current);
-            turnstileWidgetId.current = null;
-          } catch (e) {
-            console.warn('Failed to remove Turnstile widget:', e);
-          }
+          try { window.turnstile.remove(turnstileWidgetId.current); turnstileWidgetId.current = null; } catch (e) { }
         }
       };
     }
 
-    // Wait for script to load and DOM to be ready
     let checkInterval = null;
     let timeoutId = null;
-
     checkInterval = setInterval(() => {
       if (checkAndRender()) {
         if (checkInterval) clearInterval(checkInterval);
         if (timeoutId) clearTimeout(timeoutId);
       }
     }, 100);
-
-    // Cleanup interval after 10 seconds
     timeoutId = setTimeout(() => {
       if (checkInterval) clearInterval(checkInterval);
     }, 10000);
 
-    // Cleanup function
     return () => {
       if (checkInterval) clearInterval(checkInterval);
       if (timeoutId) clearTimeout(timeoutId);
       if (turnstileWidgetId.current && typeof window !== 'undefined' && window.turnstile) {
-        try {
-          window.turnstile.remove(turnstileWidgetId.current);
-          turnstileWidgetId.current = null;
-        } catch (e) {
-          console.warn('Failed to remove Turnstile widget:', e);
-        }
+        try { window.turnstile.remove(turnstileWidgetId.current); turnstileWidgetId.current = null; } catch (e) { }
       }
     };
   }, []);
 
-  // Helper function to reset Turnstile widget
   const resetTurnstileWidget = () => {
     if (typeof window !== 'undefined' && window.turnstile && turnstileWidgetId.current) {
       try {
@@ -231,7 +201,6 @@ function LoginPageContent() {
         setTurnstileToken(null);
         setIsTurnstileLoading(true);
       } catch (err) {
-        console.warn('Failed to reset Turnstile widget:', err);
         setTurnstileToken(null);
         setIsTurnstileLoading(true);
       }
@@ -459,59 +428,25 @@ function LoginPageContent() {
 
   return (
     <>
-      {/* ============================================================
-          CLOUDFLARE TURNSTILE SCRIPT LOADING
-          ============================================================
-          
-          This script:
-          1. Loads Turnstile JavaScript library
-          2. Makes window.turnstile available globally
-          3. Widget is manually rendered via useEffect to work with client-side navigation
-          
-          Strategy: "afterInteractive" = Load after page is interactive
-          ============================================================ */}
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
         onLoad={() => {
-          // Trigger widget rendering when script loads
-          // Use a small delay to ensure DOM is ready
           setTimeout(() => {
             if (turnstileRef.current && typeof window !== 'undefined' && window.turnstile && !turnstileWidgetId.current) {
               try {
-                // Clear any existing content
                 turnstileRef.current.innerHTML = '';
-
                 setIsTurnstileLoading(true);
                 const widgetId = window.turnstile.render(turnstileRef.current, {
-                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (() => {
-                    console.warn("⚠️ [Turnstile] NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set. Please add it to your .env file.");
-                    return '1x00000000000000000000AA'; // Test key - replace with production key
-                  })(),
-                  callback: (token) => {
-                    setTurnstileToken(token);
-                    setIsTurnstileLoading(false);
-                    console.log('✅ Turnstile verified:', token);
-                  },
-                  'error-callback': () => {
-                    setTurnstileToken(null);
-                    setIsTurnstileLoading(false);
-                    console.error('❌ Turnstile error');
-                  },
-                  'expired-callback': () => {
-                    setTurnstileToken(null);
-                    setIsTurnstileLoading(true);
-                    console.warn('⏰ Turnstile token expired');
-                  },
+                  sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+                  callback: (token) => { setTurnstileToken(token); setIsTurnstileLoading(false); },
+                  'error-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(false); },
+                  'expired-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(true); },
                   theme: 'dark',
                   size: 'normal',
                 });
                 turnstileWidgetId.current = widgetId;
-
-                // Mark as loaded after widget renders
-                setTimeout(() => {
-                  setIsTurnstileLoading(false);
-                }, 800);
+                setTimeout(() => setIsTurnstileLoading(false), 800);
               } catch (err) {
                 console.error('Failed to render Turnstile widget on script load:', err);
               }
@@ -644,6 +579,7 @@ function LoginPageContent() {
                 disabled={isSubmitting} // Disable button while submitting
                 type="button"
                 aria-label="Sign in"
+                suppressHydrationWarning
               >
                 <div className="relative w-[314px] h-[50px] rounded-[12.97px] bg-[linear-gradient(180deg,rgba(158,173,247,1)_0%,rgba(113,106,231,1)_100%)]">
                   <div className="absolute top-[11px] left-[126px] [font-family:'Poppins',Helvetica] font-semibold text-white text-lg tracking-[0] leading-[normal]">
@@ -671,6 +607,7 @@ function LoginPageContent() {
                     className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[240px]"
                     placeholder="Email or Mobile Number"
                     aria-label="Email or Mobile Number"
+                    suppressHydrationWarning
                   />
                 </div>
                 {error.emailOrMobile && (
@@ -703,12 +640,14 @@ function LoginPageContent() {
                     className="absolute top-[17px] left-[58px] [font-family:'Poppins',Helvetica] font-medium text-[#d3d3d3] text-[14.3px] tracking-[0] leading-[normal] bg-transparent border-none outline-none w-[200px]"
                     placeholder="Enter your password"
                     aria-label="Password"
+                    suppressHydrationWarning
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute top-[17px] right-[20px] w-[17px] h-[17px] cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
+                    suppressHydrationWarning
                   >
                     {showPassword ? (
                       <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
@@ -737,6 +676,7 @@ function LoginPageContent() {
                     className="[font-family:'Poppins',Helvetica] font-medium text-neutral-400 text-[11.3px] tracking-[0] leading-[normal] ml-2 cursor-pointer hover:text-neutral-300 transition-colors"
                     onClick={handleForgotPassword}
                     type="button"
+                    suppressHydrationWarning
                   >
                     Forgot Password?
                   </button>
@@ -815,6 +755,7 @@ function LoginPageContent() {
                         onClick={() => handleSocialLogin("google")}
                         type="button"
                         aria-label="Sign in with Google"
+                        suppressHydrationWarning
                       >
                         <div className="w-[20px] h-[20px] flex items-center justify-center">
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -848,6 +789,7 @@ function LoginPageContent() {
                         onClick={() => handleSocialLogin("facebook")}
                         type="button"
                         aria-label="Sign in with Facebook"
+                        suppressHydrationWarning
                       >
                         <div className="w-[20px] h-[20px] flex items-center justify-center">
                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -915,6 +857,7 @@ function LoginPageContent() {
                       className="text-[#9098f2] cursor-pointer bg-transparent border-none underline"
                       onClick={handleSignUp}
                       type="button"
+                      suppressHydrationWarning
                     >
                       Sign Up
                     </button>

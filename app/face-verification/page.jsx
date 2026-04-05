@@ -8,9 +8,13 @@ import { NativeBiometric } from "capacitor-native-biometric";
 import { Camera } from "@capacitor/camera";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { App } from "@capacitor/app";
+import { useSplash } from "@/components/SplashScreen";
 
 export default function FaceVerificationPage() {
+    const { hideSplash } = useSplash();
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => { hideSplash(); }, [hideSplash]);
 
     // Block Android hardware back button — user must complete or skip face verification
     useEffect(() => {

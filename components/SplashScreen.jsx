@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SplashScreen as CapSplashScreen } from "@capacitor/splash-screen";
 import Image from "next/image";
@@ -9,6 +9,10 @@ const FADE_MS = 300;
 const NATIVE_FADE_MS = 400;
 const NATIVE_MAX_MS = 8000; // safety: hide no matter what after 8s
 const SPLASH_SHOWN_KEY = "jr_splash_shown";
+
+// Context so any screen (e.g. app/page.js) can trigger the hide.
+export const SplashContext = createContext({ hideSplash: () => {} });
+export const useSplash = () => useContext(SplashContext);
 
 // Show web overlay only on first open of a session (native handles its own splash).
 function shouldShowSplash() {
@@ -24,35 +28,42 @@ function shouldShowSplash() {
 export default function SplashScreen({ children }) {
   const [visible, setVisible] = useState(shouldShowSplash);
   const [fading, setFading] = useState(false);
+  const hideCalledRef = useRef(false);
+
+  const hideSplash = useCallback(() => {
+    if (hideCalledRef.current) return;
+    hideCalledRef.current = true;
+
+    const isNative = Capacitor.isNativePlatform?.();
+
+    if (isNative) {
+      // Hide the native Capacitor splash with a smooth fade.
+      CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS }).catch(() => {});
+      return;
+    }
+
+    // Web: fade out the overlay.
+    if (!visible) return;
+    setFading(true);
+    setTimeout(() => setVisible(false), FADE_MS);
+  }, [visible]);
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform?.();
 
-    // ── Native ──────────────────────────────────────────────────────────────
-    // Hide the Capacitor native splash as soon as the React app has mounted
-    // and the first frame is ready to paint — same pattern as Instagram/WhatsApp.
-    // A safety max timeout ensures it always hides even if something hangs.
     if (isNative) {
-      const hide = () =>
-        CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS }).catch(() => {});
-
-      // requestAnimationFrame fires after the browser has painted the first frame.
-      // This is the native-equivalent of "app is ready to display".
-      const raf = requestAnimationFrame(() => hide());
-      const max = setTimeout(hide, NATIVE_MAX_MS);
-
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(max);
-      };
+      // Safety: if app/page.js never calls hideSplash (e.g. routing error),
+      // force-hide after NATIVE_MAX_MS so the splash never gets stuck.
+      const max = setTimeout(hideSplash, NATIVE_MAX_MS);
+      return () => clearTimeout(max);
     }
 
-    // ── Web — skip if already shown this session ─────────────────────────
+    // Web — skip if already shown this session.
     if (!visible) return;
 
-    // ── Web — hide after first paint ─────────────────────────────────────
     sessionStorage.setItem(SPLASH_SHOWN_KEY, "1");
 
+    // Auto-hide on first paint for web (no routing gate needed on web).
     const raf = requestAnimationFrame(() => {
       setFading(true);
       setTimeout(() => setVisible(false), FADE_MS);
@@ -62,7 +73,7 @@ export default function SplashScreen({ children }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <>
+    <SplashContext.Provider value={{ hideSplash }}>
       {children}
 
       {visible && (
@@ -88,6 +99,6 @@ export default function SplashScreen({ children }) {
           />
         </div>
       )}
-    </>
+    </SplashContext.Provider>
   );
 }

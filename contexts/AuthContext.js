@@ -70,6 +70,7 @@ import {
   fetchBonusDays,
   resetDailyChallengeState,
 } from "@/lib/redux/slice/dailyChallengeSlice";
+import { clearStreak } from "@/lib/redux/slice/streakSlice";
 import {
   fetchSurveys,
   fetchNonGameOffers,
@@ -2290,7 +2291,8 @@ export function AuthProvider({ children }) {
     dispatch(clearAccountOverview()); // Clear account overview
     dispatch(clearSurveys()); // Clear surveys data
     dispatch(clearNonGameOffers()); // Clear non-game offers data
-    dispatch(resetDailyChallengeState()); // Clear daily challenge (today, calendar, etc.) so new account doesn't see previous user's "Claim reward" / completed state
+    dispatch(resetDailyChallengeState()); // Clear daily challenge so new account doesn't see previous user's state
+    dispatch(clearStreak()); // Clear streak data so new account starts fresh
     clearDealsCache(); // Clear in-memory deals page cache (not in localStorage, must be cleared explicitly)
     resetAdjustCounters(); // Reset per-user Adjust milestone counters (industry standard: clear on logout)
 
@@ -2399,6 +2401,31 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("cameraFacePhotoPath");
       localStorage.removeItem("cameraFacePhoto");
       localStorage.removeItem("faceVerificationSkipped");
+      localStorage.removeItem("faceVerificationCompleted");
+
+      // Clear spin wheel state (previous user's pending rewards must not leak)
+      localStorage.removeItem("spinWheel_pendingReward");
+      localStorage.removeItem("spinWheel_pendingSpinId");
+      localStorage.removeItem("spinWheel_isAdWatched");
+
+      // Clear welcome bonus state
+      localStorage.removeItem("welcomeBonusTasks");
+      localStorage.removeItem("welcomeBonusTimer");
+
+      // Clear onboarding completion flag so new account goes through onboarding
+      localStorage.removeItem("onboardingComplete");
+
+      // Clear stale biometric credential staging data
+      localStorage.removeItem("biometricCredentialsPending");
+      localStorage.removeItem("biometricCredentialsData");
+
+      // Clear per-user Adjust offer/survey tracking flags
+      localStorage.removeItem("adjust_survey_opened");
+      localStorage.removeItem("adjust_nongame_offer_opened");
+
+      // Clear sessionStorage — session-scoped data must not persist for next login
+      try { sessionStorage.clear(); } catch (_) {}
+
       // Note: biometricToken, biometricUser, biometric_username, biometric_password are preserved
       // for biometric login functionality
     } catch (err) {

@@ -198,7 +198,8 @@ export const HomeIndicator = ({ activeTab }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 w-full z-[9999]"
+      className="fixed bottom-0 left-0 right-0 w-full z-[9999] bg-black"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       data-model-id="730:32095"
       role="navigation"
       aria-label="Main navigation"
@@ -206,7 +207,6 @@ export const HomeIndicator = ({ activeTab }) => {
       <div className="w-full">
         <div className="w-full h-[100px] relative">
           <div className="absolute bottom-0 left-0 right-0 bg-black w-full h-[78px]"></div>
-          <div className="absolute bottom-[5px] left-1/2 transform -translate-x-1/2 w-[135px] h-[5px] bg-white rounded-[100px]"></div>
           <div className="absolute bottom-0 left-0 right-0 h-[78px] flex items-center justify-between px-4">
             <div className="flex items-center justify-between w-full relative">
 

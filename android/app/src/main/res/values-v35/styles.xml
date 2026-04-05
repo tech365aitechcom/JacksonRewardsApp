@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 15+ (API 35) overrides.
+    Android 15 enforces mandatory edge-to-edge, making setStatusBarColor() /
+    setNavigationBarColor() no-ops. Without this file the splash window background
+    (splash_bg) bleeds through the transparent system bars.
+    windowOptOutEdgeToEdgeEnforcement opts the launch theme back to non-edge-to-edge
+    so status bar and nav bar remain solid black during the splash phase.
+-->
+<resources>
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!-- Opt out of forced edge-to-edge for the splash/launch theme only -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+
+        <!-- System splash screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">#3DB140</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+        <!-- Activity window background while WebView initializes -->
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:background">@drawable/splash_bg</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <!-- Remove the divider/shadow line between status bar and content -->
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>

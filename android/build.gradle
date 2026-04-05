@@ -23,6 +23,18 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+
+        // AppLovin MAX mediation adapters — restrict to com.applovin.* only to prevent 403s on other packages
+        maven {
+            url 'https://artifacts.applovin.com/android'
+            content {
+                includeGroupByRegex 'com\\.applovin.*'
+            }
+        }
+        // Mintegral SDK (required by mintegral-adapter)
+        maven { url 'https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_support' }
+        // BidMachine SDK (required by bidmachine-adapter)
+        maven { url 'https://artifactory.bidmachine.io/bidmachine' }
     }
 }
 

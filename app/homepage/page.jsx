@@ -1,6 +1,7 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSplash } from "@/components/SplashScreen";
 import { useHomepageData } from "@/hooks/useHomepageData";
 import { useNotifications } from "@/hooks/useNotifications";
 import { HomeIndicator } from "../../components/HomeIndicator";
@@ -18,7 +19,10 @@ import SurveysSection from "./components/SurveysSection";
 import NonGameOffersSection from "./components/NonGameOffersSection";
 
 const Homepage = () => {
+  const { hideSplash } = useSplash();
   const { token, user } = useAuth();
+
+  useEffect(() => { hideSplash(); }, [hideSplash]);
 
   const {
     stats,
@@ -62,9 +66,10 @@ const Homepage = () => {
         </div>
 
         <VipBanner />
-        <RaceSection />
+        {/* <RaceSection /> */}
         <SurveysSection />
         <StreakSection />
+
       </div>
       <HomeIndicator activeTab="home" />
     </div>

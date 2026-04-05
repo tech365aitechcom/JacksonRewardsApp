@@ -22,10 +22,13 @@
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
 
         <!-- Activity window background while WebView initializes after system splash -->
+        <item name="android:windowFullscreen">false</item>
         <item name="android:background">@drawable/splash_bg</item>
-        <item name="android:statusBarColor">#000000</item>
+       <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <!-- Remove the divider/shadow line between status bar and content -->
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

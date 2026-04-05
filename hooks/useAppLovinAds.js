@@ -302,11 +302,33 @@ export const useAppLovinAds = () => {
         );
         setupListeners();
 
-        // Preload first ad (but don't show it automatically)
-        // Only load when user actually wants to watch
-        // await loadAd(); // Commented out - only load when needed
+        // FIX 1: Preload first ad immediately after SDK init (fire and forget)
+        // Big apps (TikTok, Candy Crush, etc.) always preload on launch so the
+        // ad is cached and shows INSTANTLY when user clicks — no spinner, no wait.
+        console.log("[useAppLovinAds] 🔍 Step 5: Preloading first ad in background...");
+        const _preloadPlatformInfo = appLovinPlugin.getPlatformInfo();
+        if (token) {
+          trackAppLovinAdLoad({
+            adUnitId: "rewarded",
+            placement: "rewarded",
+            platform: _preloadPlatformInfo.platform,
+            deviceType: _preloadPlatformInfo.deviceType,
+            appVersion: "1.0.0",
+            sdkVersion: "11.0.0",
+          }, token)
+            .then((resp) => {
+              if (resp?.success && resp?.data?.adRecordId) {
+                currentAdRecordIdRef.current = resp.data.adRecordId;
+                console.log("[useAppLovinAds] ✅ Preload ad record set:", currentAdRecordIdRef.current);
+              }
+            })
+            .catch(() => {});
+        }
+        appLovinPlugin.loadAd().catch((err) => {
+          console.warn("[useAppLovinAds] ⚠️ Background preload failed:", err?.message);
+        });
         console.log(
-          "[useAppLovinAds] ✅ Initialization complete - ready to load ads",
+          "[useAppLovinAds] ✅ Initialization complete — ad preloading in background",
         );
 
         return true;
@@ -380,51 +402,30 @@ export const useAppLovinAds = () => {
           loadTrackingData,
         );
 
-        try {
-          const loadResponse = await trackAppLovinAdLoad(
-            loadTrackingData,
-            token,
-          );
-          console.log(
-            "[useAppLovinAds] 📥 Backend load response received:",
-            loadResponse,
-          );
-          console.log("[useAppLovinAds] 📊 Response data:", {
-            success: loadResponse?.success,
-            hasData: !!loadResponse?.data,
-            adRecordId: loadResponse?.data?.adRecordId,
-            message: loadResponse?.data?.message,
+        // FIX 2: Fire backend tracking WITHOUT awaiting — start native ad load immediately
+        // Before: backend call blocked the ad request, adding 300ms–2s delay every load
+        trackAppLovinAdLoad(loadTrackingData, token)
+          .then((loadResponse) => {
+            if (loadResponse?.success && loadResponse?.data?.adRecordId) {
+              currentAdRecordIdRef.current = loadResponse.data.adRecordId;
+              console.log("[useAppLovinAds] ✅ Ad record created:", currentAdRecordIdRef.current);
+            }
+          })
+          .catch((backendError) => {
+            console.error("[useAppLovinAds] ❌ Backend load tracking failed:", backendError?.message);
           });
-
-          if (loadResponse?.success && loadResponse?.data?.adRecordId) {
-            currentAdRecordIdRef.current = loadResponse.data.adRecordId;
-            console.log(
-              "[useAppLovinAds] ✅ Ad record created and stored:",
-              currentAdRecordIdRef.current,
-            );
-          } else {
-            console.warn(
-              "[useAppLovinAds] ⚠️ Backend did not return adRecordId",
-            );
-            console.warn("[useAppLovinAds] 📝 Response:", loadResponse);
-          }
-        } catch (backendError) {
-          console.error(
-            "[useAppLovinAds] ❌ Backend load tracking failed:",
-            backendError,
-          );
-          console.error("[useAppLovinAds] 🐛 Backend error details:", {
-            message: backendError?.message,
-            response: backendError?.response,
-            status: backendError?.response?.status,
-            data: backendError?.response?.data,
-          });
-          // Continue with ad load even if backend tracking fails
-        }
       } else {
         console.warn(
           "[useAppLovinAds] ⚠️ No auth token, skipping backend tracking",
         );
+      }
+
+      // FIX 3: If the background preload already loaded an ad, skip the native load entirely
+      // This prevents a double-load glitch when user clicks before preload finishes
+      if (appLovinPlugin.isAdReady()) {
+        console.log("[useAppLovinAds] ✅ Ad already preloaded and ready — skipping native load");
+        setIsAdReady(true);
+        return true;
       }
 
       // Load ad via plugin
@@ -543,34 +544,17 @@ export const useAppLovinAds = () => {
         console.log(
           "[useAppLovinAds] 🔍 Step 1: Tracking ad display with backend...",
         );
+        // FIX 4: Fire display tracking WITHOUT awaiting — show ad IMMEDIATELY
+        // Before: backend call added 300ms–2s delay between user click and ad appearing
         if (token && currentAdRecordIdRef.current) {
-          console.log("[useAppLovinAds] 📤 Sending display tracking:", {
-            adRecordId: currentAdRecordIdRef.current,
-          });
-          try {
-            await trackAppLovinAdDisplay(currentAdRecordIdRef.current, token);
-            console.log("[useAppLovinAds] ✅ Ad display tracked with backend");
-          } catch (displayError) {
-            console.error(
-              "[useAppLovinAds] ❌ Backend display tracking failed:",
-              displayError,
-            );
-            console.error("[useAppLovinAds] 🐛 Display error details:", {
-              message: displayError?.message,
-              response: displayError?.response,
-              status: displayError?.response?.status,
-              data: displayError?.response?.data,
+          trackAppLovinAdDisplay(currentAdRecordIdRef.current, token)
+            .then(() => console.log("[useAppLovinAds] ✅ Ad display tracked with backend"))
+            .catch((displayError) => {
+              console.error("[useAppLovinAds] ❌ Backend display tracking failed:", displayError?.message);
             });
-            // Continue with ad display even if backend tracking fails
-          }
-        } else {
-          console.warn("[useAppLovinAds] ⚠️ Cannot track display:", {
-            hasToken: !!token,
-            hasAdRecordId: !!currentAdRecordIdRef.current,
-          });
         }
 
-        // Show ad via plugin
+        // Show ad via plugin — now fires INSTANTLY after user clicks
         console.log(
           "[useAppLovinAds] 🔍 Step 2: Showing ad via native plugin...",
         );
@@ -870,5 +854,9 @@ export const useAppLovinAds = () => {
 
     // Ad consent (Google UMP) – use in Settings for "Manage ad choices" / "Privacy options"
     showPrivacyOptionsForm,
+
+    // Opens AppLovin Mediation Debugger — shows which networks are active/verified
+    // Only works on real device after APK build (not in browser)
+    showMediationDebugger: () => appLovinPlugin.showMediationDebugger(),
   };
 };

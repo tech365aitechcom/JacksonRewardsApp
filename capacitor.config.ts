@@ -4,6 +4,13 @@ const config: CapacitorConfig = {
   appId: 'com.jackson.app',
   appName: 'Jackson',
   webDir: 'out',
+  android: {
+    // Android 15 (API 35) enforces edge-to-edge — setDecorFitsSystemWindows is ignored.
+    // 'auto' tells Capacitor to apply native WebView margin adjustments on Android 15+
+    // so body content never slides under the status bar or nav bar.
+    // On older Android this has no effect (returns to normal behaviour).
+    adjustMarginsForEdgeToEdge: 'auto',
+  },
   server: {
     allowNavigation: [
       'http://94.249.151.176:4001',
@@ -12,6 +19,7 @@ const config: CapacitorConfig = {
        '*.googleapis.com',             // Google APIs
       '*.firebasejs.com',
       // '*.google.com'              // Firebase JS library
+      'challenges.cloudflare.com',    // Cloudflare Turnstile iframe — required or widget silently fails in Capacitor WebView
     ],
     cleartext: false
   },
@@ -30,8 +38,8 @@ const config: CapacitorConfig = {
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true,
+      splashFullScreen: false,
+      splashImmersive: false,
     },
     Geolocation: {
       // Android-specific location configuration

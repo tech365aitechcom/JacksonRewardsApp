@@ -560,6 +560,7 @@ export default function BiometricLoginButton({ onSuccess, onError }) {
             className="relative w-[58.1px] h-11 rounded-[12px] border border-gray-600 bg-black/10 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             type="button"
             aria-label="Sign in with Biometric"
+            suppressHydrationWarning
         >
             {isAuthenticating ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

@@ -148,7 +148,7 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                     </button>
                 </div>
 
-                <div className="flex items-center justify-between w-full mt-6">
+                {/* <div className="flex items-center justify-between w-full mt-6">
                     <div className="flex items-center gap-4">
                         <Image
                             width={24}
@@ -178,7 +178,7 @@ const Settings = ({ profile, themeLabel, notificationsEnabled, handleToggleNotif
                             priority
                         />
                     </button>
-                </div>
+                </div> */}
 
                 <div className="flex items-center justify-between w-full mt-6">
                     <div className="flex items-center gap-4">

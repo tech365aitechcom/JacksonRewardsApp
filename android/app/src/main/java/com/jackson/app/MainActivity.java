@@ -1,12 +1,18 @@
 package com.jackson.app;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import com.jackson.app.R;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowInsetsController;
 import android.webkit.WebView;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.core.view.WindowCompat;
 import com.adjust.sdk.Adjust;
 import com.getcapacitor.BridgeActivity;
 import com.google.android.ump.ConsentInformation;
@@ -24,6 +30,7 @@ public class MainActivity extends BridgeActivity {
         // Register custom plugins before bridge is created (BridgeActivity builds bridge in super.onCreate)
         registerPlugin(UmpConsentPlugin.class);
         registerPlugin(AdjustPlugin.class);
+        registerPlugin(SoftInputPlugin.class);
 
         // Hide the action bar before splash screen
         if (getSupportActionBar() != null) {
@@ -34,6 +41,27 @@ public class MainActivity extends BridgeActivity {
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
+
+        // Set window background to BLACK immediately so the window behind the Capacitor
+        // splash overlay is always black (never the green splash_bg).
+        getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+
+        // On Android 15+ (API 35) setStatusBarColor/setNavigationBarColor are no-ops
+        // because edge-to-edge is enforced. Use WindowInsetsController instead.
+        // values-v35/styles.xml also opts out of edge-to-edge for the launch theme
+        // so this ensures bars stay black once the theme switches to AppTheme.NoActionBar.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // API 35+ — use WindowInsetsController to set bar appearance
+            android.view.WindowInsetsController ctrl = getWindow().getInsetsController();
+            if (ctrl != null) {
+                ctrl.setSystemBarsAppearance(0,
+                    android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                    android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+            }
+        } else {
+            getWindow().setStatusBarColor(Color.BLACK);
+            getWindow().setNavigationBarColor(Color.BLACK);
+        }
 
         // Enable WebView debugging
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -75,14 +103,45 @@ public class MainActivity extends BridgeActivity {
             // Ignore if bridge is not available yet
         }
 
-        // Keep the Android 12+ system splash visible until Capacitor's own overlay
-        // has had a chance to attach to the WebView. Without this delay the system
-        // splash exits immediately, exposing a raw white/black frame before the
-        // Capacitor layer appears. 250 ms is enough for the plugin to initialise.
-        // Industry pattern: hold system splash → Capacitor overlay takes over seamlessly.
+        // adjustPan is set in AndroidManifest — the WebView never resizes for the keyboard,
+        // so the window background is never exposed. No keyboard-gap logic needed.
         final boolean[] keepSplash = {true};
         splashScreen.setKeepOnScreenCondition(() -> keepSplash[0]);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash[0] = false, 250);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            keepSplash[0] = false;
+            // Transition: immersive splash → edge-to-edge app (bars visible, transparent).
+            // This is the same pattern used by Instagram, WhatsApp, Spotify, etc.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // API 30+ — let system fit content within bars (not edge-to-edge).
+                // setOverlaysWebView(false) in JS handles status bar spacing;
+                // setDecorFitsSystemWindows(true) ensures nav bar spacing is also respected.
+                WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+                WindowInsetsController ctrl = getWindow().getInsetsController();
+                if (ctrl != null) {
+                    ctrl.show(android.view.WindowInsets.Type.systemBars());
+                    ctrl.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_DEFAULT);
+                    // 0 clears APPEARANCE_LIGHT_*: white icons for dark app background
+                    ctrl.setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                    ctrl.setSystemBarsAppearance(0, WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                }
+            } else {
+                // API 21-29 — default fitting, system handles bar spacing
+                getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                );
+            }
+            // Replace splash window background with solid black NOW (Capacitor splash
+            // still covers the screen at this point so the swap is invisible to the user).
+            // This ensures the keyboard gap NEVER reveals the splash image at any point.
+            getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            // On API 35+ setStatusBarColor/setNavigationBarColor are no-ops; bar
+            // appearance is already set via WindowInsetsController above (APPEARANCE_LIGHT_*
+            // cleared = white icons on dark background). For API < 35 set explicitly.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                getWindow().setStatusBarColor(Color.BLACK);
+                getWindow().setNavigationBarColor(Color.BLACK);
+            }
+        }, 400);
     }
 
     /** AdMob App ID from AndroidManifest (for debug logs). */
