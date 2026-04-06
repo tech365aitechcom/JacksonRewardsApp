@@ -130,7 +130,9 @@ export default function CashCoachPage() {
         goals.food !== 40 && goals.savings !== 40 &&
         goals.revenueGoal !== 40;
 
-    if (status === 'loading' && isInitialLoadRef.current && !hasCachedData) {
+    // Show loading only on very first load when no cached data exists
+    // Allow background refreshes to show cached data immediately
+    if (isInitialLoadRef.current && !hasCachedData && status === 'loading') {
         return (
             <div className="w-full h-screen bg-black flex flex-col justify-center items-center">
                 <div className="text-white text-center text-lg font-medium">

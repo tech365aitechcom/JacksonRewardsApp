@@ -1009,7 +1009,7 @@ export default function SpinWheel() {
                             ease: "easeInOut"
                         } : {}}
                     >
-                        {isLoading ? "🪙" : spins}
+                        {!spinsLoaded ? "🪙" : spins}
                     </motion.span>
                     <span
                         className="text-[#2C1810] text-xs font-bold tracking-wide"

@@ -626,11 +626,22 @@ export function AuthProvider({ children }) {
     if (!hasFreshSurveys && surveysStatus !== "loading") {
       dispatch(fetchSurveys({ token }));
     }
+
+    // Add cash coach data to immediate prefetching (Stage 1)
     if (!hasStatsData && statsStatus === "idle") {
       dispatch(fetchProfileStats({ token }));
     }
     if (user && user._id && !hasUserData && userDataStatus === "idle") {
       dispatch(fetchUserData({ userId: user._id, token }));
+    }
+    // Prefetch cash coach data immediately for better UX
+    const cashCoachState = store.getState().cashCoach || {};
+    const hasCashCoachData = cashCoachState.goals && Object.keys(cashCoachState.goals).length > 0 &&
+      cashCoachState.goals.salary !== 40 && cashCoachState.goals.rent !== 40 &&
+      cashCoachState.goals.food !== 40 && cashCoachState.goals.savings !== 40 &&
+      cashCoachState.goals.revenueGoal !== 40;
+    if ((cashCoachState.status || "idle") === "idle" && !hasCashCoachData) {
+      dispatch(fetchFinancialGoals(token));
     }
     if (userForGames && !hasGamesData) {
       dispatch(
@@ -702,7 +713,7 @@ export function AuthProvider({ children }) {
         fetchFullWalletTransactions({ token, page: 1, limit: 20, type: "all" }),
       );
       dispatch(fetchAccountOverview());
-      dispatch(fetchFinancialGoals(token));
+      // Cash coach moved to Stage 1 (immediate)
       dispatch(fetchVipTiers("US"));
       dispatch(fetchLocationHistory(token));
       dispatch(

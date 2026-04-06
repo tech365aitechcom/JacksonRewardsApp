@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SplashScreen as CapSplashScreen } from "@capacitor/splash-screen";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import Image from "next/image";
 
 const FADE_MS = 300;
@@ -38,7 +39,13 @@ export default function SplashScreen({ children }) {
 
     if (isNative) {
       // Hide the native Capacitor splash with a smooth fade.
-      CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS }).catch(() => {});
+      // Known Capacitor bug: SplashScreen.hide() resets Android status bar style.
+      // Re-apply white icons immediately after the splash finishes hiding.
+      CapSplashScreen.hide({ fadeOutDuration: NATIVE_FADE_MS })
+        .catch(() => {})
+        .finally(() => {
+          StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        });
       return;
     }
 

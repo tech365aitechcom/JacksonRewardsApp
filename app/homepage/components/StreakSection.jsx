@@ -24,7 +24,7 @@ const StreakSection = () => {
     const streakData = useMemo(() => {
         const hasStreak = currentStreak > 0;
         const dayText = hasStreak ? `Day ${currentStreak} of 30` : '30 Days Streak';
-        const statusText = hasStreak ? 'Keep it up! 🔥' : 'if you login daily';
+        const statusText = hasStreak ? 'Keep it up! 🔥' : 'if you play game daily';
         const titleText = hasStreak ? 'Great Progress!' : 'Exciting Rewards';
 
         return {

@@ -10,7 +10,7 @@ const RewardProgress = ({ stats }) => {
 
     const profile = useSelector((state) => state.profile.details);
     const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
-    const balance = profile?.wallet?.balance ?? profile?.data?.wallet?.balance ?? walletScreen?.wallet?.balance ?? 0;
+    const balance = walletScreen?.wallet?.balance ?? profile?.wallet?.balance ?? profile?.data?.wallet?.balance ?? 0;
 
     // Round to 2 decimal places to avoid floating-point display (e.g. 3266.9000000000015)
     const round2 = (n) => (typeof n === "number" && !Number.isNaN(n) ? Math.round(n * 100) / 100 : n);
