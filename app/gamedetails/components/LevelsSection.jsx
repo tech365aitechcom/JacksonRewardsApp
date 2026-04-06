@@ -577,27 +577,17 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     // Calculate dynamic line heights to connect from first card to last card
     const calculateLineHeight = (cardCount, isLocked = false) => {
         if (cardCount === 0) return 0;
-        if (cardCount === 1) return 75; // Single card height
+        if (cardCount === 1) return 120; // Single card height + buffer
 
-        // Each card is 75px height + 16px gap between cards (gap-4)
-        const cardHeight = 75;
+        // More generous calculation to account for variable card heights
+        // Assume average card height of ~100px + 16px gap = 116px between centers
+        const estimatedCardHeight = 100;
         const gapBetweenCards = 16;
+        const distanceBetweenCircles = (cardCount - 1) * (estimatedCardHeight + gapBetweenCards);
 
-        // Calculate height to connect ALL icons from first to last
-        // Line starts at top-6 (24px) and needs to reach the last circle
-        // Distance between circle centers: cardHeight (75px) + gapBetweenCards (16px) = 91px
-        // For cardCount circles, distance from first to last: (cardCount - 1) × 91px
-        const distanceBetweenCircles = (cardCount - 1) * (cardHeight + gapBetweenCards);
-
-        // For locked tasks: add extra buffer to ensure line extends well past the last circle
-        // For active/unlocked tasks: use smaller buffer for cleaner appearance
-        if (isLocked) {
-            const baseHeight = distanceBetweenCircles + cardHeight + 100; // Large buffer for locked tasks
-            return baseHeight;
-        } else {
-            const baseHeight = distanceBetweenCircles + (cardHeight); // Smaller buffer for active tasks
-            return baseHeight;
-        }
+        // Add generous buffer to ensure line extends well past the last circle
+        const buffer = isLocked ? 150 : 100; // Extra buffer for locked tasks
+        return distanceBetweenCircles + estimatedCardHeight + buffer;
     };
 
     const activeLineHeight = calculateLineHeight(activeLevels.length, false);

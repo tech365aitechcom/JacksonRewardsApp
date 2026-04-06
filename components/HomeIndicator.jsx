@@ -205,8 +205,8 @@ export const HomeIndicator = ({ activeTab }) => {
       aria-label="Main navigation"
     >
       <div className="w-full">
-        <div className="w-full h-[100px] relative">
-          <div className="absolute bottom-0 left-0 right-0 bg-black w-full h-[78px]"></div>
+        <div className="w-full h-[80] relative">
+          <div className="absolute bottom-0 left-0 right-0 bg-black w-full h-[62]"></div>
           <div className="absolute bottom-0 left-0 right-0 h-[78px] flex items-center justify-between px-4">
             <div className="flex items-center justify-between w-full relative">
 

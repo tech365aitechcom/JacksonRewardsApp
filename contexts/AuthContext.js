@@ -22,6 +22,7 @@ import {
   getCashbackOffers,
   getShoppingOffers,
   getBitlabsSurveys,
+  getAllNonGameOffers,
 } from "@/lib/api";
 import { setDealsCache, clearDealsCache } from "@/lib/dealsCache";
 import { getDeviceMetadata, clearVerisoulSessionId } from "@/lib/deviceUtils";
@@ -690,7 +691,6 @@ export function AuthProvider({ children }) {
       const skipRoutes = [
         "/Ticket",
         "/AchieveGoals",
-        "/cash-coach",
         "/contact-us",
         "/privacy-policy",
         "/reset-password",
@@ -763,57 +763,12 @@ export function AuthProvider({ children }) {
       }
     }, 9000);
 
-    // ── STAGE 7 (30 s): Deals page pre-warm (Cashback + Shopping + Surveys) ────
-    const dealsPrewarmTimer = setTimeout(async () => {
-      try {
-        const defaultParams = {
-          category: "all",
-          page: 1,
-          limit: 6,
-          useAdminConfig: "true",
-        };
-        const [cashbackRes, shoppingRes, surveysRes] = await Promise.all([
-          getCashbackOffers(defaultParams, token),
-          getShoppingOffers(defaultParams, token),
-          getBitlabsSurveys(defaultParams, token),
-        ]);
-
-        let cbOffers = [];
-        if (cashbackRes?.success && cashbackRes.data) {
-          cbOffers = Array.isArray(cashbackRes.data.offers)
-            ? cashbackRes.data.offers
-            : cashbackRes.data.categorized?.cashback || [];
-        }
-
-        let shOffers = [];
-        if (shoppingRes?.success && shoppingRes.data) {
-          shOffers = Array.isArray(shoppingRes.data.offers)
-            ? shoppingRes.data.offers
-            : shoppingRes.data.categorized?.shopping || [];
-        }
-
-        let svOffers = [];
-        if (surveysRes?.success && Array.isArray(surveysRes.data?.surveys)) {
-          svOffers = surveysRes.data.surveys;
-        }
-
-        setDealsCache({
-          cashbackOffers: cbOffers,
-          shoppingOffers: shOffers.slice(0, 6),
-          surveyOffers: svOffers,
-        });
-      } catch (_e) {
-        // Silent — deals pre-warm is best-effort
-      }
-    }, 30000);
-
     return () => {
       clearTimeout(dailyTimer);
       clearTimeout(walletTxTimer);
       clearTimeout(mostPlayedScreenTimer);
       clearTimeout(secondaryGamesTimer);
       clearTimeout(taskListTimer);
-      clearTimeout(dealsPrewarmTimer);
     };
     // Use user?._id (primitive string) instead of the full user object so this
     // effect only re-runs when the logged-in account actually changes, not on
@@ -1335,6 +1290,29 @@ export function AuthProvider({ children }) {
           dispatch(fetchSurveys({ token })),
           // VIP status (VipBanner)
           dispatch(fetchVipStatus(token)),
+          // Deals data (Deals page) - fetch immediately after login/signup
+          (async () => {
+            try {
+              const [nonGameRes, surveyRes] = await Promise.all([
+                getAllNonGameOffers({}, token),
+                getBitlabsSurveys({ page: 1 }, token),
+              ]);
+
+              const nonGameOffers =
+                nonGameRes?.success && Array.isArray(nonGameRes.data)
+                  ? nonGameRes.data
+                  : [];
+              const surveyOffers =
+                surveyRes?.success && Array.isArray(surveyRes.data)
+                  ? surveyRes.data
+                  : [];
+
+              const combined = [...nonGameOffers, ...surveyOffers];
+              setDealsCache({ allOffers: combined });
+            } catch (_e) {
+              // Silent — deals fetch is best-effort
+            }
+          })(),
           // User game data (useHomepageData / inProgressGames)
           ...(user && user._id
             ? [
@@ -2424,7 +2402,9 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("adjust_nongame_offer_opened");
 
       // Clear sessionStorage — session-scoped data must not persist for next login
-      try { sessionStorage.clear(); } catch (_) {}
+      try {
+        sessionStorage.clear();
+      } catch (_) {}
 
       // Note: biometricToken, biometricUser, biometric_username, biometric_password are preserved
       // for biometric login functionality

@@ -134,7 +134,7 @@ const Leadership = () => {
                 </h3>
                 <div className="flex items-center justify-center w-full h-26">
                     <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">
-                        No games available now
+                        No games available at the moment
                     </p>
                 </div>
             </section>

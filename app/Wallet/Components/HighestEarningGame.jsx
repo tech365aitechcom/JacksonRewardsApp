@@ -155,7 +155,7 @@ export const HighestEarningGame = () => {
 
         >
             <section className="flex flex-col w-full max-w-[335px] justify-center items-start gap-2.5 mx-auto ">
-                <h3 className="font-semibold text-[#F4F3FC] text-[16px] opacity-[100%]">Highest Earning Games</h3>
+                <h3 className="font-semibold text-[#F4F3FC]  text-start text-[16px] opacity-[100%]">Highest Earning Games</h3>
                 <div
                     className="flex items-center gap-[10px] w-full overflow-x-auto pb-0 scrollbar-hide"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -229,11 +229,9 @@ export const HighestEarningGame = () => {
                             </article>
                         )) : (
                             <div className="w-full flex flex-col items-center justify-center py-6 px-4">
-                                <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2 text-center">
-                                    Gaming - Highest Earning
-                                </h3>
+
                                 <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">
-                                    No games available
+                                    No games available at the moment
                                 </p>
                             </div>
                         )}

@@ -60,7 +60,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
                     // counter seeded from server at login — survives reinstalls
                     onNonGamingOfferComplete(incrementAndGet("nongameOffer"));
                 }
-            } catch {}
+            } catch { }
         };
 
         const handleFocus = () => { checkOfferReturn(); handleRefreshIfStale(); };
@@ -95,7 +95,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
             // Flag that an offer was opened — completion event fires when user returns
             try {
                 localStorage.setItem("adjust_nongame_offer_opened", offer.id || offer.externalId || "1");
-            } catch {}
+            } catch { }
             window.open(clickUrl, '_blank', 'noopener,noreferrer');
         }
     };
@@ -204,7 +204,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
         <div className={`w-[335px] mx-auto flex flex-col items-center ${nonGameOffers?.length ? 'h-[275px]' : 'min-h-20'}`}>
             <div className="w-full h-[24px] px-4 mb-2.5 mr-4">
                 <h2 className="font-['Poppins',Helvetica] text-[16px] font-semibold leading-normal tracking-[0] text-[#FFFFFF]">
-                    Non- Gaming Offers
+                    Non Gaming Offers
                 </h2>
             </div>
 

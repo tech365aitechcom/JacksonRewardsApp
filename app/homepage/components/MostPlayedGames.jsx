@@ -279,8 +279,8 @@ const MostPlayedGames = () => {
             ) : (
                 <div className="flex h-[110px] min-w-0 w-full items-center justify-center py-4">
                     <div className="flex flex-col items-center justify-center">
-                        <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">Gaming - Most Played</h3>
-                        <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center">No games available</p>
+                        {/* <h3 className="[font-family:'Poppins',Helvetica] font-semibold text-white text-lg mb-2">Gaming - Most Played</h3> */}
+                        <p className="[font-family:'Poppins',Helvetica] font-normal text-gray-400 text-sm text-center"> No games available at the moment</p>
                     </div>
                 </div>
             )}

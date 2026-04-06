@@ -32,20 +32,89 @@ export default function CashCoachPage() {
     const dispatch = useDispatch();
     const router = useRouter();
     const { token } = useAuth();
-    const { status, error } = useSelector((state) => state.cashCoach);
+    const { status, error, goals } = useSelector((state) => state.cashCoach);
 
     // Audio ref for coin sound effect
     const audioRef = useRef(null);
+
+    // Track if this is the initial load to avoid showing loader on background refreshes
+    const isInitialLoadRef = useRef(true);
+    // Track if component has mounted to handle re-mounts correctly
+    const hasMountedRef = useRef(false);
 
     // Get wallet screen data from Redux store for coin balance
     const { walletScreen } = useSelector((state) => state.walletTransactions);
     const coinBalance = walletScreen?.wallet?.balance || 0;
 
     useEffect(() => {
-        if (token && status === 'idle') {
-            dispatch(fetchFinancialGoals(token));
+        if (!token) {
+            hasMountedRef.current = false; // Reset when user logs out
+            return;
         }
-    }, [dispatch, token, status]);
+
+        // First mount of this component instance
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true;
+
+            const checkCacheAndLoad = () => {
+                // Check if we have cached data from previous sessions
+                const hasCachedData = goals && Object.keys(goals).length > 0 &&
+                    goals.salary !== 40 && goals.rent !== 40 &&
+                    goals.food !== 40 && goals.savings !== 40 &&
+                    goals.revenueGoal !== 40;
+
+                if (status === 'idle' && !hasCachedData) {
+                    // No data loaded yet - fetch and show loader
+                    dispatch(fetchFinancialGoals(token));
+                } else if (status === 'succeeded' || hasCachedData) {
+                    // Data already in Redux from previous session or cached - mark initial load done, then refresh
+                    isInitialLoadRef.current = false;
+                    dispatch(fetchFinancialGoals(token)); // Refresh in background
+                }
+            };
+
+            // Check immediately
+            const hasImmediateCache = goals && Object.keys(goals).length > 0 &&
+                goals.salary !== 40 && goals.rent !== 40 &&
+                goals.food !== 40 && goals.savings !== 40 &&
+                goals.revenueGoal !== 40;
+
+            if (hasImmediateCache || status === 'succeeded') {
+                checkCacheAndLoad();
+            } else {
+                // Wait up to 3 seconds for AuthContext prefetching to complete
+                const timeoutId = setTimeout(() => {
+                    checkCacheAndLoad();
+                }, 3000);
+
+                // Also check every 200ms for cache availability
+                const intervalId = setInterval(() => {
+                    const hasCacheNow = goals && Object.keys(goals).length > 0 &&
+                        goals.salary !== 40 && goals.rent !== 40 &&
+                        goals.food !== 40 && goals.savings !== 40 &&
+                        goals.revenueGoal !== 40;
+                    if (hasCacheNow || status === 'succeeded') {
+                        clearTimeout(timeoutId);
+                        clearInterval(intervalId);
+                        checkCacheAndLoad();
+                    }
+                }, 200);
+
+                // Cleanup
+                return () => {
+                    clearTimeout(timeoutId);
+                    clearInterval(intervalId);
+                };
+            }
+        }
+    }, [token, dispatch, status, goals]);
+
+    // Mark initial load as complete when status transitions to 'succeeded'
+    useEffect(() => {
+        if (status === 'succeeded') {
+            isInitialLoadRef.current = false;
+        }
+    }, [status]);
 
     // Initialize audio element when component mounts
     useEffect(() => {
@@ -55,7 +124,13 @@ export default function CashCoachPage() {
         }
     }, []);
 
-    if (status === 'loading') {
+    // Check if we have cached data from previous sessions (not default values)
+    const hasCachedData = goals && Object.keys(goals).length > 0 &&
+        goals.salary !== 40 && goals.rent !== 40 &&
+        goals.food !== 40 && goals.savings !== 40 &&
+        goals.revenueGoal !== 40;
+
+    if (status === 'loading' && isInitialLoadRef.current && !hasCachedData) {
         return (
             <div className="w-full h-screen bg-black flex flex-col justify-center items-center">
                 <div className="text-white text-center text-lg font-medium">
@@ -84,7 +159,7 @@ export default function CashCoachPage() {
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
                         // Retry once silently after autoplay prevention
-                        audioRef.current?.play().catch(() => {});
+                        audioRef.current?.play().catch(() => { });
                     });
                 }
             }
