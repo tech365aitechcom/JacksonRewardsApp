@@ -636,9 +636,13 @@ export function AuthProvider({ children }) {
     }
     // Prefetch cash coach data immediately for better UX
     const cashCoachState = store.getState().cashCoach || {};
-    const hasCashCoachData = cashCoachState.goals && Object.keys(cashCoachState.goals).length > 0 &&
-      cashCoachState.goals.salary !== 40 && cashCoachState.goals.rent !== 40 &&
-      cashCoachState.goals.food !== 40 && cashCoachState.goals.savings !== 40 &&
+    const hasCashCoachData =
+      cashCoachState.goals &&
+      Object.keys(cashCoachState.goals).length > 0 &&
+      cashCoachState.goals.salary !== 40 &&
+      cashCoachState.goals.rent !== 40 &&
+      cashCoachState.goals.food !== 40 &&
+      cashCoachState.goals.savings !== 40 &&
       cashCoachState.goals.revenueGoal !== 40;
     if ((cashCoachState.status || "idle") === "idle" && !hasCashCoachData) {
       dispatch(fetchFinancialGoals(token));
@@ -2293,27 +2297,12 @@ export function AuthProvider({ children }) {
       console.error("❌ Failed to purge persistor:", err);
     }
 
-    // Clear biometric backup keys from Capacitor Preferences (not covered by persistor.purge)
-    // These are stored directly via Preferences.set() in biometricAuth.js, not as Redux persist keys
-    try {
-      await Preferences.remove({ key: "biometric_username_backup" });
-      await Preferences.remove({ key: "biometric_password_backup" });
-      console.log(
-        "✅ [AuthContext] Cleared biometric backup keys from Capacitor Preferences",
-      );
-    } catch (err) {
-      console.error(
-        "❌ Failed to clear Capacitor Preferences biometric backup:",
-        err,
-      );
-    }
-
     setUser(null);
     setToken(null);
 
-    // DON'T delete biometric credentials on signout
-    // This allows users to use biometric login after signout without needing to login manually first
-    // Biometric credentials are stored in native secure storage and remain available
+    // DON'T delete biometric credentials on signout (including backup keys in Preferences)
+    // Biometric credentials from native secure storage and Preferences backup remain available
+    // This allows users to use Face ID login after logout without needing manual login first
 
     try {
       // Clear authentication data

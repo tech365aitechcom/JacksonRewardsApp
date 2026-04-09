@@ -305,27 +305,38 @@ export const useAppLovinAds = () => {
         // FIX 1: Preload first ad immediately after SDK init (fire and forget)
         // Big apps (TikTok, Candy Crush, etc.) always preload on launch so the
         // ad is cached and shows INSTANTLY when user clicks — no spinner, no wait.
-        console.log("[useAppLovinAds] 🔍 Step 5: Preloading first ad in background...");
+        console.log(
+          "[useAppLovinAds] 🔍 Step 5: Preloading first ad in background...",
+        );
         const _preloadPlatformInfo = appLovinPlugin.getPlatformInfo();
         if (token) {
-          trackAppLovinAdLoad({
-            adUnitId: "rewarded",
-            placement: "rewarded",
-            platform: _preloadPlatformInfo.platform,
-            deviceType: _preloadPlatformInfo.deviceType,
-            appVersion: "1.0.0",
-            sdkVersion: "11.0.0",
-          }, token)
+          trackAppLovinAdLoad(
+            {
+              adUnitId: "rewarded",
+              placement: "rewarded",
+              platform: _preloadPlatformInfo.platform,
+              deviceType: _preloadPlatformInfo.deviceType,
+              appVersion: "1.0.0",
+              sdkVersion: "11.0.0",
+            },
+            token,
+          )
             .then((resp) => {
               if (resp?.success && resp?.data?.adRecordId) {
                 currentAdRecordIdRef.current = resp.data.adRecordId;
-                console.log("[useAppLovinAds] ✅ Preload ad record set:", currentAdRecordIdRef.current);
+                console.log(
+                  "[useAppLovinAds] ✅ Preload ad record set:",
+                  currentAdRecordIdRef.current,
+                );
               }
             })
             .catch(() => {});
         }
         appLovinPlugin.loadAd().catch((err) => {
-          console.warn("[useAppLovinAds] ⚠️ Background preload failed:", err?.message);
+          console.warn(
+            "[useAppLovinAds] ⚠️ Background preload failed:",
+            err?.message,
+          );
         });
         console.log(
           "[useAppLovinAds] ✅ Initialization complete — ad preloading in background",
@@ -408,11 +419,17 @@ export const useAppLovinAds = () => {
           .then((loadResponse) => {
             if (loadResponse?.success && loadResponse?.data?.adRecordId) {
               currentAdRecordIdRef.current = loadResponse.data.adRecordId;
-              console.log("[useAppLovinAds] ✅ Ad record created:", currentAdRecordIdRef.current);
+              console.log(
+                "[useAppLovinAds] ✅ Ad record created:",
+                currentAdRecordIdRef.current,
+              );
             }
           })
           .catch((backendError) => {
-            console.error("[useAppLovinAds] ❌ Backend load tracking failed:", backendError?.message);
+            console.error(
+              "[useAppLovinAds] ❌ Backend load tracking failed:",
+              backendError?.message,
+            );
           });
       } else {
         console.warn(
@@ -423,7 +440,9 @@ export const useAppLovinAds = () => {
       // FIX 3: If the background preload already loaded an ad, skip the native load entirely
       // This prevents a double-load glitch when user clicks before preload finishes
       if (appLovinPlugin.isAdReady()) {
-        console.log("[useAppLovinAds] ✅ Ad already preloaded and ready — skipping native load");
+        console.log(
+          "[useAppLovinAds] ✅ Ad already preloaded and ready — skipping native load",
+        );
         setIsAdReady(true);
         return true;
       }
@@ -548,9 +567,16 @@ export const useAppLovinAds = () => {
         // Before: backend call added 300ms–2s delay between user click and ad appearing
         if (token && currentAdRecordIdRef.current) {
           trackAppLovinAdDisplay(currentAdRecordIdRef.current, token)
-            .then(() => console.log("[useAppLovinAds] ✅ Ad display tracked with backend"))
+            .then(() =>
+              console.log(
+                "[useAppLovinAds] ✅ Ad display tracked with backend",
+              ),
+            )
             .catch((displayError) => {
-              console.error("[useAppLovinAds] ❌ Backend display tracking failed:", displayError?.message);
+              console.error(
+                "[useAppLovinAds] ❌ Backend display tracking failed:",
+                displayError?.message,
+              );
             });
         }
 
