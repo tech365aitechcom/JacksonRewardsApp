@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useVPNDetector } from "@/hooks/useVPNDetector";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Compute the destination route SYNCHRONOUSLY from localStorage.
@@ -108,6 +109,13 @@ function computeDestination() {
 
 export default function AppLoader() {
   const router = useRouter();
+
+  // VPN detection - blocks app if VPN is detected
+  useVPNDetector({
+    checkOnMount: true,
+    checkOnAppResume: true,
+    blockOnDetection: true,
+  });
 
   // destination is computed synchronously on first render —
   // zero async gap means no blank-frame flash on background resume.

@@ -95,6 +95,13 @@ const config: CapacitorConfig = {
         biometricPromptNegativeButtonText: "Cancel"
       }
     },
+    VpnDetector: {
+      // Android VPN detection configuration
+      android: {
+        // Android doesn't need special permissions to check VPN status
+        // But the plugin needs to be registered
+      }
+    },
   },
 };
 

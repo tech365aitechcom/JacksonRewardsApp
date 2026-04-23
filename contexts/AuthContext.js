@@ -433,10 +433,50 @@ export function AuthProvider({ children }) {
                       if (verisoulSessionId)
                         sessionAuthData.session_id = verisoulSessionId;
 
-                      const fraudResponse = await authenticateFraudSession(
-                        sessionAuthData,
-                        storedToken,
-                      );
+                      let fraudResponse;
+                      try {
+                        fraudResponse = await authenticateFraudSession(
+                          sessionAuthData,
+                          storedToken,
+                        );
+                        console.log(
+                          "[FraudDebug] loadSession - fraudResponse success:",
+                          fraudResponse,
+                        );
+                      } catch (error) {
+                        console.log(
+                          "[FraudDebug] loadSession - error caught:",
+                          error?.message,
+                        );
+                        // The ApiError has .body property
+                        const errorData = error?.body;
+                        console.log(
+                          "[FraudDebug] loadSession - error.body:",
+                          errorData,
+                        );
+                        if (errorData?.blocked === true) {
+                          fraudResponse = errorData;
+                          console.log(
+                            "[FraudDebug] loadSession - BLOCKED! reason:",
+                            fraudResponse?.reason,
+                          );
+                        } else {
+                          console.error(
+                            "❌ [AuthContext] Fraud session auth error:",
+                            error?.message,
+                          );
+                        }
+                      }
+
+                      if (fraudResponse?.blocked === true) {
+                        console.error(
+                          "🔒 [AuthContext] VPN/Proxy detected -Blocking user access:",
+                          fraudResponse.reason,
+                        );
+                        await handleVpnBlocked(fraudResponse, storedToken);
+                        return;
+                      }
+
                       if (fraudResponse?.success && fraudResponse?.sessionId) {
                         console.log(
                           "[FraudDebug] loadSession re-auth – storing backend sessionId:",
@@ -493,10 +533,33 @@ export function AuthProvider({ children }) {
                   if (verisoulSessionId)
                     sessionAuthData.session_id = verisoulSessionId;
 
-                  const fraudResponse = await authenticateFraudSession(
-                    sessionAuthData,
-                    storedToken,
-                  );
+                  let fraudResponse;
+                  try {
+                    fraudResponse = await authenticateFraudSession(
+                      sessionAuthData,
+                      storedToken,
+                    );
+                  } catch (error) {
+                    const errorData = error?.body || error?.responseData;
+                    if (errorData?.blocked === true) {
+                      fraudResponse = errorData;
+                    } else {
+                      console.error(
+                        "❌ [AuthContext] Fraud session error:",
+                        error?.message,
+                      );
+                    }
+                  }
+
+                  if (fraudResponse?.blocked === true) {
+                    console.error(
+                      "🔒 [AuthContext] VPN/Proxy detected (new session) - blocking user access:",
+                      fraudResponse.reason,
+                    );
+                    await handleVpnBlocked(fraudResponse, storedToken);
+                    return;
+                  }
+
                   if (fraudResponse?.success && fraudResponse?.sessionId) {
                     console.log(
                       "[FraudDebug] loadSession new session – storing backend sessionId:",
@@ -915,7 +978,26 @@ export function AuthProvider({ children }) {
                   if (verisoulSessionId)
                     sessionAuthData.session_id = verisoulSessionId;
 
-                  await authenticateFraudSession(sessionAuthData, token);
+                  let focusFraudResponse;
+                  try {
+                    focusFraudResponse = await authenticateFraudSession(
+                      sessionAuthData,
+                      token,
+                    );
+                  } catch (error) {
+                    const errorData = error?.body || error?.responseData;
+                    if (errorData?.blocked === true) {
+                      focusFraudResponse = errorData;
+                    }
+                  }
+                  if (focusFraudResponse?.blocked === true) {
+                    console.error(
+                      "🔒 [AuthContext] VPN/Proxy detected (handleFocus) - blocking user:",
+                      focusFraudResponse.reason,
+                    );
+                    await handleVpnBlocked(focusFraudResponse, token);
+                    return;
+                  }
                   console.log(
                     "[FraudDebug] handleFocus re-auth – authenticate called (new backend sessionId in response if success)",
                   );
@@ -957,6 +1039,20 @@ export function AuthProvider({ children }) {
 
   // Gatekeeper logic for routing (No changes needed here)
   useEffect(() => {
+    // 🔒 Check if user was blocked previously due to VPN - redirect to blocked page
+    if (typeof window !== "undefined") {
+      const vpnBlocked = localStorage.getItem("vpn_blocked");
+      const vpnReason = localStorage.getItem("vpn_reason");
+      if (vpnBlocked === "true" && !pathname.startsWith("/blocked")) {
+        console.log(
+          "🔒 [AuthContext] VPN blocked - redirecting to blocked page",
+        );
+        const reason = vpnReason || "vpn_detected";
+        router.replace(`/blocked?reason=${reason}`);
+        return;
+      }
+    }
+
     if (isLoading) return;
     if (pathname === "/") return;
 
@@ -1238,10 +1334,43 @@ export function AuthProvider({ children }) {
             sessionAuthData.metadata.signupDate =
               user.createdAt || user.created_at;
           }
-          const fraudResponse = await authenticateFraudSession(
-            sessionAuthData,
-            token,
-          );
+          let fraudResponse;
+          try {
+            fraudResponse = await authenticateFraudSession(
+              sessionAuthData,
+              token,
+            );
+            console.log(
+              "[FraudDebug] login - fraudResponse success:",
+              fraudResponse,
+            );
+          } catch (error) {
+            console.log("[FraudDebug] login - error caught:", error?.message);
+            const errorData = error?.body;
+            console.log("[FraudDebug] login - error.body:", errorData);
+            if (errorData?.blocked === true) {
+              fraudResponse = errorData;
+              console.log(
+                "[FraudDebug] login - BLOCKED! reason:",
+                fraudResponse?.reason,
+              );
+            } else {
+              console.error(
+                "❌ [AuthContext] Fraud session error:",
+                error?.message,
+              );
+            }
+          }
+
+          if (fraudResponse?.blocked === true) {
+            console.error(
+              "🔒 [AuthContext] VPN/Proxy detected (login) - blocking user:",
+              fraudResponse.reason,
+            );
+            await handleVpnBlocked(fraudResponse, token);
+            return;
+          }
+
           if (fraudResponse?.success && fraudResponse?.sessionId) {
             localStorage.setItem(
               "verisoul_session_id",
@@ -1251,7 +1380,7 @@ export function AuthProvider({ children }) {
         } catch (error) {
           console.error(
             "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
-            error,
+            error?.message,
           );
         }
       })();
@@ -2243,6 +2372,48 @@ export function AuthProvider({ children }) {
       console.error("❌ [AuthContext] Signup error:", error);
       return { ok: false, error: error.body || { error: error.message } };
     }
+  };
+
+  const handleVpnBlocked = async (fraudResponse, authToken) => {
+    console.error(
+      "🔒 [AuthContext] VPN/Proxy blocked - signing out user:",
+      fraudResponse.reason,
+    );
+
+    const reason = fraudResponse?.reason || "vpn_detected";
+    const message =
+      reason === "vpn_detected"
+        ? "VPN connections are not allowed. Please disable your VPN and try again."
+        : reason === "proxy_detected"
+          ? "Proxy connections are not allowed. Please disable your proxy and try again."
+          : reason === "tor_detected"
+            ? "Tor connections are not allowed. Please disable Tor and try again."
+            : "High risk detected. Please contact support.";
+
+    try {
+      const storedSessionId = localStorage.getItem("verisoul_session_id");
+      if (storedSessionId && authToken) {
+        await unauthenticateFraudSession(storedSessionId, authToken).catch(
+          () => {},
+        );
+      }
+    } catch (e) {}
+
+    clearVerisoulSessionId();
+    localStorage.removeItem("verisoul_session_id");
+    localStorage.clear();
+
+    dispatch(clearProfile());
+    dispatch(clearGames());
+    dispatch(clearWalletTransactions());
+    dispatch(clearAccountOverview());
+
+    setToken(null);
+    setUser(null);
+
+    router.replace(
+      `/blocked?reason=${reason}&message=${encodeURIComponent(message)}`,
+    );
   };
 
   // MODIFIED: signOut clears the profile state in the Redux store but KEEPS biometric credentials

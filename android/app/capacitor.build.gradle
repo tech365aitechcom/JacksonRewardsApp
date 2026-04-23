@@ -25,6 +25,7 @@ dependencies {
     implementation project(':capgo-capacitor-navigation-bar')
     implementation project(':capgo-native-purchases')
     implementation project(':capacitor-native-biometric')
+    implementation project(':capacitor-vpn-detector')
     implementation "com.applovin:applovin-sdk:13.2.0"
 }
 
