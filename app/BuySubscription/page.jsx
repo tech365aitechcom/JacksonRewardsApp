@@ -94,6 +94,36 @@ const SparkleSmallIcon = ({ className, color }) => (
     />
   </svg>
 )
+const XPMultiplierIcon = ({ className, color }) => (
+  <svg
+    className={className}
+    viewBox='0 0 40 40'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+  >
+    <circle cx='20' cy='20' r='18' fill={color} opacity='0.15' />
+    <circle cx='20' cy='20' r='18' stroke={color} strokeWidth='2' />
+    <text
+      x='50%'
+      y='50%'
+      dominantBaseline='central'
+      textAnchor='middle'
+      fill={color}
+      fontSize='14'
+      fontWeight='bold'
+      fontFamily='Poppins, sans-serif'
+    >
+      x
+    </text>
+    <path
+      d='M14 16L26 16M26 16L22 12M26 16L22 20'
+      stroke={color}
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  </svg>
+)
 export default function BuySubscription() {
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [selectedTier, setSelectedTier] = useState('gold')
@@ -171,7 +201,12 @@ export default function BuySubscription() {
       (currentBackendTier?.benefits || []).map((b, index) => {
         const icons = currentTierData?.features || []
         const iconSrc = icons.length ? icons[index % icons.length].icon : ''
-        return { title: b.title, icon: iconSrc }
+        const isMultiplier = b.id === 'xp_multiplier'
+        return {
+          title: b.title,
+          icon: iconSrc,
+          isMultiplier,
+        }
       }),
     [currentBackendTier, currentTierData],
   )
@@ -746,11 +781,18 @@ export default function BuySubscription() {
                 key={index}
                 className='inline-flex items-center gap-[15px] relative flex-[0_0_auto]'
               >
-                <img
-                  className='relative w-[40px] h-[40px] aspect-[1] object-cover'
-                  alt=''
-                  src={feature.icon}
-                />
+                {feature.isMultiplier ? (
+                  <XPMultiplierIcon
+                    color={currentTierData?.iconColor || '#fff'}
+                    className='w-[40px] h-[40px]'
+                  />
+                ) : (
+                  <img
+                    className='relative w-[40px] h-[40px] aspect-[1] object-cover'
+                    alt=''
+                    src={feature.icon}
+                  />
+                )}
                 <div className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-[#F4F3FC] opacity-[100%] text-[20px] tracking-[0] leading-[normal]">
                   {feature.title || `Feature ${index + 1}`}
                 </div>
