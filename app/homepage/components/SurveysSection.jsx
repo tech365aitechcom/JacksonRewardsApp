@@ -199,7 +199,7 @@ const SurveysSection = () => {
                     const xp = survey.userRewardXP ?? 0;
 
                     // Get survey title
-                    const surveyTitle = survey.title || "Survey";
+                    // const surveyTitle = survey.title || "Survey";
 
                     // Get estimated time in user-friendly format
                     const estimatedTime = survey.estimatedTime || survey.reward?.estimatedTime || 0;
@@ -243,7 +243,7 @@ const SurveysSection = () => {
                                         <img
                                             className="w-full h-full object-contain rounded-t-[10px]"
                                             src={surveyImage}
-                                            alt={surveyTitle}
+                                            alt={survey.title || "Survey"}
                                             style={{ imageRendering: 'crisp-edges' }}
                                             loading="eager"
                                             decoding="async"
@@ -258,7 +258,7 @@ const SurveysSection = () => {
                                     {/* Bottom gradient section - increased height by 2px: h-[52px] - faded to differentiate from Earn button */}
                                     <div className="absolute bottom-0 h-[63px] w-full bg-gradient-to-b from-[#9EADF7]/50 to-[#716AE7]/50 rounded-b-[6px] flex flex-col items-center justify-center py-1 backdrop-blur-sm">
                                         <div className="text-center font-['Poppins',Helvetica] text-base font-semibold leading-4 tracking-[0] text-white px-2 line-clamp-2 overflow-hidden text-ellipsis break-words w-full">
-                                            {formatTitle(surveyTitle)}
+                                            {/* {formatTitle(survey.title || "Survey")} */}
                                         </div>
                                         {estimatedTime > 0 && (
                                             <div className="text-center font-['Poppins',Helvetica] text-[11px] font-medium leading-3 tracking-[0] text-white/90 mt-0.5">

@@ -319,9 +319,11 @@ const DealsPage = () => {
 
                                 <div className="flex flex-col justify-between flex-1">
                                     <div>
-                                        <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-[16px] leading-[16px] tracking-[0] text-white mb-1">
-                                            {deal.title}
-                                        </h2>
+                                        {deal.type !== "survey" && (
+                                            <h2 className="[font-family:'Poppins',Helvetica] font-semibold text-[16px] leading-[16px] tracking-[0] text-white mb-1">
+                                                {deal.title}
+                                            </h2>
+                                        )}
                                         <p className="[font-family:'Poppins',Helvetica] font-normal text-[13px] leading-[13px] tracking-[0] text-[#D4D4D4]">
                                             {deal.description}
                                         </p>
