@@ -268,11 +268,11 @@ const MostPlayedGames = () => {
                             <div className="relative w-[72px] [font-family:'Poppins',Helvetica] font-medium text-white text-xs text-center tracking-[0] leading-4 overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
                                 {(game.displayTitle || game.details?.name || game.title || 'Game').split(' - ')[0]}
                             </div>
-                            <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
+                            {/* <div className="flex items-center justify-center gap-1 text-[10px] text-white/80">
                                 <span>{game.displayAmount ?? '$0'}</span>
                                 <span>·</span>
                                 <span>{game.displayXP ?? 0} XP</span>
-                            </div>
+                            </div> */}
                         </div>
                     ))}
                 </div>

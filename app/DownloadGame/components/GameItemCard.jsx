@@ -121,15 +121,17 @@ const GameItemCard = ({
         return numValue.toLocaleString();
     };
 
-    // Coins: prefer API rewards (unchanged). XP: total from tasks (getTotalPromisedPoints)
-    const rawCoins = game.rewards?.coins ?? game.rewards?.gold ?? game.amount ?? game.score ?? 0;
-    const coinsNum = typeof rawCoins === 'number' ? rawCoins : (typeof rawCoins === 'string' ? parseFloat(String(rawCoins).replace(/[$,]/g, '')) || 0 : 0);
-    const displayCoins = Number.isFinite(coinsNum) ? (coinsNum === Math.round(coinsNum) ? String(Math.round(coinsNum)) : (Math.round(coinsNum * 100) / 100).toString()) : "0";
+    // Coins: prefer backend totalCoins, then fall back to normalizer, then legacy rewards
+    let displayCoins = "0";
     let displayXP = "0";
     try {
-        const { totalXP } = getTotalPromisedPoints(game);
+        const { totalCoins, totalXP } = getTotalPromisedPoints(game);
+        displayCoins = Number.isFinite(totalCoins) ? (totalCoins === Math.round(totalCoins) ? String(Math.round(totalCoins)) : (Math.round(totalCoins * 100) / 100).toString()) : "0";
         displayXP = Number.isFinite(totalXP) ? String(Math.round(totalXP)) : "0";
     } catch (_) {
+        const rawCoins = game.totalCoins ?? game.rewards?.coins ?? game.rewards?.gold ?? game.amount ?? game.score ?? 0;
+        const coinsNum = typeof rawCoins === 'number' ? rawCoins : (typeof rawCoins === 'string' ? parseFloat(String(rawCoins).replace(/[$,]/g, '')) || 0 : 0);
+        displayCoins = Number.isFinite(coinsNum) ? (coinsNum === Math.round(coinsNum) ? String(Math.round(coinsNum)) : (Math.round(coinsNum * 100) / 100).toString()) : "0";
         const rawXP = game.rewards?.xp ?? game.xp ?? game.bonus ?? 0;
         const xpNum = typeof rawXP === 'number' ? rawXP : (typeof rawXP === 'string' ? parseFloat(String(rawXP).replace(/,/g, '')) || 0 : 0);
         displayXP = Number.isFinite(xpNum) ? String(Math.round(xpNum)) : "0";

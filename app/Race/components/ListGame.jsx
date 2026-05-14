@@ -173,8 +173,17 @@ export const ListGame = () => {
         // Add downloaded games
         if (inProgressGames && inProgressGames.length > 0) {
             const downloadedGames = inProgressGames.map((game, index) => {
-                // Prefer API rewards.coins / rewards.gold
-                const coinAmount = game.rewards?.coins ?? game.rewards?.gold ?? game.amount ?? 0;
+                // Prefer backend totalCoins, then rewards.coins, then sum of coinReward from completed goals
+                const backendTotalCoins = game.totalCoins ?? game.besitosRawData?.totalCoins ?? game.bitlabsRawData?.totalCoins;
+                const rewardsCoins = game.rewards?.coins ?? game.rewards?.gold;
+                const goalsCoinSum = game.goals
+                    ?.filter(g => g.completed === true)
+                    .reduce((sum, goal) => sum + (parseFloat(goal.coinReward ?? goal.amount) || 0), 0) || 0;
+                const coinAmount = backendTotalCoins != null && Number(backendTotalCoins) > 0
+                    ? Number(backendTotalCoins)
+                    : rewardsCoins != null && Number(rewardsCoins) >= 0
+                        ? Number(rewardsCoins)
+                        : goalsCoinSum;
                 const raw = typeof coinAmount === 'number' ? coinAmount : (typeof coinAmount === 'string' ? parseFloat(String(coinAmount).replace('$', '')) || 0 : 0);
                 const earnings = Number.isFinite(raw) ? (raw === Math.round(raw) ? String(Math.round(raw)) : (Math.round(raw * 100) / 100).toString()) : '0';
                 let xpPoints = '0';

@@ -273,7 +273,7 @@ export const QuestCard = ({ game }) => {
                             {/* Coins - Use reward data from first task if available, otherwise default */}
                             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm">
                                 <span className="text-white font-semibold text-sm">
-                                    {game?.goals?.[0]?.reward?.coins || game?.coins || 100}
+                                    {game?.goals?.[0]?.reward?.coins || game?.rewards?.coins || game?.coins || 100}
                                 </span>
                                 <img
                                     src="/dollor.png"

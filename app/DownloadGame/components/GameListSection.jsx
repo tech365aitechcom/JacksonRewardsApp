@@ -373,10 +373,13 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     const completedGoalsCount = game.goals?.filter(g => g.completed === true).length || 0;
     const totalGoals = game.goals?.length || 0;
 
-    // Calculate actual earnings from completed goals only
-    const earnedAmount = game.goals
-      ?.filter(g => g.completed === true)
-      .reduce((sum, goal) => sum + (goal.amount || 0), 0) || 0;
+    // Calculate actual earnings from completed goals only — prefer backend totalCoins, then coinReward
+    const backendTotalCoins = game.totalCoins ?? game.besitosRawData?.totalCoins ?? game.bitlabsRawData?.totalCoins;
+    const earnedAmount = backendTotalCoins != null && Number(backendTotalCoins) > 0
+      ? Number(backendTotalCoins)
+      : game.goals
+          ?.filter(g => g.completed === true)
+          .reduce((sum, goal) => sum + (parseFloat(goal.coinReward ?? goal.amount) || 0), 0) || 0;
 
     // Calculate XP bonus (10% of earned amount)
     const xpBonus = Math.floor(earnedAmount * 0.1);
