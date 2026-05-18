@@ -692,7 +692,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                 <span className="text-yellow-400 text-lg">💰</span>
                                 <span className="text-white text-xs font-medium">Earned</span>
                             </div>
-                            <div className="text-yellow-300 text-xl font-bold">${sessionCoins.toFixed(2)}</div>
+                            <div className="text-yellow-300 text-xl font-bold">{sessionCoins.toFixed(2)}</div>
                             <div className="text-gray-400 text-[10px] mt-1">Total Coins</div>
                         </div>
 
@@ -773,11 +773,11 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                                             <span>⏱</span>
                                         </div>
                                     )}
-                                    {level.isTurbo && !level.isCompleted && !level.isFailed && (
+                                    {/* {level.isTurbo && !level.isCompleted && !level.isFailed && (
                                         <div className="bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg flex items-center gap-0.5">
                                             <span>⚡</span>
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                             )}
 

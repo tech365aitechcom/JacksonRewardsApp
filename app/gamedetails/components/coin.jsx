@@ -75,19 +75,14 @@ export const Coin = ({
         }
 
         // Subsequent batches
-        if (isNextBatchZero) {
-            // nextBatchSize = 0: all remaining tasks are one batch
-            const goals = processedGoals.slice(idx);
-            if (goals.length > 0) {
-                batches.push({ size: goals.length, goals });
-            }
-        } else {
-            while (idx < processedGoals.length && effectiveNextBatchSize > 0) {
-                const goals = processedGoals.slice(idx, idx + effectiveNextBatchSize);
-                if (goals.length === 0) break;
-                batches.push({ size: effectiveNextBatchSize, goals });
-                idx += effectiveNextBatchSize;
-            }
+        // When nextBatchSize is null/0 (optional), each task is its own batch
+        // so user can claim any number of completed tasks freely
+        const batchSize = effectiveNextBatchSize || 1;
+        while (idx < processedGoals.length && batchSize > 0) {
+            const goals = processedGoals.slice(idx, idx + batchSize);
+            if (goals.length === 0) break;
+            batches.push({ size: batchSize, goals });
+            idx += batchSize;
         }
 
         // Compute completion sequentially (only full batches count)
@@ -556,7 +551,7 @@ export const Coin = ({
                                     ? `🎉 Ready to claim ${claimableRewards.coins.toFixed(2)} + ${claimableRewards.xp} XP from ${claimableBatches} batch${claimableBatches > 1 ? 'es' : ''}!`
                                     : sessionCoins > 0
                                         ? `💰 Complete ${Math.max(0, batchData.currentBatchTarget - batchData.currentBatchProgress)} more tasks to unlock the next batch reward!`
-                                        : `💰 Complete tasks to start earning .`}
+                                        : `💰 Complete tasks to start earning `}
                         </p>
 
                         {/* Progress indicator when coins are available but milestone not reached */}
