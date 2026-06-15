@@ -192,7 +192,7 @@ const DealsPage = () => {
     };
 
     const dealsToShow = useMemo(() => {
-        const fallbackImg = "https://static.bitlabs.ai/categories/other.svg";
+        const fallbackImg = "/survey.jpeg";
 
         const cards = allOffers.map((offer, index) => ({
             id: buildKey(offer.offerType || "offer", offer, index),
@@ -309,9 +309,10 @@ const DealsPage = () => {
                                         <img
                                             src={deal.image}
                                             alt={deal.title}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover rounded-[10px]"
+                                            style={{ boxShadow: '0 3px 10px rgba(0,0,0,0.3)' }}
                                             onError={(e) => {
-                                                e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                                e.target.src = "/survey.jpeg";
                                             }}
                                         />
                                     </div>

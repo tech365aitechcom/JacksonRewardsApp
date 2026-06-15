@@ -829,7 +829,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                     <header className="absolute w-full h-[88px] -top-0.5 left-0 right-0">
                         <div className={`relative w-full h-[87px] top-px rounded-[10px_10px_0px_0px] ${isLoopMode ? 'bg-gradient-to-r from-purple-600/80 to-pink-600/80' : 'bg-[#442a3b]'}`}>
                             <p
-                                className="absolute w-[calc(100%-30px)] max-w-[304px] left-[15px] top-3.5 [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
+                                className="absolute w-[calc(100%-30px)] max-w-[304px] left-[15px] top-1 [font-family:'Poppins',Helvetica] font-normal text-white text-base text-center tracking-[0] leading-[1.4] break-words hyphens-auto"
                                 style={{
                                     wordBreak: 'break-word',
                                     overflowWrap: 'break-word',
@@ -846,7 +846,7 @@ const GameCard = ({ onClose: onCloseProp }) => {
                                     <>
                                         🔄 Loop Mode: Keep swiping to see more games!
                                         <br />
-                                        <span className="text-sm opacity-80">Tap X to return to your last game</span>
+                                        <span className="text-sm opacity-80">Tap Undo to return to your last game</span>
                                     </>
                                 ) : (
                                     <>

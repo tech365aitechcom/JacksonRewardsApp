@@ -192,7 +192,7 @@ const SurveysSection = () => {
             >
                 {surveys && surveys.length > 0 ? surveys.map((survey, index) => {
                     // Get survey image
-                    const surveyImage = survey.thumbnail || "https://static.bitlabs.ai/categories/other.svg";
+                    const surveyImage = survey.thumbnail || "/survey.jpeg";
 
                     // Get coins and XP
                     const coins = survey.userRewardCoins ?? survey.coinReward ?? 0;
@@ -241,16 +241,16 @@ const SurveysSection = () => {
                                     {/* Survey Image Section - full width to contain image */}
                                     <div className="relative w-full h-[174px] overflow-hidden">
                                         <img
-                                            className="w-full h-full object-contain rounded-t-[10px]"
+                                            className="w-full h-full object-fill rounded-[12px]"
                                             src={surveyImage}
                                             alt={survey.title || "Survey"}
-                                            style={{ imageRendering: 'crisp-edges' }}
+                                            style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
                                             loading="eager"
                                             decoding="async"
                                             width="168"
                                             height="174"
                                             onError={(e) => {
-                                                e.target.src = "https://static.bitlabs.ai/categories/other.svg";
+                                                e.target.src = "/survey.jpeg";
                                             }}
                                         />
                                     </div>
@@ -269,7 +269,7 @@ const SurveysSection = () => {
 
                                     {/* Earn button - moved down slightly: top-[110px] min-h-[29px] w-[140px] */}
                                     <div
-                                        className="absolute top-[128px] left-1/2 flex flex-wrap items-center justify-center gap-0.5 px-1.5 py-1 min-h-[29px] w-[140px] -translate-x-1/2 rounded-[10px] bg-gradient-to-b from-[#9EADF7] to-[#716AE7] cursor-pointer hover:opacity-90 transition-opacity leading-none"
+                                        className="absolute top-[134px] left-1/2 flex flex-wrap items-center justify-center gap-0.5 px-1.5 py-1 min-h-[29px] w-[140px] -translate-x-1/2 rounded-[10px] bg-gradient-to-b from-[#9EADF7] to-[#716AE7] cursor-pointer hover:opacity-90 transition-opacity leading-none"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleSurveyClick(survey);

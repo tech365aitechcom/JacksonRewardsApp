@@ -180,7 +180,7 @@ export const HighestEarningGame = () => {
                                         <h4 className="font-semibold text-[#FFFFFF] text-[16px] leading-tight">
                                             {String(game.title || 'Game').split(' - ')[0]}
                                         </h4>
-                                        <div className="text-[#FFFFFF] font-normal text-[13px] opacity-80">{String(game.category || 'Action')}</div>
+                                        {/* <div className="text-[#FFFFFF] font-normal text-[13px] opacity-80">{String(game.category || 'Action')}</div> */}
 
                                         <div
                                             className="relative w-full min-h-[60px] rounded-[10px] overflow-hidden bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] p-2.5 flex flex-col gap-1"
