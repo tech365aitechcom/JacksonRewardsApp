@@ -5,6 +5,7 @@ import StatusBarSetter from "@/components/StatusBarSetter";
 import SplashScreen from "@/components/SplashScreen";
 import AdjustInitializer from "@/components/AdjustInitializer";
 import VPNDetectorProvider from "@/components/VPNDetectorProvider";
+import ErrorTrackingProvider from "@/components/ErrorTrackingProvider";
 
 export const metadata = {
   title: "Jackson Rewards",
@@ -108,11 +109,13 @@ export default function RootLayout({ children }) {
         <SplashScreen>
           <ReduxProvider>
             <AuthProvider>
-              <VPNDetectorProvider>
-                <AdjustInitializer />
-                <StatusBarSetter />
-                {children}
-              </VPNDetectorProvider>
+              <ErrorTrackingProvider>
+                <VPNDetectorProvider>
+                  <AdjustInitializer />
+                  <StatusBarSetter />
+                  {children}
+                </VPNDetectorProvider>
+              </ErrorTrackingProvider>
             </AuthProvider>
           </ReduxProvider>
         </SplashScreen>
