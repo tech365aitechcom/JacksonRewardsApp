@@ -148,14 +148,22 @@ export function AuthProvider({ children }) {
               let path;
               let token;
 
-              // Handle custom URL scheme (com.jackson.app://)
-              if (urlString.startsWith("com.jackson.app://")) {
+              // Handle custom URL schemes. The backend returns OAuth callbacks
+              // on jacksonrewards:// (IOS_AUTH_URL_SCHEME); older backend builds
+              // still use com.jackson.app://, so accept both.
+              const customScheme = [
+                "jacksonrewards://",
+                "com.jackson.app://",
+              ].find((scheme) => urlString.startsWith(scheme));
+
+              if (customScheme) {
                 parsableUrl = new URL(
-                  urlString.replace("com.jackson.app://", "http://app/"),
+                  urlString.replace(customScheme, "http://app/"),
                 );
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
                 console.log("🔗 [DeepLink] Custom scheme parsed →", {
+                  scheme: customScheme,
                   path,
                   hasToken: !!token,
                   allParams: Object.fromEntries(parsableUrl.searchParams),

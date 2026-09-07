@@ -49,6 +49,12 @@
                <category android:name="android.intent.category.BROWSABLE" />
                <!-- Change @string/custom_url_scheme to your actual scheme string if build fails -->
                <data android:scheme="com.jackson.app" />
+               <!-- OAuth callbacks: the backend hands control back via
+                    jacksonrewards:// (IOS_AUTH_URL_SCHEME). Without this the
+                    Google/Facebook return has no handler on Android. Both stay
+                    registered because older backend builds still redirect to
+                    com.jackson.app://. -->
+               <data android:scheme="jacksonrewards" />
            </intent-filter>
 
             <!-- Android App Links (HTTPS) -->
