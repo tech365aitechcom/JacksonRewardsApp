@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RulesModal } from "./RulesModal";
 import sessionManager from "@/lib/sessionManager";
+import { BASE_URL } from "@/lib/api";
 import { normalizeGameGoals, getSdkProvider } from "@/lib/gameDataNormalizer";
 
 export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdate, claimedBatches = [], isDownloadedGame = false }) => {
@@ -527,7 +528,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
         setClaiming(true);
         try {
             // Call backend API to claim rewards
-            const response = await fetch('https://rewardsapi.hireagent.co/api/claim-rewards', {
+            const response = await fetch(`${BASE_URL}/api/claim-rewards`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

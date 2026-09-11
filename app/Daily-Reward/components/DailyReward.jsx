@@ -8,6 +8,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { MemoizedButton, MemoizedImage } from "./PerformanceWrapper";
 import { useDailyRewards } from "../hooks/useDailyRewards";
 import { NotificationService } from "../services/notificationService";
+import { BASE_URL } from "@/lib/api";
 import { MissedDayRecovery } from "./MissedDayRecovery";
 import { UserFriendlyModal } from "./UserFriendlyModal";
 
@@ -51,7 +52,7 @@ const DailyReward = () => {
         try {
             // API call to recover missed day
             const token = localStorage.getItem("authToken");
-            const response = await fetch("https://rewardsapi.hireagent.co/api/daily-rewards/recover", {
+            const response = await fetch(`${BASE_URL}/api/daily-rewards/recover`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
