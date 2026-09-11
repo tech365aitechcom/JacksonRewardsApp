@@ -79,6 +79,7 @@ import {
   clearNonGameOffers,
 } from "@/lib/redux/slice/surveysSlice";
 import { getUserFromLocalStorage } from "@/lib/utils";
+import { BASE_URL } from "@/lib/api";
 
 const AuthContext = createContext({});
 
@@ -2602,7 +2603,7 @@ export function AuthProvider({ children }) {
         // 1. Fetch profile + location status in PARALLEL (saves ~200-400ms vs sequential)
         const [profileAction, locationResult] = await Promise.allSettled([
           dispatch(fetchUserProfile(socialToken)),
-          fetch("https://rewardsapi.hireagent.co/api/location/status", {
+          fetch(`${BASE_URL}/api/location/status`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${socialToken}`,

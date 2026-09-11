@@ -12,6 +12,7 @@ import Script from "next/script";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { useSplash } from "@/components/SplashScreen";
+import { BASE_URL } from "@/lib/api";
 
 function LoginPageContent() {
   const { hideSplash } = useSplash();
@@ -311,7 +312,9 @@ function LoginPageContent() {
     });
 
     setIsRedirecting(true);
-    const backendUrl = "https://rewardsapi.hireagent.co";
+    // Was hardcoded to production, so a UAT build authenticated against prod
+    // and then called UAT with a token minted by a different environment.
+    const backendUrl = BASE_URL;
 
     // Check if the app is running on a native mobile platform (iOS/Android)
     if (Capacitor.isNativePlatform()) {
