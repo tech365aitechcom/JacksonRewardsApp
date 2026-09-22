@@ -15,9 +15,9 @@ export const useVipStatus = () => {
 
   // Auto-fetch VIP status when token is available and status is idle
   useEffect(() => {
-    console.log("[DEBUG-VIP] useVipStatus effect fired | vipStatusState:", vipStatusState, "| hasToken:", !!token, "| at:", new Date().toISOString());
+
     if (token && vipStatusState === "idle") {
-      console.log("[DEBUG-VIP] dispatching fetchVipStatus + fetchActiveGooglePlaySubscription");
+
       dispatch(fetchVipStatus(token));
       // Also check for active Google Play subscription on Android
       dispatch(fetchActiveGooglePlaySubscription(token));

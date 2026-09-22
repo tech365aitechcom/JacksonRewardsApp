@@ -25,7 +25,6 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
-<!-- Fixed: Removed the broken comment and added the closing bracket here -->
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
@@ -47,7 +46,6 @@
                <action android:name="android.intent.action.VIEW" />
                <category android:name="android.intent.category.DEFAULT" />
                <category android:name="android.intent.category.BROWSABLE" />
-               <!-- Change @string/custom_url_scheme to your actual scheme string if build fails -->
                <data android:scheme="com.jackson.app" />
                <!-- OAuth callbacks: the backend hands control back via
                     jacksonrewards:// (IOS_AUTH_URL_SCHEME). Without this the

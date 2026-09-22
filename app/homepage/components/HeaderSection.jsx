@@ -7,7 +7,7 @@ import { BASE_URL } from "@/lib/api";
 const HeaderSection = () => {
     const router = useRouter();
 
-    // OPTIMIZED: Memoize selectors to prevent unnecessary re-renders
+    // Memoize selectors to prevent unnecessary re-renders
     const profile = useSelector((state) => state.profile.details);
     const walletScreen = useSelector((state) => state.walletTransactions.walletScreen);
 
@@ -24,7 +24,7 @@ const HeaderSection = () => {
         };
     }, [profile, walletScreen]);
 
-    // OPTIMIZED: Memoize event handlers to prevent recreation
+    // Memoize event handlers to prevent recreation
     const handleProfileClick = useCallback(() => {
         router.push("/myprofile");
     }, [router]);
@@ -33,7 +33,7 @@ const HeaderSection = () => {
         router.push("/Wallet");
     }, [router]);
 
-    // OPTIMIZED: Memoize avatar URL processing
+    // Memoize avatar URL processing
     const avatarUrl = useMemo(() => {
         if (!headerData.avatar) return "/profile.png";
 

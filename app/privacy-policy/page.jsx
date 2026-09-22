@@ -39,7 +39,6 @@ export default function PrivacyPolicyPage() {
                     <div className="w-6 h-6"></div> {/* Spacer for centering */}
                 </div>
 
-
             </div>
 
             {/* Main Content - Scrollable */}

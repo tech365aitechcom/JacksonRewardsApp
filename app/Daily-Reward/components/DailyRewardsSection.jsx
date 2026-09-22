@@ -164,13 +164,13 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
             let isMissed = false;
             let isLocked = false;
 
-            // ✅ CHECK ACTIVE FLAG FIRST - If day is inactive, force locked status
+            // CHECK ACTIVE FLAG FIRST - If day is inactive, force locked status
             if (dayData.active === false) {
                 effectiveStatus = 'locked';
                 isLocked = true;
-                
+
                 const config = getRewardConfig('locked', dayData.dayNumber, isBigRewardEligible);
-                
+
                 return {
                     day: dayData.dayNumber,
                     calendarDay: dayData.dayNumber,
@@ -477,7 +477,7 @@ export const DailyRewardsSection = ({ weekData, isCurrentWeek, isFutureWeek, onC
 
                 const rewardData = weekData?.days?.find(day => day.dayNumber === dayNumber);
 
-                // ✅ CHECK IF DAY IS INACTIVE
+                // CHECK IF DAY IS INACTIVE
                 if (rewardData && rewardData.active === false) {
                     setError("This reward is currently unavailable. Please contact support.");
                     return;

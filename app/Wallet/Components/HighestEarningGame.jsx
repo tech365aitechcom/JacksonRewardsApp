@@ -30,7 +30,7 @@ export const HighestEarningGame = () => {
     const CACHE_STALE_MS = 5 * 60 * 1000;
     const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
 
-    // FIX: select only this section's data so re-renders only happen when "Highest Earning" changes,
+    // select only this section's data so re-renders only happen when "Highest Earning" changes,
     // not every time Swipe / MostPlayed / Leadership etc. update their Redux state
     const highestEarningGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
     const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
@@ -52,7 +52,7 @@ export const HighestEarningGame = () => {
             page: 1,
             limit: 10
         }));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Return to app (focus): one discover call only if cache older than 2 min. Same pattern as MostPlayedGames / GameCard.
     useEffect(() => {

@@ -132,24 +132,24 @@ export const RaiseATicket = () => {
     // API FUNCTIONS - COMMENTED OUT TO USE REDUX STORE INSTEAD
     // ============================================================================
     // const loadUserGames = async () => {
-    //     try {
-    //         setLoadingGames(true);
-    //         const token = localStorage.getItem('authToken');
-    //         if (!token) {
-    //             setErrors({ auth: "Please log in to raise a ticket" });
-    //             return;
-    //         }
+    // try {
+    // setLoadingGames(true);
+    // const token = localStorage.getItem('authToken');
+    // if (!token) {
+    // setErrors({ auth: "Please log in to raise a ticket" });
+    // return;
+    // }
 
-    //         const response = await getUserGamesList(token);
-    //         if (response && response.games) {
-    //             setGameOptions(response.games);
-    //         }
-    //     } catch (error) {
-    //         console.error("Failed to load games:", error);
-    //         setErrors({ games: "Failed to load games. Please try again." });
-    //     } finally {
-    //         setLoadingGames(false);
-    //     }
+    // const response = await getUserGamesList(token);
+    // if (response && response.games) {
+    // setGameOptions(response.games);
+    // }
+    // } catch (error) {
+    // console.error("Failed to load games:", error);
+    // setErrors({ games: "Failed to load games. Please try again." });
+    // } finally {
+    // setLoadingGames(false);
+    // }
     // };
 
     // ============================================================================
@@ -368,8 +368,6 @@ export const RaiseATicket = () => {
                     </button>
                 </div>
             </header>
-
-
 
             {/* Main Form */}
             <form className="flex flex-col w-full items-start gap-3 px-5 flex-1">
@@ -611,7 +609,6 @@ export const RaiseATicket = () => {
                     </button>
                 </div>
             </div>
-
 
         </div>
     );

@@ -16,13 +16,13 @@ import MockAdOverlay from "@/app/games/components/MockAdOverlay";
 
 /**
  * 30-Day Win Streak Page
- * 
+ *
  * Main page component for the 30-day streak feature that:
  * - Displays streak progress with visual tree
  * - Shows completed days and milestones
  * - Handles reward claiming on milestones
  * - Manages streak resets and fallbacks
- * 
+ *
  * @component
  */
 export default function WinStreakPage() {
@@ -128,9 +128,9 @@ export default function WinStreakPage() {
 
     // commented — history/leaderboard no longer needed, /api/streak/status provides all data
     // useEffect(() => {
-    //     if (status === 'succeeded' && currentStreak !== undefined) {
-    //         loadAdditionalData();
-    //     }
+    // if (status === 'succeeded' && currentStreak !== undefined) {
+    // loadAdditionalData();
+    // }
     // }, [status, currentStreak]);
 
     // Scroll to bottom when page loads/navigates

@@ -199,9 +199,7 @@ export const TicketList = () => {
     const handleTicketClick = useCallback((ticketId) => {
         // Ticket details page removed - no action needed
         // Only log in development
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Ticket clicked:', ticketId);
-        }
+
     }, []);
 
     const handleRetry = useCallback(() => {

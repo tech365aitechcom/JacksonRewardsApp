@@ -2,8 +2,6 @@ import React from 'react'
 import Image from 'next/image'
 import { BASE_URL } from '@/lib/api'
 
-
-
 const ProfileSection = ({ profile, vipStatus, handleEditProfile }) => {
     return (
         <section className="flex flex-col w-full max-w-[335px] items-center">

@@ -71,7 +71,7 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
         }));
     };
 
-    // ✅ FIX: Better keyboard handling - ensure button stays visible with 3x more scroll
+    // Better keyboard handling - ensure button stays visible with 3x more scroll
     const handleInputFocus = () => {
         // Use multiple timeouts to handle different keyboard animation speeds
         setTimeout(() => {
@@ -117,9 +117,8 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
         }, 500);
     };
 
-
     const handleSubmitPayout = async () => {
-        // CRITICAL FIX: Prevent double submission
+        // Prevent double submission
         if (isSubmitting) {
             return;
         }
@@ -440,7 +439,6 @@ export const MoneyTransfer = ({ isOpen, onClose, methods, fundingSources, token 
                                 <p className="text-red-400 text-sm">{error}</p>
                             </div>
                         )}
-
 
                         <div className="space-y-4" ref={formContainerRef}>
                             <div>

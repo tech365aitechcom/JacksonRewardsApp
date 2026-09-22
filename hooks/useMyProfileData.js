@@ -34,7 +34,7 @@ export const useMyProfileData = (token, user) => {
     (state) => state.walletTransactions
   );
 
-  // OPTIMIZED: Enhanced data availability check with persistence awareness
+  // Enhanced data availability check with persistence awareness
   const dataAvailability = useMemo(() => {
     const hasProfile = profile && detailsStatus === "succeeded";
     const hasStats = stats && statsStatus === "succeeded";
@@ -43,7 +43,7 @@ export const useMyProfileData = (token, user) => {
     const hasUserData = userData && userDataStatus === "succeeded";
     const hasWalletData = walletScreen && walletScreenStatus === "succeeded";
 
-    // OPTIMIZED: More intelligent loading state
+    // More intelligent loading state
     const isLoading =
       detailsStatus === "loading" ||
       statsStatus === "loading" ||
@@ -160,8 +160,6 @@ export const useMyProfileData = (token, user) => {
       vipStatus?.data?.currentTier &&
       vipStatus?.data?.currentTier !== "Free";
     const currentTier = vipStatus?.data?.currentTier || "Bronze";
-
-   
 
     return {
       coinBalance,

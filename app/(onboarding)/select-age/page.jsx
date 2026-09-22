@@ -54,8 +54,6 @@ export default function AgeSelection() {
       <div className="absolute top-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-40 left-10 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl animate-pulse delay-700" />
 
-
-
       {/* Fixed Header */}
       <div className="-mt-4 sticky top-0 bg-gradient-to-b from-gray-900 via-purple-900/95 to-transparent backdrop-blur-sm z-10 pb-0 sm:pb-0.5 md:pb-1 lg:pb-2 pt-0">
         <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">

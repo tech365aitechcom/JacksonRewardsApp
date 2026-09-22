@@ -134,7 +134,7 @@ export const WithdrawalOption = () => {
             el.removeEventListener('touchmove', onTouchMove);
             el.removeEventListener('touchend', onTouchEnd);
         };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Load authentication token
     useEffect(() => {

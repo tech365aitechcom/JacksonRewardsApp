@@ -5,7 +5,7 @@ import Image from "next/image";
 /**
  * Reusable Page Header Component with Back Button
  * Same styling as MyProfile page for consistency
- * 
+ *
  * @param {string} title - The page title to display
  * @param {function} onBack - Optional custom back handler (defaults to router.back())
  * @param {React.ReactNode} rightElement - Optional element to display on the right (e.g., coin balance)

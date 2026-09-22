@@ -22,7 +22,7 @@ const Leadership = () => {
     const CACHE_STALE_MS = 5 * 60 * 1000;
     const FOCUS_REFRESH_STALE_MS = 2 * 60 * 1000;
 
-    // FIX: select only this section's data so re-renders only happen when "Leadership" changes,
+    // select only this section's data so re-renders only happen when "Leadership" changes,
     // not every time Swipe / MostPlayed / Highest Earning etc. update their Redux state
     const sectionGames = useSelector((state) => state.games.gamesBySection[sectionName] ?? EMPTY_ARRAY);
     const sectionStatus = useSelector((state) => state.games.gamesBySectionStatus[sectionName] || "idle");
@@ -44,7 +44,7 @@ const Leadership = () => {
             page: 1,
             limit: 10
         }));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Return to app (focus): one discover call only if cache older than 2 min.
     useEffect(() => {

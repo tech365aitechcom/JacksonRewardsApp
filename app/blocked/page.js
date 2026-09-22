@@ -18,13 +18,13 @@ function BlockedContent() {
   }, [searchParams]);
 
   // const handleTryAgain = () => {
-  //   try {
-  //     localStorage.setItem("vpn_blocked", "false");
-  //     localStorage.setItem("vpn_blocked_recent", "false");
-  //     localStorage.removeItem("vpn_reason");
-  //     localStorage.removeItem("vpn_message");
-  //   } catch (e) {}
-  //   router.replace("/welcome");
+  // try {
+  // localStorage.setItem("vpn_blocked", "false");
+  // localStorage.setItem("vpn_blocked_recent", "false");
+  // localStorage.removeItem("vpn_reason");
+  // localStorage.removeItem("vpn_message");
+  // } catch (e) {}
+  // router.replace("/welcome");
   // };
 
   const getIcon = () => {
@@ -104,7 +104,7 @@ function BlockedContent() {
         </p>
       </div>
 
-      {/* 
+      {/*
       <button
         onClick={handleTryAgain}
         onMouseDown={() => setIsPressed(true)}

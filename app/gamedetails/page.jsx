@@ -130,7 +130,6 @@ function GameDetailsContent() {
     const source = searchParams.get('source');
     const isFromGamesScreen = !source && loadedFromLocalStorage;
 
-
     // Load game data - handle both downloaded games (localStorage) and API games
     useEffect(() => {
         const loadGameData = async () => {
@@ -247,9 +246,7 @@ function GameDetailsContent() {
             }
         } else if (gameDetailsStatus === 'failed') {
             setIsInitialLoading(false); // Stop loading on error
-        } else if (gameDetailsStatus === 'loading') {
-            // Loading state
-        } else if (gameDetailsStatus === 'succeeded' && !currentGameDetails) {
+        } else if (!(gameDetailsStatus === 'loading')) if (gameDetailsStatus === 'succeeded' && !currentGameDetails) {
             // API succeeded but no game data - this shouldn't happen, but clear loading anyway
             setIsInitialLoading(false);
         }
@@ -464,7 +461,6 @@ function GameDetailsContent() {
             // Error initializing session
         }
     };
-
 
     // Refresh user data when page regains focus (after user downloads game).
     // Stale check: only refetch if last fetch was more than 2 minutes ago to prevent
@@ -1109,7 +1105,6 @@ function GameDetailsContent() {
         </LoadingOverlay>
     );
 }
-
 
 export default function GameDetailsPage() {
     return (

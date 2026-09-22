@@ -34,7 +34,7 @@ export const BigRewardAnimation = ({ isEligible, onAnimationComplete }) => {
                 >
                     ✕
                 </button>
-                
+
                 <div className="text-center pt-2">
                     <div className="text-6xl mb-4 animate-bounce">🎉</div>
                     <div className="text-4xl mb-2 text-yellow-400 font-bold animate-pulse">

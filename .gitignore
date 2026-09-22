@@ -31,11 +31,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
 # Allow .env.example to be committed (it's a template)
 !.env.example
 
@@ -48,3 +44,35 @@ next-env.d.ts
 
 # Android sensitive files
 android/app/google-services.json
+
+# Local tools and editor state
+/.claude/
+/.codex/
+/.agents/
+/.vscode/
+**/.idea/
+
+# Build output, crash reports, and signing material
+/release/
+*.apk
+*.aab
+*.log
+*.hprof
+*.jks
+*.keystore
+*.p12
+*.pfx
+**/key.properties
+**/keystore.properties
+hs_err_pid*
+replay_pid*
+
+# Internal reference material and one-off backend patches
+/*.pdf
+/*.csv
+/*.postman_collection*.json
+/ALTERNATIVE_UPDATE_METHOD.js
+/UPDATED_BIOMETRIC_SCHEMA.js
+/routes/biometric-fixed.js
+/assets/c__Users_*
+/app/(onboarding)/select-age/draft.jsx

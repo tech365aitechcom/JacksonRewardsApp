@@ -7,7 +7,7 @@ export default function PhoneLoginPage() {
 
   const handleProceed = () => {
     // Handle form submission logic here
-    console.log("Proceeding with phone number:", countryCode + phoneNumber);
+
   };
 
   const handlePhoneChange = (e) => {
@@ -27,13 +27,13 @@ export default function PhoneLoginPage() {
         alt="Coins decoration"
         src="/assets/animaapp/TCUof8k2/img/coins-1-2x.png"
       />
-      
+
       <img
         className="absolute w-[120px] h-[100px] top-[80px] right-[20px] object-cover"
         alt="Treasure chest decoration"
         src="/assets/animaapp/TCUof8k2/img/2211-w030-n003-510b-p1-510--converted--02-2-2x.png"
       />
-      
+
       <img
         className="absolute w-[50px] h-[40px] top-[200px] right-[40px]"
         alt="Gem decoration"
@@ -55,25 +55,25 @@ export default function PhoneLoginPage() {
         {/* Form */}
         <div className="w-full max-w-[340px] space-y-6">
           <div>
-            <label 
-              htmlFor="phone-input" 
+            <label
+              htmlFor="phone-input"
               className="block text-neutral-400 text-sm mb-3 [font-family:'Poppins',Helvetica]"
             >
               Mobile Number
             </label>
-            
+
             <div className="relative">
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="mr-3">
-                  <path 
-                    d="M3.5 2C2.67 2 2 2.67 2 3.5V14.5C2 15.33 2.67 16 3.5 16H14.5C15.33 16 16 15.33 16 14.5V3.5C16 2.67 15.33 2 14.5 2H3.5Z" 
-                    stroke="#d3d3d3" 
-                    strokeWidth="1.5" 
+                  <path
+                    d="M3.5 2C2.67 2 2 2.67 2 3.5V14.5C2 15.33 2.67 16 3.5 16H14.5C15.33 16 16 15.33 16 14.5V3.5C16 2.67 15.33 2 14.5 2H3.5Z"
+                    stroke="#d3d3d3"
+                    strokeWidth="1.5"
                     fill="none"
                   />
                 </svg>
               </div>
-              
+
               <input
                 id="phone-input"
                 type="tel"

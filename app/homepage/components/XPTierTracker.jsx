@@ -47,7 +47,7 @@ const XPTierTracker = ({ stats, token }) => {
         if (xpTierData?.currentTier?.name) {
             prevTierNameRef.current = xpTierData.currentTier.name;
         }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Fire onXPLevelReached when tier upgrades to mid or senior (never on first load)
     const detectTierUpgrade = (newData) => {
@@ -189,7 +189,7 @@ const XPTierTracker = ({ stats, token }) => {
         };
     }, [token]);
 
-    // OPTIMIZED: Memoize progress data from API response; xp.current from walletScreen
+    // Memoize progress data from API response; xp.current from walletScreen
     const progressData = useMemo(() => {
         // Use API data if available, otherwise fallback to stats prop
         if (xpTierData) {
@@ -313,7 +313,7 @@ const XPTierTracker = ({ stats, token }) => {
         };
     }, [xpTierData, stats?.currentXP, xpCurrent]);
 
-    // OPTIMIZED: Memoize event handler with smooth animation
+    // Memoize event handler with smooth animation
     const handleModalOpen = useCallback(() => {
         setIsXPModalOpen(true);
         // Small delay to ensure DOM is updated before animation starts

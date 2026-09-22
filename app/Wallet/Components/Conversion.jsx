@@ -6,7 +6,6 @@ import { Capacitor } from '@capacitor/core';
 import MockAdOverlay from '@/app/games/components/MockAdOverlay';
 import { getConversionSettings } from "../../../lib/api";
 
-
 const SCALE_CONFIG = [
     { minWidth: 0, scaleClass: "scale-90" },
     { minWidth: 320, scaleClass: "scale-90" },
@@ -18,7 +17,6 @@ const SCALE_CONFIG = [
     { minWidth: 1280, scaleClass: "scale-200" },
     { minWidth: 1536, scaleClass: "scale-225" },
 ];
-
 
 // Simple 5-Minute Timer Modal
 const SimpleTimerModal = ({ onClose, timeLeft }) => {
@@ -269,7 +267,6 @@ export const Conversion = () => {
             setAdFlowState("idle");
         }
     };
-
 
     // Handle mock ad completion (for web browsers)
     const handleMockAdComplete = () => {

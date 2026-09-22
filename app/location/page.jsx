@@ -209,7 +209,6 @@ export default function LocationPage() {
     setError(null);
 
     try {
-      console.log("User chose to skip location permission.");
 
       // THIS IS THE KEY CHANGE: Show the in-page warning
       setShowSkipWarning(true);

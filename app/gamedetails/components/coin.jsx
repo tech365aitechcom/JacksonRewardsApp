@@ -9,7 +9,6 @@ import { transferGameEarnings, getBatchStatus } from "../../../lib/api";
 import { fetchWalletTransactions, fetchFullWalletTransactions } from "@/lib/redux/slice/walletTransactionsSlice";
 import { normalizeGameTitle } from "@/lib/gameDataNormalizer";
 
-
 export const Coin = ({
     game,
     sessionCoins = 0,
@@ -45,7 +44,7 @@ export const Coin = ({
      * - First batch size = firstBatchSize (or 3 if rule missing)
      * - Next batches size = nextBatchSize (or same as first / 3 fallback)
      *
-     * IMPORTANT: Rewards are NOT hardcoded. We sum the actual per-task rewards:
+     * Rewards are NOT hardcoded. We sum the actual per-task rewards:
      * - coins: `goal.coinReward`
      * - xp: `goal.xpReward`
      */
@@ -411,7 +410,7 @@ export const Coin = ({
                     onClick={handleClaimClick}
                     disabled={claimableBatches === 0 || claiming}
                     className={`
-                        absolute bottom-4 left-4 right-12 h-10 flex items-center justify-center rounded-lg overflow-hidden 
+                        absolute bottom-4 left-4 right-12 h-10 flex items-center justify-center rounded-lg overflow-hidden
                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black
                         ${claimableBatches === 0 || claiming
                             ? 'bg-gray-600 cursor-not-allowed opacity-50'
@@ -484,7 +483,6 @@ export const Coin = ({
                                 style={{ width: `${finalProgressPercentage}%` }}
                             />
                         </div>
-
 
                         <div
                             className="absolute top-1/2 w-7 h-7 rounded-full bg-[#25D42D] flex items-center justify-center transition-all duration-500 ease-out"

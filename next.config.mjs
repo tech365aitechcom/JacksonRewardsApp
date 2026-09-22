@@ -15,7 +15,7 @@ const nextConfig = {
     domains: ["c.animaapp.com", "rewardsapi.hireagent.co"],
   },
   compiler: {
-    removeConsole: false,
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 

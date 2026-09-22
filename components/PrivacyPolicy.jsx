@@ -3,12 +3,12 @@ import React from "react";
 
 /**
  * PrivacyPolicy Component
- * 
+ *
  * Reusable component for displaying privacy policy content:
  * - Scrollable legal content
  * - Mobile-optimized layout
  * - Configurable display options
- * 
+ *
  * @param {function} onBack - Handler for back button
  * @param {boolean} showHeader - Whether to show header section
  * @param {boolean} showHomeIndicator - Whether to show home indicator

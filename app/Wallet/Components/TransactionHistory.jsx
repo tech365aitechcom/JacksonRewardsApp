@@ -19,9 +19,6 @@ const SCALE_CONFIG = [
     { minWidth: 1536, scaleClass: "scale-225" },
 ];
 
-
-
-
 export default function TransactionHistory() {
     const dispatch = useDispatch();
     const router = useRouter();

@@ -62,7 +62,6 @@ export default function MyEarningCard({ token }) {
         };
     }, [showTooltip]);
 
-
     return (
         <section className="flex flex-col items-center justify-center gap-2.5 w-full">
             <div className="flex justify-center w-full">

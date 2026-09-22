@@ -44,10 +44,10 @@ export default function FaceIdPage() {
                 type="button"
                 onClick={handleGoBack}
               >
-                <img 
-                  className="w-full h-full" 
-                  alt="" 
-                  src="/assets/animaapp/gGYGC01x/img/arrow-back-ios-new-2x.png" 
+                <img
+                  className="w-full h-full"
+                  alt=""
+                  src="/assets/animaapp/gGYGC01x/img/arrow-back-ios-new-2x.png"
                 />
               </button>
 
@@ -60,10 +60,10 @@ export default function FaceIdPage() {
                 aria-label="Open messages"
                 type="button"
               >
-                {/* <img 
-                  className="w-full h-full" 
-                  alt="" 
-                  src="/img/messages-chat.svg" 
+                {/* <img
+                  className="w-full h-full"
+                  alt=""
+                  src="/img/messages-chat.svg"
                 /> */}
               </button>
             </nav>
@@ -75,8 +75,8 @@ export default function FaceIdPage() {
           aria-live="polite"
         >
           <p className="[font-family:'Poppins',Helvetica] font-normal text-white text-xl text-center tracking-[0] leading-[normal]">
-            {isScanning 
-              ? "Scanning your face... Keep your head still" 
+            {isScanning
+              ? "Scanning your face... Keep your head still"
               : "Move your head slowly from left to right to complete the process"
             }
           </p>

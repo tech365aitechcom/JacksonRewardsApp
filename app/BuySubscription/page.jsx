@@ -276,7 +276,7 @@ export default function BuySubscription() {
         return
       }
 
-      // ✅ FIX: Backend returns data in response.payload.data (nested)
+      // Backend returns data in response.payload.data (nested)
       const payloadData = response.payload?.data || response.payload
 
       // Check if user already has an active subscription
@@ -395,10 +395,10 @@ export default function BuySubscription() {
         }
       }, 3000) // Increased delay to show success message
     } catch (error) {
-      console.error('❌ [handlePaymentSuccess] Error details:', error)
-      console.error('❌ [handlePaymentSuccess] Error type:', typeof error)
+      console.error("[handlePaymentSuccess] Error details:", error)
+      console.error("[handlePaymentSuccess] Error type:", typeof error)
       console.error(
-        '❌ [handlePaymentSuccess] Error keys:',
+        "[handlePaymentSuccess] Error keys:",
         error ? Object.keys(error) : 'null',
       )
 

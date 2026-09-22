@@ -74,7 +74,7 @@ export const Charity = ({ isOpen, onClose, methods, fundingSources, token }) => 
         setShowAllCharities(false);
     };
 
-    // ✅ FIX: Scroll to button when keyboard opens (mobile)
+    // Scroll to button when keyboard opens (mobile)
     const handleInputFocus = () => {
         setTimeout(() => {
             if (submitButtonRef.current) {
@@ -132,7 +132,7 @@ export const Charity = ({ isOpen, onClose, methods, fundingSources, token }) => 
     }, [isOpen, onClose]);
 
     const handleSubmitDonation = async () => {
-        // CRITICAL FIX: Prevent double submission
+        // Prevent double submission
         if (isSubmitting) {
             return;
         }

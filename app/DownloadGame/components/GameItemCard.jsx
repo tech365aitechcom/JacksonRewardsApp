@@ -27,21 +27,21 @@ const GameItemCard = ({
                 return userId;
             }
         } catch (error) {
-            console.error('❌ [GameItemCard] Error getting user ID:', error);
+            console.error("[GameItemCard] Error getting user ID:", error);
         }
-        console.warn('⚠️ [GameItemCard] No user ID found in localStorage');
+        console.warn("[GameItemCard] No user ID found in localStorage");
         return null;
     };
 
     // Helper function to add user ID to redirect URL
     const addUserIdToRedirectUrl = (url, userId) => {
         if (!url) {
-            console.warn('⚠️ [GameItemCard] No URL provided');
+            console.warn("[GameItemCard] No URL provided");
             return url;
         }
 
         if (!userId) {
-            console.warn('⚠️ [GameItemCard] No user ID provided, cannot add to URL');
+            console.warn("[GameItemCard] No user ID provided, cannot add to URL");
             return url;
         }
 
@@ -59,7 +59,7 @@ const GameItemCard = ({
             const finalUrl = urlObj.toString();
             return finalUrl;
         } catch (error) {
-            console.error('❌ [GameItemCard] URL parsing failed, using fallback:', error);
+            console.error("[GameItemCard] URL parsing failed, using fallback:", error);
             // If URL parsing fails, try to append/replace as query string
             // Remove existing empty partner_user_id if present
             let cleanUrl = url;
@@ -231,7 +231,7 @@ const GameItemCard = ({
                             const userId = getUserId();
 
                             if (!userId) {
-                                console.error('❌ [GameItemCard] Cannot open URL: No user ID found');
+                                console.error("[GameItemCard] Cannot open URL: No user ID found");
                                 alert('Error: User ID not found. Please log in again.');
                                 return;
                             }
@@ -240,7 +240,7 @@ const GameItemCard = ({
                             const finalUrl = addUserIdToRedirectUrl(url, userId);
 
                             if (finalUrl === url && !url.includes(`partner_user_id=${userId}`)) {
-                                console.error('❌ [GameItemCard] Failed to add user ID to URL');
+                                console.error("[GameItemCard] Failed to add user ID to URL");
                                 alert('Error: Failed to add user ID to redirect URL.');
                                 return;
                             }

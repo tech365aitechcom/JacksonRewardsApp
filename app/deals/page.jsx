@@ -40,10 +40,10 @@ const DealsPage = () => {
         async ({ background = false } = {}) => {
             if (!token) return;
             if (isFetchingRef.current) {
-                console.log("[DEBUG-DEALS] fetchAllDeals called but already fetching — skipping | background:", background);
+
                 return;
             }
-            console.log("[DEBUG-DEALS] fetchAllDeals called | background:", background, "| at:", new Date().toISOString());
+
             isFetchingRef.current = true;
 
             const shouldShowLoader = !background && !hasLocalDataRef.current;
@@ -128,20 +128,20 @@ const DealsPage = () => {
                 clearInterval(intervalId);
             };
         }
-    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [token]);
 
     // Background refresh when app gains focus / becomes visible
     useEffect(() => {
         if (!token) return;
 
         const handleFocus = () => {
-            console.log("[DEBUG-DEALS] focus event fired — calling fetchAllDeals(background) at", new Date().toISOString());
+
             fetchAllDeals({ background: true });
         };
 
         const handleVisibilityChange = () => {
             if (!document.hidden) {
-                console.log("[DEBUG-DEALS] visibilitychange (visible) — calling fetchAllDeals(background) at", new Date().toISOString());
+
                 fetchAllDeals({ background: true });
             }
         };

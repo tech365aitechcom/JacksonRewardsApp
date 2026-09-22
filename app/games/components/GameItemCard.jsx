@@ -1,7 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
 
-
 const GameItemCard = ({
     game,
     showBorder = true,
@@ -125,7 +124,6 @@ const GameItemCard = ({
                 </div>
             </div>
 
-            {/* If needed, you can add a status dot indicator here */}
             {/* {game.hasStatusDot && (
                 <div className="absolute w-2 h-2 top-[26px] right-[8px] bg-[#4bba56] rounded-full animate-pulse" />
             )} */}

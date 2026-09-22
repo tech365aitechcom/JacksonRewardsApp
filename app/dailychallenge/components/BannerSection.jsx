@@ -50,7 +50,6 @@ export const BannerSection = ({ calendar, today, onDayClick, onPreviousMonth, on
     // Use only processed calendar data from API
     const calendarDays = processCalendarData(calendar) || [];
 
-
     const getDayClasses = (dayData) => {
         let baseClasses =
             "absolute w-[31px] h-[31px] flex items-center justify-center m-1 mb-2";

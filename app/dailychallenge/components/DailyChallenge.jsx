@@ -320,8 +320,8 @@ export const DailyChallenge = () => {
                 left: positions[i],
                 top: "527px",
                 // image: hasStreak
-                //     ? "/assets/animaapp/b23YVSTi/img/image-3943-7-2x.png"
-                //     : "/assets/animaapp/b23YVSTi/img/image-3943-6-2x.png",
+                // ? "/assets/animaapp/b23YVSTi/img/image-3943-7-2x.png"
+                // : "/assets/animaapp/b23YVSTi/img/image-3943-6-2x.png",
                 hasStreak,
             });
         }
@@ -408,7 +408,6 @@ export const DailyChallenge = () => {
     };
 
     const coinBadges = generateCoinBadges();
-
 
     return (
         <div
@@ -608,9 +607,6 @@ export const DailyChallenge = () => {
                 //     </div>
                 // );
             })}
-
-
-
 
             {/* Already Completed Modal */}
             {showCompletedModal && (

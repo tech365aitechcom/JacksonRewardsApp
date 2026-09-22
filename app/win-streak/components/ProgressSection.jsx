@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
 
 /**
  * ProgressSection Component
- * 
+ *
  * Displays the vertical scrollable streak tree with:
  * - 30 day ladder numbered 1-30 from bottom to top
  * - Visual progress indicators based on API data
@@ -12,11 +12,11 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
  * - Milestone reward badges
  * - Path decoration images
  * - Uses daily activity stats API to track user activity streak
- * 
+ *
  * @param {object} streakData - Complete streak data from API
  * @param {array} streakHistory - Streak history data
  * @param {array} leaderboard - Leaderboard data
- * @param {function} onRefresh - Refresh handler 
+ * @param {function} onRefresh - Refresh handler
  */
 export const ProgressSection = ({
     streakData = null,
@@ -34,7 +34,6 @@ export const ProgressSection = ({
     const streakTree = streakData?.streakTree || [];
     const rewards = streakData?.rewards || [];
     const progress = streakData?.progress || { current: 0, target: 7, percentage: 0 };
-
 
     // Check if day is completed using API data
     const isDayCompleted = (day) => {
@@ -362,8 +361,6 @@ export const ProgressSection = ({
                             </div>
                         </div>
 
-
-
                         {/* Day Icons - Show leaves progressively based on current streak */}
                         {/* Only show leaf if day is within current streak range OR is a milestone day */}
                         {/* Uses activity stats to track user activity streak */}
@@ -440,7 +437,7 @@ export const ProgressSection = ({
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
-        
+
         @keyframes pulse {
           0%, 100% {
             transform: scale(1);
@@ -451,7 +448,7 @@ export const ProgressSection = ({
             box-shadow: 0 12px 24px rgba(59, 130, 246, 0.6), 0 6px 12px rgba(37, 99, 235, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.4);
           }
         }
-        
+
         @keyframes float {
           0%, 100% {
             transform: translateY(0px);
@@ -460,7 +457,7 @@ export const ProgressSection = ({
             transform: translateY(-3px);
           }
         }
-        
+
         @keyframes glow {
           0%, 100% {
             box-shadow: 0 8px 16px rgba(251, 191, 36, 0.5), 0 4px 8px rgba(245, 158, 11, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.4);
@@ -469,7 +466,7 @@ export const ProgressSection = ({
             box-shadow: 0 12px 24px rgba(251, 191, 36, 0.7), 0 6px 12px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.5);
           }
         }
-        
+
         @keyframes bounce {
           0%, 100% {
             transform: translateY(0px);
@@ -478,7 +475,7 @@ export const ProgressSection = ({
             transform: translateY(-2px);
           }
         }
-        
+
         @keyframes shimmer {
           0% {
             background-position: -200% 0;
@@ -487,7 +484,7 @@ export const ProgressSection = ({
             background-position: 200% 0;
           }
         }
-        
+
         @keyframes circleMotion {
           0%, 100% {
             transform: translateY(0px) scale(1);
@@ -510,17 +507,17 @@ export const ProgressSection = ({
             border-color: rgb(74, 222, 128);
           }
         }
-        
+
         .ladder-3d {
           perspective: 1000px;
           transform-style: preserve-3d;
         }
-        
+
         .day-circle-3d {
           transform-style: preserve-3d;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .day-circle-3d:hover {
           transform: translateZ(10px) rotateX(5deg) rotateY(5deg);
         }

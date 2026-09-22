@@ -86,7 +86,6 @@ const WatchAdCard = ({
     useEffect(() => {
         if (lastReward && !isWatchingAd && claimedRewardRef.current !== lastReward) {
             claimedRewardRef.current = lastReward;
-            console.log('[WatchAdCard] 💰 Processing lastReward from hook:', lastReward);
 
             // Call the claim API to process the reward
             claimAdReward(lastReward);
@@ -121,8 +120,6 @@ const WatchAdCard = ({
                 throw new Error('Authentication required. Please log in.');
             }
 
-            console.log('[WatchAdCard] 📤 Claiming reward via API:', rewardData);
-
             const response = await fetch(`${BASE_URL}/api/account-overview/ad-reward/claim`, {
                 method: 'POST',
                 headers: {
@@ -143,7 +140,6 @@ const WatchAdCard = ({
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('[WatchAdCard] ✅ Reward claimed successfully:', result);
 
                 // Clear any error so success message is not overwritten by stale adError
                 setError(null);
@@ -152,7 +148,6 @@ const WatchAdCard = ({
                 // Store last watched time
                 const now = Date.now();
                 localStorage.setItem('lastBoosterAdWatched', now.toString());
-                console.log('[WatchAdCard] 💾 Stored last watched time:', new Date(now).toISOString());
 
                 // Use message from API response
                 setSuccessMessage(result.message || 'Reward claimed successfully!');
@@ -161,11 +156,6 @@ const WatchAdCard = ({
                 setIsAdAvailable(false);
                 setCooldownRemaining(cooldownHours * 60);
                 setShowSuccessMessage(true);
-                console.log('[WatchAdCard] 📈 State updated from API response:', {
-                    isAdAvailable: false,
-                    cooldownRemaining: cooldownHours * 60,
-                    showSuccessMessage: true,
-                });
 
                 // Call completion callback with actual reward
                 if (onAdComplete) {
@@ -175,14 +165,14 @@ const WatchAdCard = ({
                         success: true,
                         ...rewardData
                     };
-                    console.log('[WatchAdCard] 📞 Calling onAdComplete callback:', completionData);
+
                     onAdComplete(completionData);
                 }
 
                 // Hide success message after 3 seconds
                 setTimeout(() => {
                     setShowSuccessMessage(false);
-                    console.log('[WatchAdCard] 📈 State updated: showSuccessMessage=false');
+
                 }, 3000);
 
             } else {
@@ -190,7 +180,7 @@ const WatchAdCard = ({
                 throw new Error(errorData.message || 'Failed to claim reward');
             }
         } catch (error) {
-            console.error('[WatchAdCard] ❌ Error claiming reward:', error);
+            console.error("[WatchAdCard]  Error claiming reward:", error);
             setError(error.message || 'Failed to claim reward. Please try again.');
 
             // Clear error after 5 seconds
@@ -292,24 +282,15 @@ const WatchAdCard = ({
      * Integrates with AppLovin MAX SDK and backend API
      */
     const handleAdClick = async (e) => {
-        console.log('[WatchAdCard] 👆 User clicked "Watch Ad" button');
+
         e.stopPropagation();
         setIsAdActionInProgress(true);
 
         // Check if ad is available (cooldown)
-        console.log('[WatchAdCard] 🔍 Checking ad availability...');
-        console.log('[WatchAdCard] 📋 Availability state:', {
-            isAdAvailable,
-            cooldownRemaining,
-            isWatchingAd,
-            isShowingAd,
-            isAdReady,
-            isInitialized,
-        });
 
         if (!isAdAvailable) {
             const errorMsg = 'Ad is not available yet. Please wait for cooldown to expire.';
-            console.warn('[WatchAdCard] ⚠️ Ad not available (cooldown):', errorMsg);
+            console.warn("[WatchAdCard]  Ad not available (cooldown):", errorMsg);
             setError(errorMsg);
             setTimeout(() => setError(null), 3000);
             setIsAdActionInProgress(false);
@@ -317,27 +298,26 @@ const WatchAdCard = ({
         }
 
         if (isWatchingAd || isShowingAd) {
-            console.warn('[WatchAdCard] ⚠️ Ad already showing, ignoring click');
+            console.warn("[WatchAdCard]  Ad already showing, ignoring click");
             setIsAdActionInProgress(false);
             return;
         }
 
         // Custom onClick handler
         if (onClick) {
-            console.log('[WatchAdCard] 📞 Calling custom onClick handler...');
+
             onClick(e);
         }
 
         setError(null);
         clearAdError();
-        console.log('[WatchAdCard] 📈 State updated: error cleared');
 
         try {
             // Check if SDK is initialized
-            console.log('[WatchAdCard] 🔍 Checking SDK initialization...');
+
             if (!isInitialized) {
                 const errorMsg = 'Ad system is initializing. Please wait a moment and try again.';
-                console.warn('[WatchAdCard] ⚠️ SDK not initialized:', errorMsg);
+                console.warn("[WatchAdCard]  SDK not initialized:", errorMsg);
                 setError(errorMsg);
                 setTimeout(() => setError(null), 5000);
                 setIsAdActionInProgress(false);
@@ -345,69 +325,55 @@ const WatchAdCard = ({
             }
 
             // Check if ad is ready, if not try to load it
-            console.log('[WatchAdCard] 🔍 Checking ad ready state...');
+
             if (!isAdReady) {
                 // Don't show a red "error" banner while loading; the spinner overlay handles UX.
-                console.log('[WatchAdCard] ⚠️ Ad not ready, loading...');
+
                 setError(null);
 
                 // Try to load ad
-                console.log('[WatchAdCard] 📥 Calling loadAd()...');
+
                 const loadSuccess = await loadAd();
-                console.log('[WatchAdCard] 📊 Load result:', loadSuccess);
+
                 if (!loadSuccess) {
                     throw new Error('Failed to load ad. Please try again.');
                 }
-                console.log('[WatchAdCard] ✅ Ad loaded successfully');
+
             } else {
-                console.log('[WatchAdCard] ✅ Ad is ready to show');
+
             }
 
             // Show the ad using AppLovin MAX SDK
             // The mock overlay will be shown automatically via useEffect when isShowingAd becomes true
-            console.log('[WatchAdCard] 🎬 Calling showAd()...');
+
             const reward = await showAd({
                 onReward: (rewardData) => {
                     // Reward callback - handled by useEffect watching lastReward
-                    console.log('[WatchAdCard] 💰 Reward received in callback:', rewardData);
-                    console.log('[WatchAdCard] 📊 Reward details:', {
-                        coins: rewardData?.coins,
-                        xp: rewardData?.xp,
-                        success: rewardData?.success,
-                    });
+
                 },
                 onError: (errorMsg) => {
-                    console.error('[WatchAdCard] ❌ Error in showAd callback:', errorMsg);
+                    console.error("[WatchAdCard]  Error in showAd callback:", errorMsg);
                     setError(errorMsg || 'Failed to show ad. Please try again.');
                     setTimeout(() => setError(null), 5000);
                     // Close mock ad on error (web only)
                     if (isWeb) setShowMockAd(false);
                     setIsWatchingAd(false);
                     setIsAdActionInProgress(false);
-                    console.log('[WatchAdCard] 📈 State updated: mock ad closed, isWatchingAd=false');
+
                 }
             });
 
-            console.log('[WatchAdCard] 📊 showAd() returned:', reward);
-
             // If reward is returned directly (not via callback), process it
             if (reward) {
-                console.log('[WatchAdCard] 💰 Processing reward:', reward);
 
                 // Store last watched time
                 const now = Date.now();
                 localStorage.setItem('lastBoosterAdWatched', now.toString());
-                console.log('[WatchAdCard] 💾 Stored last watched time:', new Date(now).toISOString());
 
                 // Update state
                 setIsAdAvailable(false);
                 setCooldownRemaining(cooldownHours * 60);
                 setShowSuccessMessage(true);
-                console.log('[WatchAdCard] 📈 State updated:', {
-                    isAdAvailable: false,
-                    cooldownRemaining: cooldownHours * 60,
-                    showSuccessMessage: true,
-                });
 
                 // Call completion callback
                 if (onAdComplete) {
@@ -417,21 +383,21 @@ const WatchAdCard = ({
                         success: true,
                         ...reward
                     };
-                    console.log('[WatchAdCard] 📞 Calling onAdComplete callback:', completionData);
+
                     onAdComplete(completionData);
                 }
 
                 // Hide success message after 3 seconds
                 setTimeout(() => {
                     setShowSuccessMessage(false);
-                    console.log('[WatchAdCard] 📈 State updated: showSuccessMessage=false');
+
                 }, 3000);
 
                 // Stop showing loading UI after the ad flow completes
                 setIsAdActionInProgress(false);
-                console.log('[WatchAdCard] ✅ Ad watch process complete');
+
             } else {
-                console.warn('[WatchAdCard] ⚠️ No reward returned from showAd()');
+                console.warn("[WatchAdCard]  No reward returned from showAd()");
                 // If the ad was closed / no reward, stop loading UI
                 setIsAdActionInProgress(false);
             }
@@ -439,21 +405,20 @@ const WatchAdCard = ({
         } catch (error) {
             // Ad watch failed
             const errorMsg = error.message || 'Failed to process ad. Please try again.';
-            console.error('[WatchAdCard] ❌ Ad error:', error);
-            console.error('[WatchAdCard] 🐛 Error details:', {
+            console.error("[WatchAdCard]  Ad error:", error);
+            console.error("[WatchAdCard]  Error details:", {
                 message: error?.message,
                 stack: error?.stack,
                 name: error?.name,
             });
             setError(errorMsg);
-            console.log('[WatchAdCard] 📈 State updated: error set');
 
             // Clear error after 5 seconds
             setTimeout(() => {
                 setError(null);
                 clearAdError();
                 setIsAdActionInProgress(false);
-                console.log('[WatchAdCard] 📈 State updated: error cleared');
+
             }, 5000);
         }
     };

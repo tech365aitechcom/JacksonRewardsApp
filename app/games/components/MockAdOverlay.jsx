@@ -6,9 +6,9 @@ import React, { useState, useEffect } from 'react';
  * Displays a visual mock ad for web browser testing
  * This simulates what a real AppLovin MAX ad would look like
  */
-const MockAdOverlay = ({ 
-  isVisible, 
-  onComplete, 
+const MockAdOverlay = ({
+  isVisible,
+  onComplete,
   onClose,
   duration = 15 // seconds
 }) => {
@@ -90,10 +90,10 @@ const MockAdOverlay = ({
             <p className="text-white/70 text-sm mb-4">
               This is a mock ad for web browser testing
             </p>
-            
+
             {/* Progress Bar */}
             <div className="w-full bg-white/20 rounded-full h-2 mb-4">
-              <div 
+              <div
                 className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-1000"
                 style={{ width: `${((duration - timeRemaining) / duration) * 100}%` }}
               ></div>
@@ -105,7 +105,7 @@ const MockAdOverlay = ({
                 Please wait {timeRemaining} second{timeRemaining !== 1 ? 's' : ''} to earn your reward
               </p>
             )}
-            
+
             {canClose && (
               <button
                 onClick={onComplete}

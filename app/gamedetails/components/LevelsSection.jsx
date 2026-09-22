@@ -73,7 +73,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     useEffect(() => {
         if (onSessionUpdate && game) {
             // Calculate completed tasks count for progression rules
-            // IMPORTANT: Count completed UNLOCKED tasks only for batch-based progression
+            // Count completed UNLOCKED tasks only for batch-based progression
             const unlockedGoals = processedGoals.filter(g => !g.isLocked);
             const completedUnlockedTasksCount = unlockedGoals.filter(g => g.isCompleted).length;
 
@@ -117,24 +117,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
             const provider = getSdkProvider(game);
             const isBitLab = provider === 'bitlab';
 
-            console.log('🎯 LevelsSection - Processing goals:', {
-                provider,
-                rawGoals: isBitLab ? game?.bitlabsRawData?.events : game?.besitosRawData?.goals,
-                normalizedGoals: goalsToUse,
-                goalsCount: goalsToUse.length,
-                firstGoal: goalsToUse[0] ? {
-                    id: goalsToUse[0].id,
-                    goal_id: goalsToUse[0].goal_id,
-                    name: goalsToUse[0].name,
-                    text: goalsToUse[0].text,
-                    title: goalsToUse[0].title,
-                    completed: goalsToUse[0].completed,
-                    type: goalsToUse[0].type,
-                    goal_type: goalsToUse[0].goal_type,
-                    section: goalsToUse[0].section
-                } : null
-            });
-
             // Get taskProgression rules for unlocking tasks
             const taskProgression = game?.taskProgression || null;
             const hasProgressionRule = taskProgression?.hasProgressionRule || false;
@@ -155,21 +137,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 // Process goals with ACTUAL API data (completed, failed, days_left)
                 const allGoals = goalsToUse.map((goal, index) => {
                     // Debug log for first few goals
-                    if (index < 3) {
-                        console.log(`🔍 [Goal ${index}] Raw data:`, {
-                            id: goal.id,
-                            goal_id: goal.goal_id,
-                            name: goal.name,
-                            text: goal.text,
-                            title: goal.title,
-                            completed: goal.completed,
-                            failed: goal.failed,
-                            status: goal.status,
-                            type: goal.type,
-                            goal_type: goal.goal_type,
-                            section: goal.section
-                        });
-                    }
 
                     // Use actual completion status from API - handle both boolean and string values
                     const isCompleted = goal.completed === true || goal.completed === 'true' || goal.status === 'completed' || goal.status === 'success';
@@ -185,12 +152,11 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     // PRIORITY: Use progression data from API if available (for downloaded games)
                     // Otherwise, calculate based on taskProgression rules
                     const isLocked = (() => {
-                        console.log(`[Debug] Checking lock status for goal: "${goal.text || goal.name || goal.title}" (Batch: ${goal.progression?.batchNumber})`);
 
                         // BitLab: use API progression lock state as source of truth (each event has progression.isLocked / isUnlocked)
                         if (isBitLab && goal.progression && (typeof goal.progression.isLocked === 'boolean' || typeof goal.progression.isUnlocked === 'boolean')) {
                             const apiLocked = goal.progression.isLocked === true;
-                            console.log('[Debug] BitLab: Using API progression.isLocked:', apiLocked, 'for', goal.name || goal.text);
+
                             return apiLocked;
                         }
                         // Non-BitLab or no progression: use progression from API when available (e.g. downloaded Besitos)
@@ -206,26 +172,22 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                         }
                         // BitLab without per-goal progression: use batch rule if available
                         if (isBitLab) {
-                            if (hasProgressionRule && firstBatchSize > 0) {
-                                // Use batch-based taskProgression rules (fall through to logic below)
-                                console.log('[Debug] BitLab: Using taskProgression batch rules (firstBatchSize, nextBatchSize).');
-                            } else {
+                            if (!(hasProgressionRule && firstBatchSize > 0)) {
                                 // No rule: unlock all tasks
-                                console.log('[Debug] BitLab: No progression rule, all tasks unlocked.');
+
                                 return false;
                             }
                         }
 
-                        console.log('[Debug] Using fallback progression logic.');
                         // No rule: unlock all tasks (no hardcoded batches)
                         if (!hasProgressionRule || firstBatchSize === 0) {
-                            console.log('[Debug] No progression rule, all tasks unlocked.');
+
                             return false;
                         }
 
                         // Use taskProgression rules
                         if (index < firstBatchSize) {
-                            console.log(`[Debug] Task index ${index} is within firstBatchSize ${firstBatchSize}, unlocked.`);
+
                             return false;
                         }
 
@@ -233,7 +195,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                         if (!nextBatchSize || nextBatchSize === 0) {
                             const firstBatchCompleted = goalsToUse.slice(0, firstBatchSize).every(g => g.completed === true || g.status === 'completed');
                             const result = !firstBatchCompleted;
-                            console.log(`[Debug] nextBatchSize is 0. First batch completed: ${firstBatchCompleted}. Locked: ${result}`);
+
                             return result;
                         }
 
@@ -252,17 +214,17 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
                             if (b === batchNumber - 1) {
                                 const result = !(batchCompleted && (canUnlockNextTasks || thresholdReached));
-                                console.log(`[Debug] Task in batch ${batchNumber}. Predecessor batch ${b} completed: ${batchCompleted}. canUnlock: ${canUnlockNextTasks}, threshold: ${thresholdReached}. Locked: ${result}`);
+
                                 return result;
                             }
                             if (!batchCompleted) {
-                                console.log(`[Debug] Task in batch ${batchNumber}. Previous batch ${b} not completed. Locked.`);
+
                                 return true;
                             }
                         }
 
                         const finalResult = !(canUnlockNextTasks || thresholdReached || unlockNextBatch);
-                        console.log(`[Debug] Final check. canUnlock: ${canUnlockNextTasks}, threshold: ${thresholdReached}, unlockNextBatch: ${unlockNextBatch}. Locked: ${finalResult}`);
+
                         return finalResult;
                     })();
 
@@ -276,7 +238,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     // Coins: prefer backend coinReward, fall back to SDK-specific amount/points
                     const goalAmount = parseFloat(goal.coinReward ?? goal.amount ?? goal.points ?? 0) || 0;
                     const coinReward = isCompleted ? goalAmount : 0;
-                    if (index < 3) console.log('💰 [LevelsSection] Goal reward:', { id: goal.goal_id || goal.id, name: goal.text || goal.name, raw_coinReward: goal.coinReward, raw_amount: goal.amount, raw_points: goal.points, parsed_goalAmount: goalAmount, isCompleted, coinReward });
 
                     // XP: BitLab = baseXP (1st task), baseXP*multiplier (2nd), ... Ensure baseXP >= 1 so XP always updates when tasks complete
                     const xpConfig = game?.xpRewardConfig || game?.bitlabsRawData?.xpRewardConfig || game?.besitosRawData?.xpRewardConfig || { baseXP: 1, multiplier: 1 };
@@ -597,10 +558,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
     const activeLineHeight = calculateLineHeight(activeLevels.length, false);
     const lockedLineHeight = calculateLineHeight(lockedLevels.length, true);
 
-
-
-
-
     return (
         <div className="w-[375px] h-auto  mt-3 mb-3  px-2 flex flex-col">
             {/* Header Section */}
@@ -651,7 +608,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     )}
                 </div>
             </div>
-
 
             {/* Progress Summary */}
             {isGameDownloaded && (
@@ -868,7 +824,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
 
                 <div className="w-[256px] relative rounded-[10px] flex items-center justify-center">
                     <div
-                        className={`w-full flex items-center gap-1.5 px-1.5 py-1 rounded-[10px] shadow-[0px_4px_4px_#00000040] 
+                        className={`w-full flex items-center gap-1.5 px-1.5 py-1 rounded-[10px] shadow-[0px_4px_4px_#00000040]
                              bg-[linear-gradient(141deg,#F4BB40_0%,#FBEA8D_80%,#F7CE46_98%,#F4BB40_100%)]
                         transition-all duration-200
                         ${isClaimed ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'hover:scale-[1.02]'}`}
@@ -881,7 +837,7 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                             onClick={() => setShowRulesModal(true)}
                             disabled={isClaimed}
                             className={`flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-[#716ae7] rounded-full flex-shrink-0
-                            hover:bg-[#5a52d4] transition-colors duration-200 
+                            hover:bg-[#5a52d4] transition-colors duration-200
                             ${isClaimed ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                         >
                             <span className="text-white text-sm sm:text-base font-bold leading-none">﹖</span>
@@ -890,7 +846,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                 </div>
             </div>
             )}
-
 
             {/* End & Claim Rewards Button - Hidden but functionality preserved */}
             <div className="hidden">
@@ -1064,8 +1019,6 @@ export const LevelsSection = ({ game, selectedTier, onTierChange, onSessionUpdat
                     )}
                 </button>
             </div>
-
-
 
             {/* Tooltip Modal */}
             {showTooltip && (

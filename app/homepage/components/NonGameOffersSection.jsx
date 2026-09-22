@@ -37,7 +37,7 @@ const NonGameOffersSection = ({ skipFetch = false }) => {
         const hasFreshCache = currentOffers?.length && currentTs && (Date.now() - currentTs < CACHE_STALE_MS);
         if (hasFreshCache || currentStatus === "loading" || currentStatus === "failed") return;
         dispatch(fetchNonGameOffers({ token, offerType: "cashback_shopping" }));
-    }, [token, skipFetch]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [token, skipFetch]);
 
     // Return to app (focus): refresh only if cache older than 1 min
     useEffect(() => {

@@ -6,7 +6,6 @@ import { HomeIndicator } from "../../components/HomeIndicator";
 import { getXPTierProgressBar } from "@/lib/api";
 import { useWalletUpdates } from "@/hooks/useWalletUpdates";
 
-
 const RacePage = () => {
     const router = useRouter();
     const [showTooltip, setShowTooltip] = useState(false);
@@ -85,7 +84,7 @@ const RacePage = () => {
         fetchXPTierData();
     }, [token]);
 
-    // OPTIMIZED: Memoize progress data from API response with real-time XP updates
+    // Memoize progress data from API response with real-time XP updates
     const progressData = useMemo(() => {
         if (!xpTierData) {
             return {

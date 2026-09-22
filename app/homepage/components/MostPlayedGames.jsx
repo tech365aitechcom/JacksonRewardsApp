@@ -22,12 +22,12 @@ const MostPlayedGames = () => {
     const sectionTimestamp = useSelector((state) => state.games.gamesBySectionTimestamp[sectionName]);
     const { details: userProfile } = useSelector((state) => state.profile);
 
-    // OPTIMIZED: Use section-specific games data
+    // Use section-specific games data
     const allGames = useMemo(() => {
         return mostPlayedGames;
     }, [mostPlayedGames]);
 
-    // OPTIMIZED: Map games using normalizer for both besitos and bitlab (coins + total XP from tasks)
+    // Map games using normalizer for both besitos and bitlab (coins + total XP from tasks)
     const filteredGames = useMemo(() => {
         return allGames.map(game => {
             // Normalize game data for both besitos and bitlab
@@ -75,7 +75,7 @@ const MostPlayedGames = () => {
         });
     }, [allGames]);
 
-    // OPTIMIZED: Reduced image preloading for faster initial render
+    // Reduced image preloading for faster initial render
     useEffect(() => {
         if (filteredGames.length > 0) {
             // Only preload first game for immediate display
@@ -106,7 +106,6 @@ const MostPlayedGames = () => {
         router.push(`/gamedetails?gameId=${gameId}&source=mostPlayed`);
     }, [router, dispatch]);
 
-
     // One discover call only on mount. Guard loading/failed to prevent unnecessary calls.
     useEffect(() => {
         const hasFreshCache = sectionTimestamp != null && Date.now() - sectionTimestamp < CACHE_STALE_MS;
@@ -117,7 +116,7 @@ const MostPlayedGames = () => {
             page: 1,
             limit: 10
         }));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // JS direction-lock touch handler for Android WebView carousel scroll
     const touchStartRef = useRef({ x: 0, y: 0, scrollLeft: 0 });
@@ -158,7 +157,7 @@ const MostPlayedGames = () => {
             el.removeEventListener('touchmove', onTouchMove);
             el.removeEventListener('touchend', onTouchEnd);
         };
-    }, [hasGames]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [hasGames]);
 
     // Return to app (focus): one discover call only if cache older than 2 min. User from localStorage.
     useEffect(() => {
@@ -189,7 +188,7 @@ const MostPlayedGames = () => {
         };
     }, [dispatch, sectionName]);
 
-    // OPTIMIZED: Memoize localStorage operations to prevent unnecessary writes
+    // Memoize localStorage operations to prevent unnecessary writes
     const handleStoreGamesData = useCallback((games) => {
         try {
             localStorage.setItem('featuredGamesData', JSON.stringify(games));
@@ -197,7 +196,6 @@ const MostPlayedGames = () => {
             // Failed to store games data - silently handle
         }
     }, []);
-
 
     return (
         <div className="flex flex-col items-start gap-4 relative w-full animate-fade-in">

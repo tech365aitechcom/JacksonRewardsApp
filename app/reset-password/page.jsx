@@ -19,10 +19,10 @@ const ResetPasswordComponent = () => {
   const [showPassword1, setShowPassword1] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
 
-  // ✅ Success Modal State
+  // Success Modal State
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // ✅ Read token
+  // Read token
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
     if (tokenFromUrl) {
@@ -33,7 +33,7 @@ const ResetPasswordComponent = () => {
     }
   }, [searchParams]);
 
-  // ✅ Validation logic
+  // Validation logic
   const validatePasswords = (pw = newPassword, cpw = confirmPassword) => {
     const errs = {};
 
@@ -68,7 +68,7 @@ const ResetPasswordComponent = () => {
     confirmPassword &&
     Object.keys(errors).length === 0;
 
-  // ✅ Submit handler
+  // Submit handler
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
@@ -83,7 +83,7 @@ const ResetPasswordComponent = () => {
     try {
       await resetPassword(token, newPassword);
 
-      // ✅ Show success modal (NO auto redirect)
+      // Show success modal (NO auto redirect)
       setShowSuccessModal(true);
 
     } catch (error) {
@@ -132,13 +132,13 @@ const ResetPasswordComponent = () => {
                   onClick={() => setShowPassword1(!showPassword1)}
                 >
                   {showPassword1 ? (
-                    // 👁️ SHOW PASSWORD
+                    // SHOW PASSWORD
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
                       <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" />
                       <path d="M10 4C5.5 4 1.73 7.11 1 10c.73 2.89 4.5 6 9 6s8.27-3.11 9-6c -.73-2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" />
                     </svg>
                   ) : (
-                    // 👁️‍🗨️ HIDE PASSWORD
+                    // HIDE PASSWORD
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
                       <path d="M10 12c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" stroke="#d3d3d3" strokeWidth="1.2" />
                       <path d="M10 4C5.5 4 1.73 7.11 1 10c .73 2.89 4.5 6 9 6s8.27-3.11 9-6c-.73 -2.89-4.5-6-9-6z" stroke="#d3d3d3" strokeWidth="1.2" />

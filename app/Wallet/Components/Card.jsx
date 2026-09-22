@@ -85,7 +85,7 @@ export const Card = ({ isOpen, onClose, methods, fundingSources, token }) => {
         // TODO: Implement add new gift card functionality
     };
 
-    // ✅ FIX: Better keyboard handling - ensure button stays visible with 3x more scroll
+    // Better keyboard handling - ensure button stays visible with 3x more scroll
     const handleInputFocus = () => {
         // Use multiple timeouts to handle different keyboard animation speeds
         setTimeout(() => {
@@ -158,7 +158,7 @@ export const Card = ({ isOpen, onClose, methods, fundingSources, token }) => {
     };
 
     const handleSubmitGiftCard = async () => {
-        // CRITICAL FIX: Prevent double submission
+        // Prevent double submission
         if (isSubmitting) {
             return;
         }

@@ -99,7 +99,7 @@ export const TaskListSection = () => {
             page: 1,
             limit: 10
         }));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Return to app (focus): one discover call only if cache older than 2 min. Same as HighestEarningGame.
     useEffect(() => {
@@ -179,7 +179,6 @@ export const TaskListSection = () => {
         const gameId = game.gameId || game.details?.id || game.id || game._id;
         router.push(`/gamedetails?gameId=${gameId}&source=cashCoach`);
     }, [router, dispatch]);
-
 
     // Show loading state only if games are loading AND we have no cached data
     // With stale-while-revalidate, we show cached data immediately, so loading only shows on first load

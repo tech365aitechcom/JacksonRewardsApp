@@ -33,7 +33,6 @@ function LoginPageContent() {
   const turnstileRef = useRef(null);
   const turnstileWidgetId = useRef(null);
 
-
   useEffect(() => { hideSplash(); }, [hideSplash]);
 
   // Show Google login error passed via query param (from native deep link error flow)
@@ -42,25 +41,24 @@ function LoginPageContent() {
   useEffect(() => {
     const googleError = searchParams.get("googleError");
     const accountStatus = searchParams.get("accountStatus");
-    console.log("🔑 [LoginPage] searchParams changed →", { googleError, accountStatus });
 
     if (googleError) {
       const decoded = decodeURIComponent(googleError);
-      console.log("🔑 [LoginPage] googleError found → decoded:", decoded);
+
       setError({ form: decoded });
     } else {
-      console.log("🔑 [LoginPage] No googleError in searchParams");
+
     }
 
     if (accountStatus) {
-      console.log("🔑 [LoginPage] accountStatus found:", accountStatus);
+
       setAccountStatusError(accountStatus);
     }
 
     if (googleError || accountStatus) {
       // Clean the URL so error doesn't persist on refresh
       window.history.replaceState({}, "", "/login");
-      console.log("🔑 [LoginPage] URL cleaned to /login");
+
     }
   }, [searchParams]);
 
@@ -135,17 +133,17 @@ function LoginPageContent() {
             callback: (token) => {
               setTurnstileToken(token);
               setIsTurnstileLoading(false);
-              console.log('✅ Turnstile verified:', token);
+
             },
             'error-callback': () => {
               setTurnstileToken(null);
               setIsTurnstileLoading(false);
-              console.error('❌ Turnstile error');
+              console.error("Turnstile error");
             },
             'expired-callback': () => {
               setTurnstileToken(null);
               setIsTurnstileLoading(true);
-              console.warn('⏰ Turnstile token expired');
+              console.warn("Turnstile token expired");
             },
             theme: 'dark',
             size: 'normal',
@@ -153,7 +151,7 @@ function LoginPageContent() {
           setIsTurnstileLoading(false);
           turnstileWidgetId.current = widgetId;
         } catch (err) {
-          console.error('Failed to render Turnstile widget:', err);
+          console.error("Failed to render Turnstile widget");
         }
       }
     };
@@ -284,7 +282,7 @@ function LoginPageContent() {
         setTurnstileToken(null);
       }
     } catch (err) {
-      console.error("Login component error:", err);
+      console.error("Login component error");
       const msg =
         err?.message ||
         err?.body?.message ||
@@ -306,10 +304,6 @@ function LoginPageContent() {
   };
 
   const handleSocialLogin = async (provider) => {
-    console.log("🔐 [Login] handleSocialLogin called:", {
-      provider,
-      isNative: Capacitor.isNativePlatform(),
-    });
 
     setIsRedirecting(true);
     // Was hardcoded to production, so a UAT build authenticated against prod
@@ -330,17 +324,9 @@ function LoginPageContent() {
         // Also pass platform=mobile so backend knows it's a mobile app
         const authUrl = `${backendUrl}/api/auth/${provider}?platform=mobile&callbackUrl=${encodeURIComponent(deepLinkCallback)}&webCallbackUrl=${encodeURIComponent(webCallbackUrl)}`;
 
-        console.log("🔗 [Login] Opening OAuth with mobile callback:", {
-          authUrl,
-          deepLinkCallback,
-
-          webCallbackUrl,
-        });
-
         // Use the Capacitor Browser plugin to open the auth URL.
         // This displays a secure, temporary browser window over the app.
         await Browser.open({ url: authUrl });
-        console.log("✅ [Login] Browser opened for OAuth");
 
         // Listen for browser navigation events to detect when callback URL is hit
         let browserListener = null;
@@ -349,7 +335,6 @@ function LoginPageContent() {
         // Note: Capacitor Browser plugin may not support this, so we'll also use a fallback
         try {
           browserListener = Browser.addListener('browserPageLoaded', () => {
-            console.log("📄 [Login] Browser page loaded");
 
             // The 'browserPageLoaded' event doesn't carry a URL.
             // The /auth/callback page is responsible for closing the browser
@@ -357,13 +342,13 @@ function LoginPageContent() {
             // We just log that a page loaded for debugging.
           });
         } catch (listenerError) {
-          console.warn("⚠️ [Login] Browser page load listener not available:", listenerError);
+          console.warn("[Login] Browser page load listener not available");
         }
 
         // Add a listener to hide the loading overlay if the user
         // manually closes the browser window without logging in.
         Browser.addListener('browserFinished', () => {
-          console.log("⚠️ [Login] Browser closed by user");
+
           setIsRedirecting(false);
           // Remove listener if it was added
           if (browserListener) {
@@ -372,7 +357,7 @@ function LoginPageContent() {
         });
 
       } catch (error) {
-        console.error("❌ [Login] Failed to open browser:", error);
+        console.error("[Login] Failed to open browser");
         setIsRedirecting(false); // Hide overlay on error
         setError({ form: "Failed to open login page. Please try again." });
       }
@@ -385,16 +370,9 @@ function LoginPageContent() {
 
       const authUrl = `${backendUrl}/api/auth/${provider}?callbackUrl=${encodeURIComponent(webCallbackUrl)}`;
 
-      console.log("🔗 [Login] Opening OAuth with web callback:", {
-        authUrl,
-        webCallbackUrl,
-      });
-
       window.location.href = authUrl;
     }
   };
-
-
 
   const handleSignUp = () => {
     router.push("/welcome");
@@ -451,7 +429,7 @@ function LoginPageContent() {
                 turnstileWidgetId.current = widgetId;
                 setTimeout(() => setIsTurnstileLoading(false), 800);
               } catch (err) {
-                console.error('Failed to render Turnstile widget on script load:', err);
+                console.error("Failed to render Turnstile widget on script load");
               }
             }
           }, 200);
@@ -538,7 +516,7 @@ function LoginPageContent() {
               {/* ============================================================
                   CLOUDFLARE TURNSTILE WIDGET - MANUAL RENDERING
                   ============================================================
-                  
+
                   HOW IT WORKS:
                   1. Widget container is rendered with a ref
                   2. Widget is manually rendered via useEffect when script loads
@@ -546,12 +524,12 @@ function LoginPageContent() {
                   4. Widget starts analyzing user behavior in the background
                   5. When verified → callback fires automatically
                   6. Token is stored in state and sent to backend with form
-                  
+
                   Widget Modes:
                   - "Managed" (default): Automatically decides if challenge needed
                   - "Non-interactive": Never shows challenge, fully invisible
                   - "Invisible": Completely hidden, always automatic
-                  
+
                   Most users will NEVER see a challenge - it's automatic!
                   ============================================================ */}
               <div className="absolute w-[316px] top-[600px] left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 mt-2">
@@ -619,8 +597,6 @@ function LoginPageContent() {
                   </p>
                 )}
               </div>
-
-
 
               <div className="absolute w-[316px] top-[473px] left-1/2 transform -translate-x-1/2 flex flex-col mt-4">
                 <div className="flex justify-between items-center">
@@ -696,12 +672,10 @@ function LoginPageContent() {
                   welcome back we missed you
                 </p>
 
-
                 <h1 className="absolute top-0 left-[11px] [font-family:'Poppins',Helvetica] font-semibold text-[#efefef] text-2xl tracking-[0] leading-[normal]">
                   Welcome Back!
                 </h1>
               </div>
-
 
               <Image
                 className="absolute w-[52px] h-[43px] top-[310px] left-[79%]"

@@ -27,7 +27,7 @@ export default function OTPPage() {
 
   const handleVerify = () => {
     const otpCode = otpValues.join("");
-    console.log("OTP Code:", otpCode);
+
     // Add verification logic here
   };
 

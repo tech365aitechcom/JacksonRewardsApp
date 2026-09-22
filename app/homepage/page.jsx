@@ -33,9 +33,6 @@ const Homepage = () => {
   const { currentNotification, dismiss, loading: notificationsLoading, error: notificationsError } = useNotifications(token);
 
   // Notification error handling (silent)
-  React.useEffect(() => {
-    // Silently handle notification errors
-  }, [currentNotification, notificationsError, notificationsLoading]);
 
   return (
     <div

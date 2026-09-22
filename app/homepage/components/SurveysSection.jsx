@@ -30,7 +30,7 @@ const SurveysSection = () => {
         const hasFreshCache = surveys?.length && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_STALE_MS);
         if (hasFreshCache || status === "loading" || status === "failed") return;
         dispatch(fetchSurveys({ token }));
-    }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [token]);
 
     // Return to app (focus): refresh only if cache older than 1 min
     useEffect(() => {
@@ -169,7 +169,6 @@ const SurveysSection = () => {
             zIndex: totalCards - Math.abs(offset),
         };
     };
-
 
     // REMOVED: Loading state - always show content immediately (stale-while-revalidate pattern)
     // Background fetching happens automatically without blocking UI

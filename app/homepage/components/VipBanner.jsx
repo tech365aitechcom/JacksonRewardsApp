@@ -7,10 +7,10 @@ import Image from "next/image";
 const VipBanner = () => {
     const router = useRouter();
 
-    // OPTIMIZED: Memoize selector to prevent unnecessary re-renders
+    // Memoize selector to prevent unnecessary re-renders
     const vipStatus = useSelector((state) => state.profile.vipStatus);
 
-    // OPTIMIZED: Memoize VIP status calculation
+    // Memoize VIP status calculation
     const vipData = useMemo(() => {
         const isVipActive = vipStatus?.data?.isActive && vipStatus?.data?.currentTier && vipStatus?.data?.currentTier.toLowerCase() !== "free";
         const currentTier = vipStatus?.data?.currentTier;
@@ -21,13 +21,13 @@ const VipBanner = () => {
         };
     }, [vipStatus]);
 
-    // OPTIMIZED: Memoize event handler
+    // Memoize event handler
     const handleVipClick = useCallback(() => {
         if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/homepage");
         router.push("/BuySubscription");
     }, [router]);
 
-    // OPTIMIZED: Memoize VIP upgrade handler
+    // Memoize VIP upgrade handler
     const handleVipUpgrade = useCallback(() => {
         if (typeof window !== "undefined") sessionStorage.setItem("buySubscriptionFrom", "/homepage");
         router.push("/BuySubscription");

@@ -13,8 +13,7 @@ const config: CapacitorConfig = {
   },
   server: {
     allowNavigation: [
-      'http://94.249.151.176:4001',
-       'jackson-3c4bc.firebaseapp.com', // Your Firebase Auth Domain
+       'jackson-3c4bc.firebaseapp.com', // Firebase authentication domain
       // 'identitytoolkit.googleapis.com',
        '*.googleapis.com',             // Google APIs
       '*.firebasejs.com',
@@ -29,7 +28,7 @@ const config: CapacitorConfig = {
       providers: ["phone"],
     },
     SplashScreen: {
-      // launchAutoHide: false — JS calls SplashScreen.hide() when ready (industry standard).
+      // launchAutoHide: false — JS calls SplashScreen.hide() when ready.
       // The plugin keeps the native splash visible indefinitely until we call hide().
       launchAutoHide: false,
       // launchFadeOutDuration: smooth cross-fade when the splash is dismissed (matches iOS feel).
@@ -77,7 +76,7 @@ const config: CapacitorConfig = {
       }
     },
     Stripe: {
-      publishableKey: "pk_test_51SBUH3PJY1SybSwUCQEkb8qM1YDRgbKitMYFGpRDcryE1AFDPIHoI4ovL61hITqeaoFeNgDkFlZ5tBV7rFv7B3U0008lDMyvfe", // Add your Stripe publishable key here
+      // StripePaymentSheet initializes the key from NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.
       stripeAccount: "", // Optional: Add if using Connect
       setReturnUrlSchemeOnAndroid: true,
       setReturnUrlSchemeOnIOS: true,

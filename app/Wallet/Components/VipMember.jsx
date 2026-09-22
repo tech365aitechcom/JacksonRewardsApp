@@ -2,8 +2,6 @@
 import Image from "next/image";
 import React, { useState, useEffect, useCallback } from "react";
 
-
-
 export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
     const isVipActive = vipStatus?.data?.isActive && vipStatus?.data?.currentTier && vipStatus?.data?.currentTier.toLowerCase() !== "free";
     return (
@@ -77,7 +75,6 @@ export const VipMember = ({ vipStatus, handleVipUpgrade }) => {
                 </div>
             </section>
         )
-
 
     )
 }

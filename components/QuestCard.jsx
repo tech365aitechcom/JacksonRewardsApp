@@ -105,7 +105,7 @@ export const QuestCard = ({ game }) => {
         return {
             id: goal.goal_id || index + 1,
             number: (index + 1).toString(),
-            // OPTIMIZED: Better text truncation and formatting for mobile
+            // Better text truncation and formatting for mobile
             title: (goal.text || goal.title || `Complete Goal ${index + 1}`).length > 50
                 ? `${(goal.text || goal.title || `Complete Goal ${index + 1}`).substring(0, 47)}...`
                 : (goal.text || goal.title || `Complete Goal ${index + 1}`),

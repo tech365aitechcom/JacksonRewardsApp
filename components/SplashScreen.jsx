@@ -77,7 +77,7 @@ export default function SplashScreen({ children }) {
     });
 
     return () => cancelAnimationFrame(raf);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SplashContext.Provider value={{ hideSplash }}>

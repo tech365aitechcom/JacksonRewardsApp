@@ -25,19 +25,11 @@ export default function StripePaymentSheet({
             try {
                 // Check if we're on mobile (Capacitor) or web
                 const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                console.log("🔍 [StripePaymentSheet] Platform detection:", {
-                    userAgent: navigator.userAgent,
-                    isMobile: isMobile,
-                    stripeAvailable: typeof Stripe !== 'undefined',
-                    stripeInitialize: typeof Stripe?.initialize === 'function',
-                    stripeCreatePaymentSheet: typeof Stripe?.createPaymentSheet === 'function',
-                    stripePresentPaymentSheet: typeof Stripe?.presentPaymentSheet === 'function'
-                });
 
                 if (isMobile && typeof Stripe !== 'undefined' && Stripe.initialize) {
                     // Mobile: Use Capacitor Stripe plugin
                     // According to official docs, use initialize() instead of setPublishableKey()
-                    console.log("📱 [StripePaymentSheet] Initializing Stripe for mobile...");
+
                     try {
                         const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
                         if (!stripePublishableKey) {
@@ -46,14 +38,10 @@ export default function StripePaymentSheet({
                         await Stripe.initialize({
                             publishableKey: stripePublishableKey
                         });
-                        console.log("✅ [StripePaymentSheet] Stripe initialized successfully (Mobile)");
+
                     } catch (initError) {
-                        console.error("❌ [StripePaymentSheet] Stripe initialization failed:", initError);
-                        console.error("❌ [StripePaymentSheet] Error details:", {
-                            message: initError.message,
-                            code: initError.code,
-                            type: typeof initError
-                        });
+                        console.error("[StripePaymentSheet] Stripe initialization failed");
+                        console.error("[StripePaymentSheet] Error details");
                         // This is critical for mobile, so set error
                         if (isMobile) {
                             setError("Failed to initialize payment service. Please restart the app.");
@@ -61,10 +49,10 @@ export default function StripePaymentSheet({
                     }
                 } else {
                     // Web: Skip Stripe initialization for now, will use redirect approach
-                    console.log("✅ [StripePaymentSheet] Running on web - using redirect approach");
+
                 }
             } catch (error) {
-                console.error("❌ [StripePaymentSheet] Failed to initialize Stripe:", error);
+                console.error("[StripePaymentSheet] Failed to initialize Stripe");
                 // Don't set error for web, just log it
                 if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                     setError("Failed to initialize payment service");
@@ -76,7 +64,6 @@ export default function StripePaymentSheet({
     }, []);
 
     const handlePayment = async () => {
-        console.log("🚀 [StripePaymentSheet] Starting payment flow");
 
         setIsLoading(true);
         setError(null);
@@ -90,17 +77,9 @@ export default function StripePaymentSheet({
 
             // Check if we're on mobile or web
             const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            console.log("🔍 [StripePaymentSheet] Payment flow detection:", {
-                isMobile: isMobile,
-                stripeAvailable: typeof Stripe !== 'undefined',
-                stripeCreatePaymentSheet: typeof Stripe?.createPaymentSheet === 'function',
-                stripePresentPaymentSheet: typeof Stripe?.presentPaymentSheet === 'function',
-                clientSecret: clientSecret ? `${clientSecret.substring(0, 20)}...` : 'null'
-            });
 
             if (isMobile && typeof Stripe !== 'undefined' && Stripe.createPaymentSheet) {
                 // Mobile: Use Capacitor Stripe plugin
-                console.log("💳 [StripePaymentSheet] Creating payment sheet configuration (Mobile)");
 
                 // Simplify config - remove optional features that might cause issues
                 const paymentSheetConfig = {
@@ -110,64 +89,49 @@ export default function StripePaymentSheet({
                     // Removed: appearance customization (might cause rendering issues)
                 };
 
-                console.log("🔧 [StripePaymentSheet] Creating payment sheet");
-                console.log("🔧 [StripePaymentSheet] Payment sheet config:", JSON.stringify(paymentSheetConfig, null, 2));
-
                 try {
                     const createResult = await Stripe.createPaymentSheet(paymentSheetConfig);
-                    console.log("✅ [StripePaymentSheet] Payment sheet created successfully");
-                    console.log("✅ [StripePaymentSheet] Create result:", JSON.stringify(createResult, null, 2));
+
                 } catch (createError) {
-                    console.error("❌ [StripePaymentSheet] createPaymentSheet threw error:", createError);
-                    console.error("❌ [StripePaymentSheet] Error type:", typeof createError);
-                    console.error("❌ [StripePaymentSheet] Error keys:", createError ? Object.keys(createError) : "null");
-                    console.error("❌ [StripePaymentSheet] Error JSON:", JSON.stringify(createError, null, 2));
-                    console.error("❌ [StripePaymentSheet] Error message:", createError.message);
-                    console.error("❌ [StripePaymentSheet] Error code:", createError.code);
+                    console.error("[StripePaymentSheet] createPaymentSheet threw error");
+                    console.error("[StripePaymentSheet] Error type");
+                    console.error("[StripePaymentSheet] Error keys");
+                    console.error("[StripePaymentSheet] Error JSON");
+                    console.error("[StripePaymentSheet] Error message");
+                    console.error("[StripePaymentSheet] Error code");
 
                     // Rethrow with more details
                     throw new Error(`Failed to create payment sheet: ${createError.message || 'Unknown error'}`);
                 }
 
-                console.log("📱 [StripePaymentSheet] Presenting payment sheet");
                 let result;
                 try {
                     result = await Stripe.presentPaymentSheet();
                 } catch (presentError) {
-                    console.error("❌ [StripePaymentSheet] presentPaymentSheet threw error:", presentError);
-                    console.error("❌ [StripePaymentSheet] Error type:", typeof presentError);
-                    console.error("❌ [StripePaymentSheet] Error keys:", presentError ? Object.keys(presentError) : "null");
-                    console.error("❌ [StripePaymentSheet] Error JSON:", JSON.stringify(presentError, null, 2));
+                    console.error("[StripePaymentSheet] presentPaymentSheet threw error");
+                    console.error("[StripePaymentSheet] Error type");
+                    console.error("[StripePaymentSheet] Error keys");
+                    console.error("[StripePaymentSheet] Error JSON");
 
                     // Rethrow to be caught by outer try-catch
                     throw new Error(presentError.message || "Failed to present payment sheet");
                 }
 
-                console.log("📊 [StripePaymentSheet] Payment result:", result);
-                console.log("📊 [StripePaymentSheet] Payment result type:", typeof result);
-                console.log("📊 [StripePaymentSheet] Payment result keys:", result ? Object.keys(result) : "null");
-                console.log("📊 [StripePaymentSheet] Payment result JSON:", JSON.stringify(result, null, 2));
-                console.log("📊 [StripePaymentSheet] Payment result.paymentResult:", result.paymentResult);
-                console.log("📊 [StripePaymentSheet] Payment result.paymentResult type:", typeof result.paymentResult);
-                console.log("📊 [StripePaymentSheet] Payment result.error:", result.error);
-                console.log("📊 [StripePaymentSheet] Payment result.error type:", typeof result.error);
-
                 // Handle payment result according to Stripe's official documentation
                 // Result can be: "completed", "paymentSheetCompleted", "failed", "canceled", "paymentSheetFailed"
 
                 if (result.paymentResult === "completed" || result.paymentResult === "paymentSheetCompleted") {
-                    console.log("✅ [StripePaymentSheet] Payment completed successfully");
+
                     const paymentIntentId = clientSecret.split("_secret_")[0];
-                    console.log("✅ [StripePaymentSheet] Extracted payment intent ID:", paymentIntentId);
+
                     if (onPaymentSuccess) {
                         onPaymentSuccess(paymentIntentId);
                     }
                 } else if (result.paymentResult === "failed") {
-                    console.log("❌ [StripePaymentSheet] Payment failed");
 
                     // Try to get more detailed error information
                     const errorDetails = result.error || {};
-                    console.error("❌ [StripePaymentSheet] Payment failure details:", errorDetails);
+                    console.error("[StripePaymentSheet] Payment failure details");
 
                     let errorMessage = "Payment failed. Please try again.";
 
@@ -191,14 +155,14 @@ export default function StripePaymentSheet({
                         onPaymentError(new Error(errorMessage));
                     }
                 } else if (result.paymentResult === "canceled") {
-                    console.log("⚠️ [StripePaymentSheet] Payment canceled by user");
+
                     if (onPaymentCancel) {
                         onPaymentCancel();
                     }
                 } else if (result.paymentResult === "paymentSheetFailed") {
-                    console.error("❌ [StripePaymentSheet] Payment sheet failed to load or display");
-                    console.error("❌ [StripePaymentSheet] This usually indicates a configuration issue");
-                    console.error("❌ [StripePaymentSheet] Error details:", result.error || "No error details available");
+                    console.error("[StripePaymentSheet] Payment sheet failed to load or display");
+                    console.error("[StripePaymentSheet] This usually indicates a configuration issue");
+                    console.error("[StripePaymentSheet] Error details");
 
                     // Provide more specific error message
                     const errorMessage = result.error?.message || "Payment system could not be loaded. Please check your internet connection and try again.";
@@ -208,15 +172,14 @@ export default function StripePaymentSheet({
                         onPaymentError(new Error(errorMessage));
                     }
                 } else {
-                    console.warn("⚠️ [StripePaymentSheet] Unknown payment result:", result.paymentResult);
-                    console.warn("⚠️ [StripePaymentSheet] Expected values: 'completed', 'paymentSheetCompleted', 'failed', 'canceled', 'paymentSheetFailed'");
-                    console.warn("⚠️ [StripePaymentSheet] Actual value:", JSON.stringify(result.paymentResult));
-                    console.warn("⚠️ [StripePaymentSheet] Full result object:", JSON.stringify(result, null, 2));
+                    console.warn("[StripePaymentSheet] Unknown payment result");
+                    console.warn("[StripePaymentSheet] Expected values: 'completed', 'paymentSheetCompleted', 'failed', 'canceled', 'paymentSheetFailed'");
+                    console.warn("[StripePaymentSheet] Actual value");
+                    console.warn("[StripePaymentSheet] Full result object");
                     setError("Unexpected payment result. Please contact support.");
                 }
             } else {
                 // Web: Redirect to Stripe Checkout
-                console.log("🌐 [StripePaymentSheet] Redirecting to Stripe Checkout (Web)");
 
                 // For web, we'll redirect to a Stripe Checkout URL
                 // This is a simplified approach for web browsers
@@ -234,7 +197,7 @@ export default function StripePaymentSheet({
                         if (newWindow.closed) {
                             clearInterval(checkClosed);
                             // Payment completed (user closed window)
-                            console.log("✅ [StripePaymentSheet] Payment window closed - assuming completed");
+
                             const paymentIntentId = clientSecret.split("_secret_")[0];
                             if (onPaymentSuccess) {
                                 onPaymentSuccess(paymentIntentId);
@@ -245,7 +208,7 @@ export default function StripePaymentSheet({
             }
 
         } catch (error) {
-            console.error("💥 [StripePaymentSheet] Payment error:", error);
+            console.error("[StripePaymentSheet] Payment error");
 
             let errorMessage = "An unexpected error occurred. Please try again.";
 
@@ -285,7 +248,7 @@ export default function StripePaymentSheet({
     // Auto-trigger payment when component mounts with client secret
     useEffect(() => {
         if (clientSecret && !isLoading && !error) {
-            console.log("🔄 [StripePaymentSheet] Auto-triggering payment");
+
             handlePayment();
         }
     }, [clientSecret]);

@@ -3,13 +3,13 @@ import React from "react";
 
 /**
  * InfoModal Component
- * 
+ *
  * Displays information about the 30-day streak feature:
  * - How it works
  * - Rules and requirements
  * - Milestone rewards
  * - Reset logic
- * 
+ *
  * @param {boolean} isVisible - Modal visibility state
  * @param {function} onClose - Handler for closing modal
  * @param {array} milestones - Milestone rewards from API
@@ -18,7 +18,7 @@ export const InfoModal = ({ isVisible = false, onClose, milestones = [] }) => {
     if (!isVisible) return null;
 
     // Use API milestones if available, otherwise fallback to defaults
-    const milestoneRewards = milestones.length > 0 
+    const milestoneRewards = milestones.length > 0
         ? milestones.map(m => ({
             day: m.day,
             coins: m.rewards?.find(r => r.type === 'coins')?.value || 0,

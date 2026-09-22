@@ -172,7 +172,6 @@ export const WelcomeOffer = () => {
     };
   }, []);
 
-
   return (
     <>
       <div
@@ -502,7 +501,6 @@ export const WelcomeOffer = () => {
 
           </div>
         )}
-
 
         {/* Tooltip */}
 

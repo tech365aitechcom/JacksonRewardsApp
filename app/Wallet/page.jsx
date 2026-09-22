@@ -16,7 +16,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { fetchWalletScreen } from "@/lib/redux/slice/walletTransactionsSlice";
 import { fetchProfileStats } from "@/lib/redux/slice/profileSlice";
 
-
 export default function WalletPage() {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -29,7 +28,6 @@ export default function WalletPage() {
 
   // VIP status using custom hook
   const { vipStatus, isLoading: vipLoadingStatus } = useVipStatus();
-
 
   // Get wallet screen data from Redux store
   const { walletScreen, walletScreenStatus } = useSelector((state) => state.walletTransactions);
@@ -107,8 +105,6 @@ export default function WalletPage() {
       </div>
     );
   }
-
-
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-black flex justify-center">

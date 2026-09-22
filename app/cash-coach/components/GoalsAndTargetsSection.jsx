@@ -30,8 +30,6 @@ export const GoalsAndTargetsSection = () => {
         router.push('/AchieveGoals');
     };
 
-
-
     const goalData = [
         { key: "salary", label: "Salary (Per Month)", max: 9999 },
         { key: "rent", label: "Rent (Per Month)", max: 9999 },

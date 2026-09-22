@@ -8,7 +8,6 @@ import { HomeIndicator } from "@/components/HomeIndicator";
 import { Header } from "./components/Header";
 import SurveysSection from "../homepage/components/SurveysSection";
 
-
 export default function AchieveGoalsPage() {
     const router = useRouter();
 

@@ -3,12 +3,12 @@ import React from "react";
 
 /**
  * ContactUs Component
- * 
+ *
  * Reusable component for displaying contact information:
  * - Physical address with map view
  * - Email and phone contact details
  * - Tap-to-call and tap-to-email functionality
- * 
+ *
  * @param {Object} contactInfo - Contact information object
  * @param {string} contactInfo.address - Physical address
  * @param {string} contactInfo.email - Email address

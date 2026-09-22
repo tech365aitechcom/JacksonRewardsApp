@@ -7,7 +7,6 @@ const Achievements = () => {
     const achievements = useSelector((state) => state.profile.achievements)
     const achievementsStatus = useSelector((state) => state.profile.achievementsStatus)
 
-
     // Show loading state
     if (achievementsStatus === 'loading') {
         return (
@@ -70,7 +69,7 @@ const Achievements = () => {
                     </button>
                 </div>
                 <div className="flex items-center justify-center w-full h-22
-                
+
                 ">
                     <p className="text-gray-400 text-sm">No achievements yet</p>
                 </div>

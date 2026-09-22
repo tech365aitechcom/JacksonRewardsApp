@@ -142,7 +142,6 @@ export const Race = ({ progressData, isLoadingXP }) => {
         },
     ];
 
-
     return (
         <div className="flex flex-col items-center">
             <div
@@ -330,7 +329,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                         </div>
                     </div>
                 </section>
-                {/* 
+                {/*
                 <section className="absolute top-[88px] left-0 w-full px-4 py-2">
                     {isLoadingXP ? (
                         <div className="flex justify-center items-center h-8">
@@ -369,7 +368,7 @@ export const Race = ({ progressData, isLoadingXP }) => {
                             transform: translateY(-4px);
                         }
                     }
-                    
+
                     @keyframes smoothBounce {
                         0%, 100% {
                             transform: translateY(0px);
@@ -390,8 +389,8 @@ export const Race = ({ progressData, isLoadingXP }) => {
                         transformStyle: 'preserve-3d'
                     }}
                     // onClick={() => {
-                    //     // Instant navigation - no loading delay
-                    //     router.push('/Race/ListGame');
+                    // // Instant navigation - no loading delay
+                    // router.push('/Race/ListGame');
                     // }}
                     aria-label="Start Playing - Begin Race"
                     type="button"

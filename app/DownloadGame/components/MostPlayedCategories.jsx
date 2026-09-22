@@ -31,7 +31,7 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
             page: 1,
             limit: 50
         }));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Return to app (focus): refetch only if cache older than 2 min. User from localStorage.
     React.useEffect(() => {
@@ -60,9 +60,6 @@ export const MostPlayedCategories = ({ searchQuery = "", showSearch = false }) =
             document.removeEventListener("visibilitychange", handleVisibility);
         };
     }, [dispatch]);
-
-
-
 
     // Process games from API into the same format - using normalizer for both besitos and bitlab
     const processGames = (games) => {

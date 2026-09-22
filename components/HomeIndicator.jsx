@@ -75,18 +75,18 @@ const MoreMenu = ({ onClose }) => {
               bg-black rounded-full border border-solid border-[#474747]
               shadow-[0px_0px_11px_#d8d8d840] cursor-pointer
               hover:border-[#5a5a5a] transition-colors
-              focus:outline-none focus:ring-2 focus:ring-[#5a5a5a] 
+              focus:outline-none focus:ring-2 focus:ring-[#5a5a5a]
               focus:ring-offset-2 focus:ring-offset-black
             "
             aria-label={item.label}
             type="button"
             onClick={() => handleMenuClick(item.href)}
             // style={{
-            //   minWidth: "60px",
-            //   minHeight: "60px",
-            //   borderRadius: "50%",
-            //   aspectRatio: "1/1",
-            //   padding: "6px 3px 3px 3px",
+            // minWidth: "60px",
+            // minHeight: "60px",
+            // borderRadius: "50%",
+            // aspectRatio: "1/1",
+            // padding: "6px 3px 3px 3px",
             // }}
             style={{
               minWidth: "60px",
@@ -95,7 +95,7 @@ const MoreMenu = ({ onClose }) => {
               aspectRatio: "1/1",
               padding: "6px 3px 3px 3px",
 
-              // 👇 THIS creates the semi-circle
+              // THIS creates the semi-circle
               transform:
                 item.id === 2
                   ? "translateY(-8px)"   // middle item (DEALS) goes up
@@ -194,7 +194,6 @@ export const HomeIndicator = ({ activeTab }) => {
     }
     return { filter: 'brightness(0.7) opacity(0.7)' };
   };
-
 
   return (
     <nav

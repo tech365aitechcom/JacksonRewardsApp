@@ -38,7 +38,6 @@ const nonGamingOffers = [
   },
 ];
 
-
 export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   // Redux state management
   const dispatch = useDispatch();
@@ -52,8 +51,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   // Extract games from the "Most Played" section
   const mostPlayedGames = gamesBySection?.["Most Played"] || [];
   const mostPlayedStatus = gamesBySectionStatus?.["Most Played"] || "idle";
-
-
 
   // Check if we have featured games data from MostPlayedGames
   const [featuredGames, setFeaturedGames] = React.useState(null);
@@ -99,16 +96,16 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
         return userId;
       }
     } catch (error) {
-      console.error('❌ [GameListSection] Error getting user ID:', error);
+      console.error("[GameListSection] Error getting user ID:", error);
     }
-    console.warn('⚠️ [GameListSection] No user ID found in localStorage');
+    console.warn("[GameListSection] No user ID found in localStorage");
     return null;
   };
 
   // Helper function to add user ID to redirect URL
   const addUserIdToRedirectUrl = (url, userId) => {
     if (!url || !userId) {
-      console.warn('⚠️ [GameListSection] Cannot add user ID: missing url or userId', { url: !!url, userId: !!userId });
+      console.warn("[GameListSection] Cannot add user ID: missing url or userId", { url: !!url, userId: !!userId });
       return url;
     }
 
@@ -126,7 +123,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       const finalUrl = urlObj.toString();
       return finalUrl;
     } catch (error) {
-      console.error('❌ [GameListSection] URL parsing failed, using fallback:', error);
+      console.error("[GameListSection] URL parsing failed, using fallback:", error);
       // If URL parsing fails, try to append/replace as query string
       // Remove existing empty partner_user_id if present
       let cleanUrl = url;
@@ -412,7 +409,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     const actualGame = game;
 
     if (!actualGame) {
-      console.error('❌ [GameListSection] No game provided to handleDownloadedGameClick');
+      console.error("[GameListSection] No game provided to handleDownloadedGameClick");
       return;
     }
 
@@ -420,7 +417,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     const gameData = actualGame.fullData || actualGame;
 
     if (!gameData) {
-      console.error('❌ [GameListSection] No game data available');
+      console.error("[GameListSection] No game data available");
       return;
     }
 
@@ -432,10 +429,10 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       localStorage.setItem('selectedGameData', JSON.stringify(gameData));
       // Use provider gameId (BitLabs/Besitos) for get-game-by-id API
       const gameId = gameData.gameId || gameData.details?.id || actualGame.id || gameData.id || gameData._id;
-      console.log('✅ [GameListSection] Navigating to game details:', gameId);
+
       router.push(`/gamedetails?gameId=${gameId}`);
     } catch (error) {
-      console.error('❌ [GameListSection] Failed to store game data:', error);
+      console.error("[GameListSection] Failed to store game data:", error);
     }
   };
 
@@ -444,14 +441,8 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     // GameItemCard passes (game, e), so game should always be the first parameter
     const actualGame = game;
 
-    console.log('🟢 [GameListSection] handleFeaturedGameClick called:', {
-      game: actualGame,
-      hasFullData: !!actualGame?.fullData,
-      gameId: actualGame?.id
-    });
-
     if (!actualGame) {
-      console.error('❌ [GameListSection] No game provided to handleFeaturedGameClick');
+      console.error("[GameListSection] No game provided to handleFeaturedGameClick");
       return;
     }
 
@@ -459,7 +450,7 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     const gameData = actualGame.fullData || actualGame;
 
     if (!gameData) {
-      console.error('❌ [GameListSection] No game data available');
+      console.error("[GameListSection] No game data available");
       return;
     }
 
@@ -471,10 +462,10 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       localStorage.setItem('selectedGameData', JSON.stringify(gameData));
       // Use provider gameId (BitLabs/Besitos) for get-game-by-id API
       const gameId = gameData.gameId || gameData.details?.id || actualGame.id || gameData.id || gameData._id;
-      console.log('✅ [GameListSection] Navigating to game details:', gameId);
+
       router.push(`/gamedetails?gameId=${gameId}&source=mostPlayed`);
     } catch (error) {
-      console.error('❌ [GameListSection] Failed to store game data:', error);
+      console.error("[GameListSection] Failed to store game data:", error);
     }
   };
 
@@ -641,12 +632,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
           )}
         </div>
       </div>
-
-
-
-
-
-
 
       {/* ==================== WATCH AD SECTION ==================== */}
       <WatchAdCard xpAmount={5} />

@@ -19,9 +19,7 @@ export const useWalletUpdates = (token) => {
   // Function to refresh wallet data
   const refreshWalletData = async () => {
     if (!token) {
-      console.warn(
-        "⚠️ [useWalletUpdates] No token provided for wallet refresh"
-      );
+      console.warn("[useWalletUpdates] No token provided for wallet refresh");
       return;
     }
 
@@ -29,7 +27,7 @@ export const useWalletUpdates = (token) => {
       await dispatch(fetchWalletScreen({ token, force: true }));
     } catch (error) {
       console.error(
-        "❌ [useWalletUpdates] Error refreshing wallet data:",
+        "[useWalletUpdates] Error refreshing wallet data:",
         error
       );
     }

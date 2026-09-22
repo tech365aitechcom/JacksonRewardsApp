@@ -48,12 +48,7 @@ export default function FaceVerificationPage() {
 
     // Check biometric availability on mount
     useEffect(() => {
-        console.log("🔍 [FACE-VERIFICATION] Component mounted, checking biometric availability...");
-        console.log("🔍 [FACE-VERIFICATION] Capacitor platform:", Capacitor.getPlatform());
-        console.log("🔍 [FACE-VERIFICATION] Is native platform:", Capacitor.isNativePlatform());
-        console.log("🔍 [FACE-VERIFICATION] Available plugins:", Object.keys(Capacitor.Plugins));
-        console.log("🔍 [FACE-VERIFICATION] NativeBiometric imported:", NativeBiometric);
-        console.log("🔍 [FACE-VERIFICATION] NativeBiometric methods:", NativeBiometric ? Object.keys(NativeBiometric) : "null");
+
         checkBiometricAvailability();
         // Only check camera permission if we might need it (device has fingerprint but not Face ID)
         // Don't check camera permission on mount - only check when user clicks Continue
@@ -78,40 +73,37 @@ export default function FaceVerificationPage() {
     }, [user, token]);
 
     const checkCameraPermission = async () => {
-        console.log("📷 [CAMERA] Checking camera permission...");
+
         try {
             if (!Capacitor.isNativePlatform()) {
-                console.log("⚠️ [CAMERA] Not on native platform, skipping");
+
                 return;
             }
 
             const permission = await Camera.checkPermissions();
-            console.log("📷 [CAMERA] Permission status:", JSON.stringify(permission));
+
             setCameraPermission(permission.camera);
         } catch (err) {
-            console.error("❌ [CAMERA] Error checking camera permission:", err);
+            console.error("[CAMERA] Error checking camera permission");
         }
     };
 
     const checkBiometricAvailability = async () => {
-        console.log("🔍 [CHECK-AVAILABILITY] Starting availability check...");
+
         try {
             if (!Capacitor.isNativePlatform()) {
-                console.log("⚠️ [CHECK-AVAILABILITY] Not on native platform, skipping");
+
                 // Web platform - show message that biometric is only available on mobile
                 setBiometricAvailable(false);
                 return;
             }
 
-            console.log("🔍 [CHECK-AVAILABILITY] Calling NativeBiometric.isAvailable()...");
             const result = await NativeBiometric.isAvailable();
-            console.log("✅ [CHECK-AVAILABILITY] Result:", JSON.stringify(result));
-            console.log("✅ [CHECK-AVAILABILITY] isAvailable:", result.isAvailable);
-            console.log("✅ [CHECK-AVAILABILITY] biometryType:", result.biometryType);
+
             // Note: @capgo/capacitor-native-biometric returns biometryType (single value), not biometryTypes array
 
-            // Map biometryType: 
-            // 0=None, 1=TouchID (iOS), 2=FaceID (iOS), 3=Fingerprint (Android), 
+            // Map biometryType:
+            // 0=None, 1=TouchID (iOS), 2=FaceID (iOS), 3=Fingerprint (Android),
             // 4=FACE_AUTHENTICATION (Android face unlock), 5=IRIS_AUTHENTICATION
             const biometryType = result.biometryType || 0;
             const hasFaceID = biometryType === 2; // 2 = FaceID (iOS only)
@@ -119,7 +111,7 @@ export default function FaceVerificationPage() {
             const hasFingerprint = biometryType === 3; // 3 = Fingerprint
             const hasTouchID = biometryType === 1; // 1 = TouchID (iOS)
 
-            // IMPORTANT: On Android, the plugin only returns the PRIMARY biometric type
+            // On Android, the plugin only returns the PRIMARY biometric type
             // If fingerprint (type 3) is returned, face unlock (type 4) might also be available
             // Android's BiometricPrompt will show all available options when verifyIdentity() is called
             // So we should check if face unlock might be available even if fingerprint is primary
@@ -128,39 +120,11 @@ export default function FaceVerificationPage() {
 
             // On Android, if fingerprint is detected, face unlock might also be available
             // The plugin only returns the primary type, but Android supports multiple biometrics
-            if (platform === "android" && hasFingerprint && !hasFaceAuth) {
-                console.log("ℹ️ [CHECK-AVAILABILITY] Android: Fingerprint detected as primary.");
-                console.log("ℹ️ [CHECK-AVAILABILITY] Android: Face unlock may also be available (not detected as primary).");
-                console.log("ℹ️ [CHECK-AVAILABILITY] Android: When verifyIdentity() is called, all available biometrics will be shown.");
-                // Note: We can't definitively say face unlock is available, but it might be
-                // Android's BiometricPrompt will show all available options when verifyIdentity() is called
-            }
 
             // Use Face if available (either iOS Face ID or Android face unlock), otherwise use the primary type
             const preferredType = hasFace ? (hasFaceID ? 2 : 4) : (biometryType || 2);
 
-            console.log("✅ [CHECK-AVAILABILITY] Has Face ID (iOS):", hasFaceID);
-            console.log("✅ [CHECK-AVAILABILITY] Has Face Authentication (Android):", hasFaceAuth);
-            console.log("✅ [CHECK-AVAILABILITY] Has Face unlock (any):", hasFace);
-            console.log("✅ [CHECK-AVAILABILITY] Has Fingerprint:", hasFingerprint);
-            console.log("✅ [CHECK-AVAILABILITY] Preferred type:", preferredType);
-
             // Explain what the plugin returned
-            if (hasFaceID) {
-                console.log("ℹ️ [CHECK-AVAILABILITY] Device has iOS Face ID (type 2)");
-            } else if (hasFaceAuth) {
-                console.log("ℹ️ [CHECK-AVAILABILITY] Device has Android Face Authentication (type 4)");
-            } else if (hasFingerprint) {
-                if (platform === "android") {
-                    console.log("ℹ️ [CHECK-AVAILABILITY] Device has Fingerprint (type 3) as primary.");
-                    console.log("ℹ️ [CHECK-AVAILABILITY] Face unlock may also be available but not detected as primary.");
-                    console.log("ℹ️ [CHECK-AVAILABILITY] Android's BiometricPrompt will show all available options when verifyIdentity() is called.");
-                } else {
-                    console.log("ℹ️ [CHECK-AVAILABILITY] Device has Fingerprint (type 3)");
-                }
-            } else {
-                console.log("ℹ️ [CHECK-AVAILABILITY] No biometric authentication available");
-            }
 
             setBiometricAvailable(result.isAvailable);
             setBiometricType(preferredType);
@@ -168,20 +132,20 @@ export default function FaceVerificationPage() {
             // Only use camera if device has fingerprint but user wants Face ID
             // If no biometrics available at all, don't use camera - show error instead
             if (!hasFace && hasFingerprint && result.isAvailable) {
-                console.log("📷 [CHECK-AVAILABILITY] Face ID not available, but fingerprint is. Will use camera for Face ID");
+
                 setUseCamera(true);
                 // Override biometric type to 4 (Face) since we're implementing Face ID via camera
                 setBiometricType(4);
             } else if (!result.isAvailable || biometryType === 1) {
-                console.log("⚠️ [CHECK-AVAILABILITY] No biometrics available - will not use camera fallback");
+
                 setUseCamera(false);
             }
         } catch (err) {
-            console.error("❌ [CHECK-AVAILABILITY] Error checking biometric availability:", err);
-            console.error("❌ [CHECK-AVAILABILITY] Error type:", typeof err);
-            console.error("❌ [CHECK-AVAILABILITY] Error message:", err?.message);
-            console.error("❌ [CHECK-AVAILABILITY] Error stack:", err?.stack);
-            console.error("❌ [CHECK-AVAILABILITY] Full error object:", JSON.stringify(err, null, 2));
+            console.error("[CHECK-AVAILABILITY] Error checking biometric availability");
+            console.error("[CHECK-AVAILABILITY] Error type");
+            console.error("[CHECK-AVAILABILITY] Error message");
+            console.error("[CHECK-AVAILABILITY] Error stack");
+            console.error("[CHECK-AVAILABILITY] Full error object");
             setBiometricAvailable(false);
             // If biometric check fails, don't use camera - show error instead
             setUseCamera(false);
@@ -189,14 +153,12 @@ export default function FaceVerificationPage() {
     };
 
     const captureFaceWithCamera = async () => {
-        console.log("📷 [CAMERA] Starting camera-based face detection...");
 
         try {
             // Request camera permission if not granted
             if (cameraPermission !== "granted") {
-                console.log("📷 [CAMERA] Requesting camera permission...");
+
                 const permission = await Camera.requestPermissions({ permissions: ["camera"] });
-                console.log("📷 [CAMERA] Permission result:", JSON.stringify(permission));
 
                 if (permission.camera !== "granted") {
                     throw new Error("Camera permission denied. Please enable camera access in app settings.");
@@ -205,7 +167,6 @@ export default function FaceVerificationPage() {
             }
 
             setLoadingStep("Opening camera...");
-            console.log("📷 [CAMERA] Opening camera...");
 
             // Capture photo using camera with lower quality and size to reduce file size
             const photo = await Camera.getPhoto({
@@ -220,10 +181,6 @@ export default function FaceVerificationPage() {
                 promptLabelPicture: "Use Camera",
             });
 
-            console.log("📷 [CAMERA] Photo captured successfully");
-            console.log("📷 [CAMERA] Photo format:", photo.format);
-            console.log("📷 [CAMERA] Photo base64 length:", photo.base64String?.length || 0);
-
             // For now, we'll use the photo as face data
             // In production, you'd send this to a face detection API (ML Kit, AWS Rekognition, etc.)
             // For this implementation, we'll treat successful photo capture as face verification
@@ -236,13 +193,11 @@ export default function FaceVerificationPage() {
             const maxSize = 50000; // ~50KB base64 (strict limit to avoid 413 errors)
 
             if (photoData && photoData.length > maxSize) {
-                console.log("📷 [CAMERA] Photo too large (" + photoData.length + " bytes), will not send to backend");
+
                 // Don't send photo data if it's too large - we already have it stored on device
                 photoData = null;
-                console.log("📷 [CAMERA] Photo data too large, will not send to backend (stored on device only)");
-            } else if (photoData) {
-                console.log("📷 [CAMERA] Photo size OK (" + photoData.length + " bytes), will include in registration");
-            }
+
+            } else {}
 
             // Persist photo on device storage so it lives outside webview memory
             if (Capacitor.isNativePlatform() && rawPhotoData) {
@@ -273,20 +228,18 @@ export default function FaceVerificationPage() {
                         directory: Directory.Data,
                     });
 
-                    console.log("📷 [CAMERA] Photo saved to device storage:", filePath);
-
                     if (typeof window !== "undefined") {
                         localStorage.setItem("cameraFacePhotoPath", filePath);
                     }
                 } catch (fsErr) {
-                    console.error("❌ [CAMERA] Failed to persist face photo on device:", fsErr);
+                    console.error("[CAMERA] Failed to persist face photo on device");
                 }
             }
 
             // Store photo data temporarily in localStorage for registration (only if small enough)
             if (photoData && typeof window !== "undefined") {
                 localStorage.setItem("cameraFacePhoto", photoData);
-                console.log("📷 [CAMERA] Photo data stored in localStorage for submission");
+
             } else if (typeof window !== "undefined") {
                 // Clear any old photo data
                 localStorage.removeItem("cameraFacePhoto");
@@ -301,20 +254,17 @@ export default function FaceVerificationPage() {
                 format: photo.format,
             };
         } catch (err) {
-            console.error("❌ [CAMERA] Camera error:", err);
+            console.error("[CAMERA] Camera error");
             throw err;
         }
     };
 
     const handleContinue = async () => {
-        console.log("🚀 [CONTINUE] Button clicked, starting face verification...");
-        console.log("🚀 [CONTINUE] User:", user);
-        console.log("🚀 [CONTINUE] Token exists:", !!token);
 
-        // INDUSTRIAL BEST PRACTICE: Face ID registration REQUIRES authentication token
+        // Face ID registration REQUIRES authentication token
         // This prevents unauthorized registration attempts and ensures user identity is verified
         if (!user || !token) {
-            console.log("❌ [CONTINUE] No user or token found - redirecting to login");
+
             setError("Please log in first to register Face ID. Redirecting to login page...");
 
             // Redirect to login after short delay to show message
@@ -331,14 +281,11 @@ export default function FaceVerificationPage() {
 
         // NOTE: Backend doesn't have a toggle endpoint
         // We'll register biometric directly via /api/biometric/setup after verification
-        console.log("🔐 [CONTINUE] Preparing biometric registration...");
 
         // Check if we're on a native platform
-        console.log("🚀 [CONTINUE] Platform check:", Capacitor.getPlatform());
-        console.log("🚀 [CONTINUE] Is native:", Capacitor.isNativePlatform());
 
         if (!Capacitor.isNativePlatform()) {
-            console.log("❌ [CONTINUE] Not on native platform");
+
             setError("Face ID is only available on mobile devices. Please use the mobile app.");
             setIsLoading(false);
             setIsScanning(false);
@@ -346,13 +293,11 @@ export default function FaceVerificationPage() {
         }
 
         setLoadingStep("Preparing face scan...");
-        console.log("🚀 [CONTINUE] Loading started");
 
         try {
             // Check availability again before starting
-            console.log("🔍 [CONTINUE] Checking availability before auth...");
+
             const availability = await NativeBiometric.isAvailable();
-            console.log("✅ [CONTINUE] Availability result:", JSON.stringify(availability));
 
             const biometryType = availability.biometryType || 0;
             const hasFaceID = biometryType === 2; // 2 = FaceID (iOS only)
@@ -364,13 +309,9 @@ export default function FaceVerificationPage() {
             // Don't use camera if no biometrics are available or if native face unlock is available
             const shouldUseCamera = useCamera && hasFingerprint && availability.isAvailable && !hasFace;
 
-            console.log("🔍 [CONTINUE] Has Face unlock:", hasFace);
-            console.log("🔍 [CONTINUE] Has Fingerprint:", hasFingerprint);
-            console.log("🔍 [CONTINUE] Should use camera:", shouldUseCamera);
-
             // If Face ID is not available, use camera for face detection
             if (shouldUseCamera) {
-                console.log("📷 [CONTINUE] Using camera for face detection...");
+
                 setLoadingStep("Opening camera for face detection...");
 
                 // Check camera permission before opening camera
@@ -382,17 +323,12 @@ export default function FaceVerificationPage() {
                     throw new Error("Failed to capture face photo");
                 }
 
-                console.log("✅ [CONTINUE] Camera face capture successful!");
                 setLoadingStep("Face captured successfully!");
             } else {
                 // Use OS-level biometrics (Face ID or Fingerprint)
                 // Show helpful message if biometrics aren't enrolled
                 if (!availability.isAvailable) {
                     const reason = availability.reason || availability.code || "Biometric not enrolled";
-
-                    console.log("⚠️ [CONTINUE] Biometric not available:", reason);
-                    console.log("⚠️ [CONTINUE] Biometry type:", availability.biometryType);
-                    console.log("⚠️ [CONTINUE] Device is secure:", availability.deviceIsSecure);
 
                     // Map biometry type numbers to names (0=None, 1=TouchID, 2=FaceID, 3=Fingerprint)
                     const typeNames = {
@@ -406,7 +342,6 @@ export default function FaceVerificationPage() {
 
                     // If no biometrics available, show error - don't use camera fallback
                     if (!availability.isAvailable || availability.biometryType === 0) {
-                        console.log("❌ [CONTINUE] No biometrics available - showing error, not using camera");
 
                         let errorMsg = "Biometric authentication is not available on this device.\n\n";
                         errorMsg += "Please set up biometric authentication in your phone settings:\n";
@@ -428,7 +363,6 @@ export default function FaceVerificationPage() {
                 } else {
                     // Use OS biometrics
                     setLoadingStep("Starting face scan...");
-                    console.log("🔐 [CONTINUE] Starting biometric authentication...");
 
                     // Get biometric display name for authentication prompt
                     const biometricName = biometricType === 2 ? "Face ID" : biometricType === 3 ? "Fingerprint" : biometricType === 1 ? "Touch ID" : "Biometric";
@@ -438,7 +372,7 @@ export default function FaceVerificationPage() {
                         : "Use your biometric to verify";
 
                     // Authenticate using biometric
-                    console.log("🔐 [CONTINUE] Calling NativeBiometric.verifyIdentity()...");
+
                     await NativeBiometric.verifyIdentity({
                         reason: `Complete ${biometricName.toLowerCase()} verification to secure your account`,
                         title: authTitle,
@@ -448,22 +382,19 @@ export default function FaceVerificationPage() {
 
                     // If we reach here, authentication was successful
                     // (the promise resolved, even if the value is undefined)
-                    console.log("✅ [CONTINUE] Biometric authentication successful!");
+
                 }
             }
 
             setLoadingStep("Verifying face data...");
-            console.log("📱 [CONTINUE] Getting device ID...");
 
             // Get device ID for tracking
             const { Device } = await import("@capacitor/device");
             const deviceInfo = await Device.getId();
             const deviceId = deviceInfo.identifier || "unknown";
-            console.log("📱 [CONTINUE] Device ID:", deviceId);
 
             // Register face with backend
             setLoadingStep("Registering face profile...");
-            console.log("🌐 [CONTINUE] Registering with backend...");
 
             // Use the actual detected biometric type
             // Backend only accepts "face_id" or "fingerprint"
@@ -509,28 +440,20 @@ export default function FaceVerificationPage() {
                 const cameraPhoto = localStorage.getItem('cameraFacePhoto');
                 if (cameraPhoto && cameraPhoto.length < 50000) { // Only send if < 50KB (strict limit)
                     registrationData.photoData = cameraPhoto;
-                    console.log("📷 [CONTINUE] Including photo data in registration (size:", cameraPhoto.length, " bytes)");
+
                 } else {
-                    console.log("📷 [CONTINUE] Photo data too large (" + (cameraPhoto?.length || 0) + " bytes) or missing, skipping photoData in registration");
-                    console.log("📷 [CONTINUE] Photo is stored on device at:", localStorage.getItem('cameraFacePhotoPath'));
+
                 }
             }
-            console.log("🌐 [CONTINUE] Registration data:", JSON.stringify(registrationData));
 
             // Register face with backend - Following official pattern
             // Backend validates biometric registration and stores device association
             const result = await registerFace(registrationData, token);
-            console.log("🌐 [CONTINUE] Backend registration response:", {
-                success: result.success,
-                hasError: !!result.error,
-                error: result.error,
-                message: result.message,
-            });
 
             // Handle backend errors - Following official error handling pattern
             if (result.error || !result.success) {
                 const errorMessage = result.error || result.message || "Failed to register biometric";
-                console.error("❌ [CONTINUE] Backend registration error:", errorMessage);
+                console.error("[CONTINUE] Backend registration error");
 
                 // Provide user-friendly error messages
                 if (errorMessage.includes("already registered") || errorMessage.includes("already exists")) {
@@ -545,7 +468,7 @@ export default function FaceVerificationPage() {
             }
 
             // Mark face verification as completed
-            console.log("✅ [CONTINUE] Marking verification as completed");
+
             localStorage.setItem("faceVerificationCompleted", "true");
 
             // Update faceVerificationStatus on backend and in context
@@ -559,7 +482,6 @@ export default function FaceVerificationPage() {
 
             // Get username FIRST - needed for all storage operations
             const username = user?.email || user?.mobile;
-            console.log("💾 [CONTINUE] Username for credential storage:", username);
 
             if (token) {
                 localStorage.setItem("biometricToken", token);
@@ -568,8 +490,8 @@ export default function FaceVerificationPage() {
                 }
             }
 
-            // CRITICAL: Store username in Capacitor Preferences FIRST (survives logout)
-            // This MUST happen before credential storage because hasBiometricCredentials() 
+            // Store username in Capacitor Preferences FIRST (survives logout)
+            // This MUST happen before credential storage because hasBiometricCredentials()
             // checks for this key to determine if biometric login is available
             // This allows biometric login even if Keystore credential save fails
             if (Capacitor.isNativePlatform() && username) {
@@ -579,16 +501,15 @@ export default function FaceVerificationPage() {
                         key: "biometric_username",
                         value: username
                     });
-                    console.log("✅ [CONTINUE] Stored username in Preferences for biometric login:", username);
 
                     // Also store as backup (used by getCredentials fallback)
                     await Preferences.set({
                         key: "biometric_username_backup",
                         value: username
                     });
-                    console.log("✅ [CONTINUE] Stored username backup in Preferences");
+
                 } catch (prefError) {
-                    console.warn("⚠️ [CONTINUE] Failed to store username in Preferences:", prefError);
+                    console.warn("[CONTINUE] Failed to store username in Preferences");
                 }
             }
 
@@ -597,19 +518,12 @@ export default function FaceVerificationPage() {
             // This allows users to use biometric login without entering password
             if (token && user && Capacitor.isNativePlatform() && username) {
                 try {
-                    console.log("💾 [CONTINUE] Saving biometric credentials after face verification...");
-                    console.log("💾 [CONTINUE] Token type:", typeof token);
-                    console.log("💾 [CONTINUE] Token value preview:", token ? (typeof token === 'string' ? token.substring(0, 20) + '...' : String(token).substring(0, 20)) : 'null/undefined');
-                    console.log("💾 [CONTINUE] User type:", typeof user);
-                    console.log("💾 [CONTINUE] User keys:", user ? Object.keys(user) : 'null/undefined');
-                    console.log("💾 [CONTINUE] User _id:", user?._id);
-                    console.log("💾 [CONTINUE] Username:", username);
 
                     const { setCredentials, enableBiometricLocally } = await import("@/lib/biometricAuth");
 
                     // Validate token before creating payload
                     if (!token || typeof token !== 'string' || token.trim().length === 0) {
-                        console.error("❌ [CONTINUE] Invalid token for credential storage");
+                        console.error("[CONTINUE] Invalid token for credential storage");
                         throw new Error("Invalid authentication token");
                     }
 
@@ -622,17 +536,11 @@ export default function FaceVerificationPage() {
                     // Stringify and validate the result
                     const passwordString = JSON.stringify(credentialPayload);
                     if (!passwordString || passwordString === '{}' || passwordString === 'null') {
-                        console.error("❌ [CONTINUE] Credential payload stringified to invalid value:", passwordString);
+                        console.error("[CONTINUE] Credential payload stringified to invalid value");
                         throw new Error("Failed to stringify credential payload");
                     }
 
-                    console.log("💾 [CONTINUE] Attempting to save biometric credentials...");
-                    console.log("💾 [CONTINUE] Token length:", token.length);
-                    console.log("💾 [CONTINUE] User ID:", user._id);
-                    console.log("💾 [CONTINUE] Biometric type:", biometricTypeString);
-                    console.log("💾 [CONTINUE] Password string length:", passwordString.length);
-
-                    // CRITICAL: Save password backup to Preferences FIRST
+                    // Save password backup to Preferences FIRST
                     // This ensures credentials are available even if Keystore save fails
                     try {
                         const { Preferences } = await import("@capacitor/preferences");
@@ -640,9 +548,9 @@ export default function FaceVerificationPage() {
                             key: "biometric_password_backup",
                             value: passwordString
                         });
-                        console.log("✅ [CONTINUE] Saved password backup to Preferences");
+
                     } catch (prefError) {
-                        console.warn("⚠️ [CONTINUE] Failed to save password backup to Preferences:", prefError);
+                        console.warn("[CONTINUE] Failed to save password backup to Preferences");
                     }
 
                     // Now try to save to Keystore
@@ -654,19 +562,17 @@ export default function FaceVerificationPage() {
                     if (credentialResult.success) {
                         // Enable biometric locally - Following official pattern
                         enableBiometricLocally(biometricTypeString);
-                        console.log("✅ [CONTINUE] Biometric credentials saved successfully!");
-                        console.log("✅ [CONTINUE] Biometric type:", biometricTypeString);
-                        console.log("✅ [CONTINUE] Users can now use biometric login");
+
                     } else {
-                        console.warn("⚠️ [CONTINUE] Failed to save biometric credentials to Keystore:", credentialResult.error);
-                        console.warn("⚠️ [CONTINUE] Credentials are stored in Preferences backup - biometric login will still work");
+                        console.warn("[CONTINUE] Failed to save biometric credentials to Keystore");
+                        console.warn("[CONTINUE] Credentials are stored in Preferences backup - biometric login will still work");
 
                         // Still enable biometric locally since credentials are in Preferences backup
                         enableBiometricLocally(biometricTypeString);
 
                         // If device authentication is required, store a flag to retry later
                         if (credentialResult.requiresDeviceAuth) {
-                            console.warn("⚠️ [CONTINUE] Device authentication required - credentials will be saved on next login");
+                            console.warn("[CONTINUE] Device authentication required - credentials will be saved on next login");
                             localStorage.setItem("biometricCredentialsPending", "true");
                             localStorage.setItem("biometricCredentialsData", JSON.stringify({
                                 username: username,
@@ -675,50 +581,44 @@ export default function FaceVerificationPage() {
                         }
                     }
                 } catch (biometricError) {
-                    console.error("❌ [CONTINUE] Error saving biometric credentials:", biometricError);
+                    console.error("[CONTINUE] Error saving biometric credentials");
                     // Don't fail face verification if biometric save fails
                     // Credentials might still be in Preferences backup
-                    console.warn("⚠️ [CONTINUE] Face verification completed, but credential storage had an error.");
-                    console.warn("⚠️ [CONTINUE] Checking if credentials exist in Preferences backup...");
+                    console.warn("[CONTINUE] Face verification completed, but credential storage had an error.");
+                    console.warn("[CONTINUE] Checking if credentials exist in Preferences backup...");
 
                     // Check if password backup was saved before the error
                     try {
                         const { Preferences } = await import("@capacitor/preferences");
                         const passwordBackup = await Preferences.get({ key: "biometric_password_backup" });
                         if (passwordBackup?.value) {
-                            console.log("✅ [CONTINUE] Password backup exists in Preferences - biometric login should still work");
+
                             // Enable biometric locally since credentials exist
                             const { enableBiometricLocally } = await import("@/lib/biometricAuth");
                             enableBiometricLocally(biometricTypeString);
                         } else {
-                            console.warn("⚠️ [CONTINUE] No password backup found - user will need to login manually");
+                            console.warn("[CONTINUE] No password backup found - user will need to login manually");
                         }
                     } catch (checkError) {
-                        console.warn("⚠️ [CONTINUE] Could not check password backup:", checkError);
+                        console.warn("[CONTINUE] Could not check password backup");
                     }
                 }
             } else {
-                console.warn("⚠️ [CONTINUE] Skipping credential storage - missing required data:", {
-                    hasToken: !!token,
-                    hasUser: !!user,
-                    isNative: Capacitor.isNativePlatform(),
-                    hasUsername: !!username
-                });
+                console.warn("[CONTINUE] Skipping credential storage - missing required data");
             }
 
             setLoadingStep("Face verification successful!");
-            console.log("🎉 [CONTINUE] Face verification complete! Navigating to homepage...");
 
             // Navigate to homepage after a brief delay
             setTimeout(() => {
                 router.push("/homepage");
             }, 1000);
         } catch (err) {
-            console.error("❌ [CONTINUE] Face verification error:", err);
-            console.error("❌ [CONTINUE] Error type:", typeof err);
-            console.error("❌ [CONTINUE] Error message:", err?.message);
-            console.error("❌ [CONTINUE] Error stack:", err?.stack);
-            console.error("❌ [CONTINUE] Full error:", JSON.stringify(err, null, 2));
+            console.error("[CONTINUE] Face verification error");
+            console.error("[CONTINUE] Error type");
+            console.error("[CONTINUE] Error message");
+            console.error("[CONTINUE] Error stack");
+            console.error("[CONTINUE] Full error");
 
             let errorMessage = "Face verification failed. Please try again.";
 
@@ -746,7 +646,6 @@ export default function FaceVerificationPage() {
     };
 
     const handleSkip = async () => {
-        console.log("⏭️ [SKIP] User chose to skip face verification");
 
         // Allow user to skip face verification
         localStorage.setItem("faceVerificationSkipped", "true");
@@ -755,7 +654,7 @@ export default function FaceVerificationPage() {
         // This allows them to use native biometric login (Touch ID/Fingerprint) even without Face ID
         if (token && user && Capacitor.isNativePlatform()) {
             try {
-                console.log("💾 [SKIP] Checking if we can still save biometric credentials...");
+
                 const { setCredentials, enableBiometricLocally, checkBiometricAvailability } = await import("@/lib/biometricAuth");
                 const { Preferences } = await import("@capacitor/preferences");
 
@@ -763,11 +662,10 @@ export default function FaceVerificationPage() {
                 const availability = await checkBiometricAvailability();
 
                 if (availability.isAvailable) {
-                    console.log("💾 [SKIP] Biometric available, saving credentials...");
 
                     const username = user.email || user.mobile;
                     if (!username || !token) {
-                        console.warn("⚠️ [SKIP] Missing username or token, skipping credential save");
+                        console.warn("[SKIP] Missing username or token, skipping credential save");
                         router.push("/homepage");
                         return;
                     }
@@ -780,19 +678,19 @@ export default function FaceVerificationPage() {
 
                     const passwordString = JSON.stringify(credentialPayload);
                     if (!passwordString || passwordString === '{}' || passwordString === 'null') {
-                        console.error("❌ [SKIP] Invalid credential payload");
+                        console.error("[SKIP] Invalid credential payload");
                         router.push("/homepage");
                         return;
                     }
 
-                    // CRITICAL: Save to Preferences FIRST (always works, survives logout)
+                    // Save to Preferences FIRST (always works, survives logout)
                     try {
                         await Preferences.set({ key: "biometric_username", value: username });
                         await Preferences.set({ key: "biometric_username_backup", value: username });
                         await Preferences.set({ key: "biometric_password_backup", value: passwordString });
-                        console.log("✅ [SKIP] Saved credentials to Preferences backup");
+
                     } catch (prefError) {
-                        console.warn("⚠️ [SKIP] Failed to save to Preferences:", prefError);
+                        console.warn("[SKIP] Failed to save to Preferences");
                     }
 
                     // Try to save to Keystore
@@ -803,9 +701,9 @@ export default function FaceVerificationPage() {
 
                     if (credentialResult.success) {
                         enableBiometricLocally(availability.biometryTypeName);
-                        console.log("✅ [SKIP] Biometric credentials saved successfully!");
+
                     } else {
-                        console.warn("⚠️ [SKIP] Keystore save failed, but Preferences backup exists");
+                        console.warn("[SKIP] Keystore save failed, but Preferences backup exists");
                         // Still enable biometric since credentials are in Preferences
                         enableBiometricLocally(availability.biometryTypeName);
 
@@ -818,10 +716,10 @@ export default function FaceVerificationPage() {
                         }
                     }
                 } else {
-                    console.log("⚠️ [SKIP] No biometric available on device");
+
                 }
             } catch (biometricError) {
-                console.error("❌ [SKIP] Error saving biometric credentials:", biometricError);
+                console.error("[SKIP] Error saving biometric credentials");
                 // Don't fail skip if biometric save fails
             }
         }

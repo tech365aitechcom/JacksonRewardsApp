@@ -19,14 +19,14 @@ const ServiceCard = ({ card }) => {
     return (
         <div
             className={`
-                ${!isCustomCard ? card.innerBgColor : ''} 
-                flex-shrink-0 snap-center 
-                w-[90px] h-[176px] 
+                ${!isCustomCard ? card.innerBgColor : ''}
+                flex-shrink-0 snap-center
+                w-[90px] h-[176px]
                 ${isCustomCard ? 'rounded-[8px]' : 'rounded-[12px]'}
                 opacity-100
-                flex flex-col items-center justify-center gap-2 py-4 px-2 
-                relative 
-                text-center 
+                flex flex-col items-center justify-center gap-2 py-4 px-2
+                relative
+                text-center
                 transition-all duration-200 hover:scale-105
             `}
             style={backgroundStyle}

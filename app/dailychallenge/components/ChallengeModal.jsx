@@ -147,13 +147,12 @@ export const ChallengeModal = ({
     const runRewardedAdGateIfManual = async (contextLabel = "complete") => {
         const claimType = today?.challenge?.claimType || today?.challenge?.claim_type;
         const isManualClaim = claimType === "manual";
-        console.log("[ChallengeModal] 🔐 Ad gate check:", { contextLabel, claimType, isManualClaim, isVipActive: vipData.isVipActive, currentTier: vipData.currentTier });
 
         if (!isManualClaim) return true;
 
         // VIP users get ad-free reward claiming
         if (vipData.isVipActive) {
-            console.log("[ChallengeModal] 🎯 VIP user detected - skipping ads for reward claiming");
+
             return true;
         }
 
@@ -162,25 +161,22 @@ export const ChallengeModal = ({
         setError(null);
         clearAdError();
 
-        console.log(`[ChallengeModal] 🎬 Manual claim: loading ad before ${contextLabel}...`);
         const loaded = await loadAd();
-        console.log(`[ChallengeModal] 📊 loadAd() result (${contextLabel}):`, loaded);
+
         if (!loaded) {
             setIsShowingAdForClaim(false);
             return false;
         }
 
-        console.log(`[ChallengeModal] 🎬 Manual claim: showing ad before ${contextLabel}...`);
         const adReward = await showAd({
             onReward: (rewardData) => {
-                console.log(`[ChallengeModal] 💰 Rewarded ad completed before ${contextLabel}:`, rewardData);
+
             },
             onError: (errorMsg) => {
                 console.error(`[ChallengeModal] ❌ Rewarded ad error before ${contextLabel}:`, errorMsg);
                 setError(errorMsg || "Failed to show ad. Please try again.");
             },
         });
-        console.log(`[ChallengeModal] 📊 showAd() result (${contextLabel}):`, adReward);
 
         setIsShowingAdForClaim(false);
         return !!adReward;
@@ -188,17 +184,11 @@ export const ChallengeModal = ({
 
     const completeChallengeFlow = async ({ auto = false } = {}) => {
         if (isCompleting) {
-            console.log("[ChallengeModal] ⏭️ completeChallengeFlow skipped: already completing");
+
             return;
         }
 
         const effectiveToken = getEffectiveToken();
-        console.log("[ChallengeModal] ▶ completeChallengeFlow()", {
-            auto,
-            effectiveTokenPresent: !!effectiveToken,
-            type: today?.challenge?.type,
-            claimType: today?.challenge?.claimType || today?.challenge?.claim_type,
-        });
 
         try {
             setIsCompleting(true);
@@ -212,22 +202,20 @@ export const ChallengeModal = ({
                 return;
             }
 
-            // IMPORTANT: For manual claim, FORCE ad first, and do not proceed unless ad completes
+            // For manual claim, FORCE ad first, and do not proceed unless ad completes
             const adOk = await runRewardedAdGateIfManual("complete");
             if (!adOk) {
-                console.warn("[ChallengeModal] ⚠️ Manual claim ad not completed; skipping complete API");
+                console.warn("[ChallengeModal]  Manual claim ad not completed; skipping complete API");
                 setIsCompleting(false);
                 return;
             }
 
-            console.log("[ChallengeModal] 🌐 Dispatching completeTodayChallenge...");
             const result = await dispatch(
                 completeTodayChallenge({
                     challengeId: today?.challenge?.id,
                     token: effectiveToken,
                 })
             );
-            console.log("[ChallengeModal] 📥 completeTodayChallenge result:", result);
 
             if (!result.type.includes("fulfilled")) {
                 const errorMessage =
@@ -262,7 +250,7 @@ export const ChallengeModal = ({
         } catch (e) {
             const errorMessage =
                 e?.message || e?.payload || e?.error || "An unexpected error occurred. Please try again.";
-            console.error("[ChallengeModal] ❌ completeChallengeFlow error:", e);
+            console.error("[ChallengeModal]  completeChallengeFlow error:", e);
             alert(errorMessage);
         } finally {
             setIsCompleting(false);
@@ -289,12 +277,6 @@ export const ChallengeModal = ({
     }, [adError]);
 
     // Log platform info once for debugging native vs web behavior
-    useEffect(() => {
-        console.log("[ChallengeModal] 🧩 Platform debug:", {
-            isWeb,
-            isNativePlatform: Capacitor.isNativePlatform?.(),
-        });
-    }, [isWeb]);
 
     // Sync AppLovin ad showing state with mock overlay on web
     useEffect(() => {
@@ -548,7 +530,7 @@ export const ChallengeModal = ({
             setIsStarting(true);
             const result = await dispatch(startTodayChallenge({ token: localStorage.getItem('authToken') }));
 
-            // IMPORTANT: Track when challenge started for 10-minute validation
+            // Track when challenge started for 10-minute validation
             // If API doesn't return startedAt, we set it locally
             if (result.type.includes('fulfilled')) {
                 // Set local start time immediately
@@ -610,11 +592,6 @@ export const ChallengeModal = ({
 
     // Handle claim rewards - with time-based validation (no ad here; ad is now on complete for manual claims)
     const handleClaimRewards = async () => {
-        console.log("[ChallengeModal] ▶ handleClaimRewards() called", {
-            isCompleted: today?.progress?.isCompleted,
-            startedAt: today?.progress?.startedAt,
-            canClaimRewards: today?.actions?.canClaimRewards,
-        });
 
         // VALIDATION: Check if challenge is completed
         if (!today?.progress?.isCompleted) {
@@ -650,12 +627,11 @@ export const ChallengeModal = ({
             clearAdError();
 
             // Use completeChallenge to claim rewards (it handles both completion and claiming)
-            console.log("[ChallengeModal] 🌐 Dispatching completeTodayChallenge for claim...");
+
             const result = await dispatch(completeTodayChallenge({
                 challengeId: today?.challenge?.id,
                 token: token
             }));
-            console.log("[ChallengeModal] 📥 completeTodayChallenge result (claim):", result);
 
             // Check if claim was successful
             if (result.type.includes('fulfilled')) {
@@ -681,7 +657,7 @@ export const ChallengeModal = ({
             onClose();
         } catch (error) {
             // Failed to claim rewards
-            console.error("[ChallengeModal] ❌ Error while claiming rewards:", error);
+            console.error("[ChallengeModal]  Error while claiming rewards:", error);
             alert("Failed to claim rewards. Please try again.");
         } finally {
             setIsClaiming(false);

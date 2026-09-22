@@ -11,7 +11,6 @@ import AccountOverviewCard from "./AccountOverviewCard";
 import WatchAdCard from "./WatchAdCard";
 import NonGameOffersSection from "../../homepage/components/NonGameOffersSection";
 
-
 // Static data for non-gaming offers carousel
 const nonGamingOffers = [
   {
@@ -71,7 +70,6 @@ function useGameDownloadedRefetch(callback) {
     }
   }, [callback]);
 }
-
 
 export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
   const dispatch = useDispatch();
@@ -208,7 +206,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
     }
   }, [userDataStatus]);
 
-
   // Add retry mechanism for failed requests
   useEffect(() => {
     const userId = getUserId();
@@ -227,7 +224,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       }, 2000); // Retry after 2 seconds
     }
   }, [userDataStatus, bitlabsAIDownloadedGamesStatus, dispatch]);
-
 
   // Combine Besitos and Bitlabs AI downloaded games — exclude stub/empty entries so we don't show a default "(Game)" when no real data came from Bitlab/Besitos
   const hasValidName = (g) =>
@@ -405,7 +401,6 @@ export const GameListSection = ({ searchQuery = "", showSearch = false }) => {
       <div className="-mt-6">
         <NonGameOffersSection skipFetch />
       </div>
-
 
       {/* ==================== NON-GAMING OFFERS CAROUSEL SECTION ==================== */}
       {/* <NonGamingOffersCarousel offers={nonGamingOffers} /> */}

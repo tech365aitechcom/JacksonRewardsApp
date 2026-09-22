@@ -26,8 +26,8 @@ export const useHomepageData = (token, user) => {
     (state) => state.walletTransactions
   );
 
-  // OPTIMIZED: Enhanced data availability check with persistence awareness
-  // OPTIMIZED: Only require walletScreen for core UI (RewardProgress, XPTierTracker)
+  // Enhanced data availability check with persistence awareness
+  // Only require walletScreen for core UI (RewardProgress, XPTierTracker)
   // Don't block homepage render waiting for stats or userData
   const dataAvailability = useMemo(() => {
     const hasStats =
@@ -40,7 +40,7 @@ export const useHomepageData = (token, user) => {
     const hasWalletData = walletScreen && (walletScreenStatus === "succeeded" || walletScreenStatus === "idle");
     const hasDashboardData = dashboardData && dashboardStatus === "succeeded";
 
-    // OPTIMIZED: Only check loading for walletScreen (core data)
+    // Only check loading for walletScreen (core data)
     // Stats and userData are nice-to-have and shouldn't block homepage render
     const isCoreLoading = walletScreenStatus === "loading";
     const hasCoreData = hasWalletData; // Only walletScreen is required for homepage to feel "ready"
@@ -65,7 +65,7 @@ export const useHomepageData = (token, user) => {
     dashboardStatus,
   ]);
 
-  // INDUSTRIAL: Only fetch if we don't have data (avoid duplicate fetches; AuthContext already fetches)
+  // Only fetch if we don't have data (avoid duplicate fetches; AuthContext already fetches)
   useEffect(() => {
     if (!token || !user?._id) return;
 

@@ -230,8 +230,6 @@ const DailyReward = () => {
                 App Version: V0.0.1
             </div>
 
-
-
             {/* Components */}
             <WeeklyCalendarSection
                 weekData={weekData}
@@ -243,8 +241,6 @@ const DailyReward = () => {
                 isFutureWeek={isFutureWeek}
                 onClaimReward={handleRewardClaim}
             />
-
-
 
             {/* Missed Day Recovery Modal */}
             <MissedDayRecovery

@@ -15,7 +15,7 @@ const RewardProgress = ({ stats }) => {
     // Round to 2 decimal places to avoid floating-point display (e.g. 3266.9000000000015)
     const round2 = (n) => (typeof n === "number" && !Number.isNaN(n) ? Math.round(n * 100) / 100 : n);
 
-    // OPTIMIZED: Memoize expensive calculations to prevent re-computation
+    // Memoize expensive calculations to prevent re-computation
     const pointsData = useMemo(() => {
         const totalCoins = Number(balance) || 0;
         const currentLevel = Math.floor(totalCoins / rewardGoal) + 1;
@@ -35,13 +35,11 @@ const RewardProgress = ({ stats }) => {
         };
     }, [balance]);
 
-    // OPTIMIZED: Memoize click handler
+    // Memoize click handler
     const handleHurryBoxClick = useCallback(() => {
         // Navigate to wallet to show balance breakdown and transaction history
         router.push('/Wallet');
     }, [router]);
-
-
 
     return (
         <div

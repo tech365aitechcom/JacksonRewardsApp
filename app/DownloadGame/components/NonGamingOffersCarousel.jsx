@@ -37,7 +37,6 @@ const NonGamingOffersCarousel = ({ offers = [], className = "" }) => {
                 </h2>
             </div>
 
-
             <div className="relative w-full h-[220px] overflow-hidden">
                 {offers.map((offer, index) => {
                     const offset = index - activeIndex
@@ -57,7 +56,7 @@ const NonGamingOffersCarousel = ({ offers = [], className = "" }) => {
                             className="absolute top-0 left-1/2 cursor-pointer"
                             style={cardStyle}
                         >
-                            {/* Card content - using your provided styles */}
+                            {/* Offer details */}
                             <div className="relative h-[220px] w-[165px]">
                                 <img
                                     className="absolute inset-0 h-full w-full"

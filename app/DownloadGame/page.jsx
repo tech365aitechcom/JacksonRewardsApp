@@ -37,9 +37,9 @@ export default function GamesPage() {
 
         <div className="flex flex-col w-full justify-center items-start gap-2 px-5 py- absolute top-[36px] left-0">
           <div className="flex h-12 items-center justify-between w-full max-w-sm mx-auto rounded-[32px]">
-            {/* 
-              Back button not working: For Android, use window.history.back() for navigation. 
-              (router is undefined here because Next.js useRouter needs to be imported and used inside component scope.) 
+            {/*
+              Back button not working: For Android, use window.history.back() for navigation.
+              (router is undefined here because Next.js useRouter needs to be imported and used inside component scope.)
             */}
             <button
               onClick={() => {

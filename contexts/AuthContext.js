@@ -117,7 +117,7 @@ export function AuthProvider({ children }) {
   const [isNewUserFlow, setIsNewUserFlow] = useState(false);
   const [isLoginRedirectPending, setIsLoginRedirectPending] = useState(false);
 
-  // NEW: Get the Redux dispatch function and the current status of the profile fetch
+  // Get the Redux dispatch function and the current status of the profile fetch
   const dispatch = useDispatch();
   const { detailsStatus } = useSelector((state) => state.profile);
   const { status: onboardingStatus } = useSelector((state) => state.onboarding);
@@ -140,10 +140,6 @@ export function AuthProvider({ children }) {
             // Capacitor v7+: addListener returns a Promise<PluginListenerHandle>
             listener = await App.addListener("appUrlOpen", (event) => {
               const urlString = event.url;
-              console.log(
-                "🔗 [DeepLink] appUrlOpen fired. Raw URL:",
-                urlString,
-              );
 
               let parsableUrl;
               let path;
@@ -163,33 +159,21 @@ export function AuthProvider({ children }) {
                 );
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
-                console.log("🔗 [DeepLink] Custom scheme parsed →", {
-                  scheme: customScheme,
-                  path,
-                  hasToken: !!token,
-                  allParams: Object.fromEntries(parsableUrl.searchParams),
-                });
+
               }
               // Handle HTTPS deep links (Android App Links)
               else if (urlString.startsWith("https://")) {
                 parsableUrl = new URL(urlString);
                 path = parsableUrl.pathname;
                 token = parsableUrl.searchParams.get("token");
-                console.log("🔗 [DeepLink] HTTPS scheme parsed →", {
-                  path,
-                  hasToken: !!token,
-                  allParams: Object.fromEntries(parsableUrl.searchParams),
-                });
+
               } else {
-                console.warn(
-                  "🔗 [DeepLink] Unknown URL scheme — not handled:",
-                  urlString,
-                );
+                console.warn("[DeepLink] Unknown URL scheme — not handled");
               }
 
               // Process the deep link
               if (path && token) {
-                console.log("🔗 [DeepLink] Has token → success path:", path);
+
                 if (path === "/reset-password") {
                   router.push(`/reset-password?token=${token}`);
                 } else if (path === "/auth/callback") {
@@ -197,9 +181,7 @@ export function AuthProvider({ children }) {
                   // processing auth inline — this prevents the login screen from sitting
                   // idle for ~3s while API calls complete in the background.
                   // source=native tells the callback page to skip its browser-close redirect.
-                  console.log(
-                    "🔗 [DeepLink] Navigating to /auth/callback with token (source=native)",
-                  );
+
                   router.replace(
                     `/auth/callback?token=${encodeURIComponent(token)}&source=native`,
                   );
@@ -216,13 +198,6 @@ export function AuthProvider({ children }) {
                   parsableUrl.searchParams.get("error") ||
                   parsableUrl.searchParams.get("error_description") ||
                   null;
-
-                console.log("❌ [DeepLink] Error path detected →", {
-                  path,
-                  accountStatus,
-                  rawMessage,
-                  allParams: Object.fromEntries(parsableUrl.searchParams),
-                });
 
                 // Apply status → message mapping per backend spec
                 let message;
@@ -245,24 +220,11 @@ export function AuthProvider({ children }) {
                   message = rawMessage || "Google authentication failed";
                 }
 
-                console.log(
-                  "❌ [DeepLink] Mapped error message:",
-                  message,
-                  "| accountStatus:",
-                  accountStatus,
-                );
-
                 const loginUrl = `/login?googleError=${encodeURIComponent(message)}${accountStatus ? `&accountStatus=${encodeURIComponent(accountStatus)}` : ""}`;
-                console.log(
-                  "❌ [DeepLink] Navigating to login with error URL:",
-                  loginUrl,
-                );
+
                 router.replace(loginUrl);
               } else {
-                console.warn(
-                  "🔗 [DeepLink] Path not matched or no parsableUrl →",
-                  { path, hasToken: !!token, hasParsableUrl: !!parsableUrl },
-                );
+                console.warn("[DeepLink] Path not matched or no parsableUrl →");
               }
             });
 
@@ -271,14 +233,11 @@ export function AuthProvider({ children }) {
               listener = null;
             }
           } catch (e) {
-            console.warn("App.addListener failed:", e);
+            console.warn("App.addListener failed");
           }
         })();
       } catch (error) {
-        console.warn(
-          "App.addListener not available in this environment:",
-          error,
-        );
+        console.warn("App.addListener not available in this environment");
       }
     }
 
@@ -301,7 +260,7 @@ export function AuthProvider({ children }) {
             listener();
           }
         } catch (error) {
-          console.warn("Error cleaning up listener:", error);
+          console.warn("Error cleaning up listener");
         }
       }
     };
@@ -312,31 +271,11 @@ export function AuthProvider({ children }) {
     const initVerisoul = async () => {
       try {
         const result = await initializeVerisoulSDK();
-        if (result.success) {
-          const isFallback =
-            result.sessionId &&
-            String(result.sessionId).startsWith("fallback_");
-          if (isFallback) {
-            console.log(
-              "ℹ️ [AuthContext] Verisoul SDK using fallback session (script may still be loading)",
-            );
-          } else {
-            console.log(
-              "✅ [AuthContext] Verisoul SDK initialized with session:",
-              result.sessionId,
-            );
-          }
-        } else {
-          console.warn(
-            "⚠️ [AuthContext] Verisoul SDK initialization failed (non-blocking):",
-            result.error,
-          );
+        if (!result.success) {
+          console.warn("[AuthContext] Verisoul SDK initialization failed (non-blocking)");
         }
       } catch (error) {
-        console.error(
-          "❌ [AuthContext] Failed to initialize Verisoul SDK (non-blocking):",
-          error,
-        );
+        console.error("[AuthContext] Failed to initialize Verisoul SDK (non-blocking)");
       }
     };
 
@@ -344,7 +283,7 @@ export function AuthProvider({ children }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // MODIFIED: This effect now focuses only on loading the session from storage
+  // This effect now focuses only on loading the session from storage
   useEffect(() => {
     const loadSession = async () => {
       try {
@@ -354,28 +293,21 @@ export function AuthProvider({ children }) {
           setToken(storedToken);
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          setIsLoading(false); // INDUSTRIAL: Unblock first paint immediately; run fraud after
+          setIsLoading(false); // Unblock first paint immediately; run fraud after
 
           // Sync my-games in background (non-blocking)
           syncMyGames(storedToken).catch(() => {});
 
-          // INDUSTRIAL: Fraud session check runs AFTER first paint (non-blocking)
+          // Fraud session check runs AFTER first paint (non-blocking)
           setTimeout(() => {
             (async () => {
               try {
                 const storedSessionId = localStorage.getItem(
                   "verisoul_session_id",
                 );
-                console.log(
-                  "[FraudDebug] loadSession – stored backend sessionId:",
-                  storedSessionId
-                    ? `${storedSessionId.slice(0, 8)}...`
-                    : "none",
-                );
+
                 if (storedSessionId) {
-                  console.log(
-                    "[FraudDebug] loadSession – GET status using backend sessionId",
-                  );
+
                   const statusResponse = await getFraudSessionStatus(
                     storedSessionId,
                     storedToken,
@@ -384,25 +316,9 @@ export function AuthProvider({ children }) {
                     const status = statusResponse?.data?.status;
                     const riskScore = statusResponse?.data?.risk_score || 0;
 
-                    console.log(
-                      "🔍 [AuthContext] Fraud session status on app open:",
-                      {
-                        status,
-                        riskScore,
-                      },
-                    );
-                    console.log(
-                      "[FraudDebug] loadSession – status:",
-                      status,
-                      "risk_score:",
-                      riskScore,
-                    );
-
                     // Re-authenticate if session is not active
                     if (status !== "active") {
-                      console.log(
-                        "🔄 [AuthContext] Session not active on app open, re-authenticating...",
-                      );
+
                       const deviceMetadata = await getDeviceMetadata();
 
                       // Get Verisoul SDK session ID (required for full fraud detection); don't send fallback to backend
@@ -412,12 +328,6 @@ export function AuthProvider({ children }) {
                         String(verisoulSessionId).startsWith("fallback_")
                       )
                         verisoulSessionId = null;
-                      console.log(
-                        "[FraudDebug] loadSession re-auth – SDK session_id:",
-                        verisoulSessionId
-                          ? `${String(verisoulSessionId).slice(0, 24)}...`
-                          : "none",
-                      );
 
                       const sessionAuthData = {
                         accountId:
@@ -448,49 +358,28 @@ export function AuthProvider({ children }) {
                           sessionAuthData,
                           storedToken,
                         );
-                        console.log(
-                          "[FraudDebug] loadSession - fraudResponse success:",
-                          fraudResponse,
-                        );
+
                       } catch (error) {
-                        console.log(
-                          "[FraudDebug] loadSession - error caught:",
-                          error?.message,
-                        );
+
                         // The ApiError has .body property
                         const errorData = error?.body;
-                        console.log(
-                          "[FraudDebug] loadSession - error.body:",
-                          errorData,
-                        );
+
                         if (errorData?.blocked === true) {
                           fraudResponse = errorData;
-                          console.log(
-                            "[FraudDebug] loadSession - BLOCKED! reason:",
-                            fraudResponse?.reason,
-                          );
+
                         } else {
-                          console.error(
-                            "❌ [AuthContext] Fraud session auth error:",
-                            error?.message,
-                          );
+                          console.error("[AuthContext] Fraud session auth error");
                         }
                       }
 
                       if (fraudResponse?.blocked === true) {
-                        console.error(
-                          "🔒 [AuthContext] VPN/Proxy detected -Blocking user access:",
-                          fraudResponse.reason,
-                        );
+                        console.error("[AuthContext] VPN/Proxy detected -Blocking user access");
                         await handleVpnBlocked(fraudResponse, storedToken);
                         return;
                       }
 
                       if (fraudResponse?.success && fraudResponse?.sessionId) {
-                        console.log(
-                          "[FraudDebug] loadSession re-auth – storing backend sessionId:",
-                          fraudResponse.sessionId?.slice(0, 8) + "...",
-                        );
+
                         localStorage.setItem(
                           "verisoul_session_id",
                           fraudResponse.sessionId,
@@ -500,9 +389,7 @@ export function AuthProvider({ children }) {
                   }
                 } else {
                   // No session ID found, authenticate new session
-                  console.log(
-                    "🔄 [AuthContext] No fraud session found, creating new session...",
-                  );
+
                   const deviceMetadata = await getDeviceMetadata();
 
                   // Get Verisoul SDK session ID; don't send fallback to backend
@@ -512,12 +399,6 @@ export function AuthProvider({ children }) {
                     String(verisoulSessionId).startsWith("fallback_")
                   )
                     verisoulSessionId = null;
-                  console.log(
-                    "[FraudDebug] loadSession new session – SDK session_id:",
-                    verisoulSessionId
-                      ? `${String(verisoulSessionId).slice(0, 24)}...`
-                      : "none",
-                  );
 
                   const sessionAuthData = {
                     accountId:
@@ -553,27 +434,18 @@ export function AuthProvider({ children }) {
                     if (errorData?.blocked === true) {
                       fraudResponse = errorData;
                     } else {
-                      console.error(
-                        "❌ [AuthContext] Fraud session error:",
-                        error?.message,
-                      );
+                      console.error("[AuthContext] Fraud session error");
                     }
                   }
 
                   if (fraudResponse?.blocked === true) {
-                    console.error(
-                      "🔒 [AuthContext] VPN/Proxy detected (new session) - blocking user access:",
-                      fraudResponse.reason,
-                    );
+                    console.error("[AuthContext] VPN/Proxy detected (new session) - blocking user access");
                     await handleVpnBlocked(fraudResponse, storedToken);
                     return;
                   }
 
                   if (fraudResponse?.success && fraudResponse?.sessionId) {
-                    console.log(
-                      "[FraudDebug] loadSession new session – storing backend sessionId:",
-                      fraudResponse.sessionId?.slice(0, 8) + "...",
-                    );
+
                     localStorage.setItem(
                       "verisoul_session_id",
                       fraudResponse.sessionId,
@@ -581,16 +453,13 @@ export function AuthProvider({ children }) {
                   }
                 }
               } catch (error) {
-                console.error(
-                  "❌ [AuthContext] Error checking/creating fraud session on app open (non-blocking):",
-                  error,
-                );
+                console.error("[AuthContext] Error checking/creating fraud session on app open (non-blocking)");
               }
             })();
           }, 0);
         }
       } catch (error) {
-        console.error("❌ Failed to load session from storage", error);
+        console.error("Failed to load session from storage");
         localStorage.clear();
       } finally {
         setIsLoading(false);
@@ -606,17 +475,11 @@ export function AuthProvider({ children }) {
   // REMOVED: Deferred one-time fetches have been consolidated into the "Smart data fetching" effect
   // This prevents duplicate API calls and unnecessary timers
 
-  // OPTIMIZED: Consolidated smart data fetching with persistence awareness
+  // Consolidated smart data fetching with persistence awareness
   // This single effect handles all data initialization to prevent duplicate API calls
   useEffect(() => {
     if (!token) return;
 
-    console.log(
-      "[DEBUG-AUTHCTX] fetchInitialData effect fired at",
-      new Date().toISOString(),
-      "| user._id:",
-      user?._id,
-    );
     // Get current state to check what data is already available
     const currentState = store.getState();
     const {
@@ -644,8 +507,8 @@ export function AuthProvider({ children }) {
       nonGameOffersCacheTimestamp,
     } = currentState.surveys || {};
 
-    // OPTIMIZED: Check if data exists and is valid before fetching
-    // IMPORTANT: Check for data existence first, then status (persisted data may have status "idle")
+    // Check if data exists and is valid before fetching
+    // Check for data existence first, then status (persisted data may have status "idle")
     const hasProfileData = details && detailsStatus === "succeeded";
     const hasStatsData =
       (stats || dashboardData?.stats) && statsStatus === "succeeded";
@@ -684,12 +547,7 @@ export function AuthProvider({ children }) {
       dispatch(fetchVipStatus(token));
     }
     if (!hasWalletData) {
-      console.log(
-        "[DEBUG-AUTHCTX] fetchInitialData: hasWalletData=false → dispatching fetchWalletScreen | walletScreen:",
-        !!walletScreen,
-        "| walletScreenStatus:",
-        walletScreenStatus,
-      );
+
       dispatch(fetchWalletScreen({ token }));
     }
     if (!hasFreshNonGameOffers && nonGameOffersStatus !== "loading") {
@@ -871,11 +729,7 @@ export function AuthProvider({ children }) {
     let focusTimeoutId = null;
 
     const handleFocus = async () => {
-      console.log(
-        "[DEBUG-AUTHCTX] window focus event fired at",
-        new Date().toISOString(),
-        "| debouncing 500ms...",
-      );
+
       // Clear any pending refresh to prevent duplicates
       if (focusTimeoutId) {
         clearTimeout(focusTimeoutId);
@@ -897,12 +751,6 @@ export function AuthProvider({ children }) {
         )
           return;
 
-        console.log(
-          "[DEBUG-AUTHCTX] focus debounce resolved — dispatching refreshes for path:",
-          path,
-          "at",
-          new Date().toISOString(),
-        );
         dispatch(fetchUserProfile({ token, force: true, background: true }));
         dispatch(fetchVipStatus(token));
         // Also refresh wallet/balance/XP when app comes to foreground
@@ -914,14 +762,9 @@ export function AuthProvider({ children }) {
         // Check fraud session status
         try {
           const storedSessionId = localStorage.getItem("verisoul_session_id");
-          console.log(
-            "[FraudDebug] handleFocus – stored backend sessionId:",
-            storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none",
-          );
+
           if (storedSessionId) {
-            console.log(
-              "[FraudDebug] handleFocus – GET status using backend sessionId",
-            );
+
             const statusResponse = await getFraudSessionStatus(
               storedSessionId,
               token,
@@ -930,30 +773,14 @@ export function AuthProvider({ children }) {
               const riskScore = statusResponse?.data?.risk_score || 0;
               const status = statusResponse?.data?.status;
 
-              console.log("🔍 [AuthContext] Fraud session status checked:", {
-                status,
-                riskScore,
-              });
-              console.log(
-                "[FraudDebug] handleFocus – status:",
-                status,
-                "risk_score:",
-                riskScore,
-              );
-
               // Handle high risk or inactive session
               if (riskScore > 0.7) {
-                console.warn(
-                  "⚠️ [AuthContext] High risk detected on app resume:",
-                  riskScore,
-                );
+                console.warn("[AuthContext] High risk detected on app resume");
               }
 
               if (status !== "active") {
                 // Re-authenticate if session is not active
-                console.log(
-                  "🔄 [AuthContext] Session not active, re-authenticating...",
-                );
+
                 if (user) {
                   const deviceMetadata = await getDeviceMetadata();
 
@@ -964,12 +791,6 @@ export function AuthProvider({ children }) {
                     String(verisoulSessionId).startsWith("fallback_")
                   )
                     verisoulSessionId = null;
-                  console.log(
-                    "[FraudDebug] handleFocus re-auth – SDK session_id:",
-                    verisoulSessionId
-                      ? `${String(verisoulSessionId).slice(0, 24)}...`
-                      : "none",
-                  );
 
                   const sessionAuthData = {
                     accountId: user.email || user.mobile || user._id || user.id,
@@ -1000,25 +821,17 @@ export function AuthProvider({ children }) {
                     }
                   }
                   if (focusFraudResponse?.blocked === true) {
-                    console.error(
-                      "🔒 [AuthContext] VPN/Proxy detected (handleFocus) - blocking user:",
-                      focusFraudResponse.reason,
-                    );
+                    console.error("[AuthContext] VPN/Proxy detected (handleFocus) - blocking user");
                     await handleVpnBlocked(focusFraudResponse, token);
                     return;
                   }
-                  console.log(
-                    "[FraudDebug] handleFocus re-auth – authenticate called (new backend sessionId in response if success)",
-                  );
+
                 }
               }
             }
           }
         } catch (error) {
-          console.error(
-            "❌ [AuthContext] Error checking fraud session status (non-blocking):",
-            error,
-          );
+          console.error("[AuthContext] Error checking fraud session status (non-blocking)");
         }
       }, 500); // Debounce delay
     };
@@ -1035,27 +848,25 @@ export function AuthProvider({ children }) {
   }, [token, dispatch, user?._id]);
 
   // useEffect(() => {
-  //   // Only fetch if we haven't fetched before
-  //   if (onboardingStatus === "idle") {
-  //     console.log("🚀 [Onboarding] Preloading all onboarding options...");
-  //     dispatch(fetchOnboardingOptions("age_range"));
-  //     dispatch(fetchOnboardingOptions("gender"));
-  //     dispatch(fetchOnboardingOptions("game_preferences"));
-  //     dispatch(fetchOnboardingOptions("game_style"));
-  //     dispatch(fetchOnboardingOptions("dealy_game"));
-  //   }
+  // // Only fetch if we haven't fetched before
+  // if (onboardingStatus === "idle") {
+  // console.log(" [Onboarding] Preloading all onboarding options...");
+  // dispatch(fetchOnboardingOptions("age_range"));
+  // dispatch(fetchOnboardingOptions("gender"));
+  // dispatch(fetchOnboardingOptions("game_preferences"));
+  // dispatch(fetchOnboardingOptions("game_style"));
+  // dispatch(fetchOnboardingOptions("dealy_game"));
+  // }
   // }, [dispatch, onboardingStatus]);
 
   // Gatekeeper logic for routing (No changes needed here)
   useEffect(() => {
-    // 🔒 Check if user was blocked previously due to VPN - redirect to blocked page
+    // Check if user was blocked previously due to VPN - redirect to blocked page
     if (typeof window !== "undefined") {
       const vpnBlocked = localStorage.getItem("vpn_blocked");
       const vpnReason = localStorage.getItem("vpn_reason");
       if (vpnBlocked === "true" && !pathname.startsWith("/blocked")) {
-        console.log(
-          "🔒 [AuthContext] VPN blocked - redirecting to blocked page",
-        );
+
         const reason = vpnReason || "vpn_detected";
         router.replace(`/blocked?reason=${reason}`);
         return;
@@ -1065,7 +876,7 @@ export function AuthProvider({ children }) {
     if (isLoading) return;
     if (pathname === "/") return;
 
-    // ✅ FIX: Skip gatekeeper during NEW USER onboarding flow
+    // Skip gatekeeper during NEW USER onboarding flow
     if (isNewUserFlow) return;
 
     // Skip gatekeeper while login prefetches are in-flight.
@@ -1153,7 +964,7 @@ export function AuthProvider({ children }) {
           }
         });
       } catch (error) {
-        console.warn("⚠️ Hardware back button listener not available:", error);
+        console.warn("Hardware back button listener not available");
       }
     }
 
@@ -1172,7 +983,7 @@ export function AuthProvider({ children }) {
             backButtonListener();
           }
         } catch (error) {
-          console.warn("⚠️ Error cleaning up back button listener:", error);
+          console.warn("Error cleaning up back button listener");
         }
       }
     };
@@ -1217,12 +1028,6 @@ export function AuthProvider({ children }) {
   const handleAuthSuccess = useCallback(
     async (data) => {
       // Log the full response structure for debugging
-      console.log("🔍 [AuthContext] handleAuthSuccess received:", {
-        hasData: !!data,
-        dataType: typeof data,
-        dataKeys: data ? Object.keys(data) : [],
-        fullData: data,
-      });
 
       // Extract token and user - handle multiple possible response structures:
       // 1. { token, user } - direct structure
@@ -1271,7 +1076,7 @@ export function AuthProvider({ children }) {
           fullDataStructure: JSON.stringify(data, null, 2).substring(0, 1000),
         };
 
-        console.error("❌ [AuthContext] Invalid auth data:", errorDetails);
+        console.error("[AuthContext] Invalid auth data");
 
         // Provide more helpful error message
         const errorMessage =
@@ -1283,14 +1088,14 @@ export function AuthProvider({ children }) {
         throw new Error(errorMessage);
       }
 
-      // CRITICAL: Save to localStorage FIRST (synchronously) before setting state
+      // Save to localStorage FIRST (synchronously) before setting state
       // This ensures token is available immediately for navigation
       try {
         localStorage.setItem("authToken", token);
         localStorage.setItem("user", JSON.stringify(user));
-        console.log("✅ [AuthContext] Token saved to localStorage");
+
       } catch (err) {
-        console.error("❌ Failed to save to localStorage", err);
+        console.error("Failed to save to localStorage");
         throw new Error("Failed to persist authentication token");
       }
 
@@ -1302,7 +1107,7 @@ export function AuthProvider({ children }) {
       // Sync my-games in background after login/signup (non-blocking)
       syncMyGames(token).catch(() => {});
 
-      // INDUSTRIAL: Run Verisoul fraud auth AFTER first paint (non-blocking)
+      // Run Verisoul fraud auth AFTER first paint (non-blocking)
       (async () => {
         try {
           const deviceMetadata = await getDeviceMetadata();
@@ -1349,33 +1154,21 @@ export function AuthProvider({ children }) {
               sessionAuthData,
               token,
             );
-            console.log(
-              "[FraudDebug] login - fraudResponse success:",
-              fraudResponse,
-            );
+
           } catch (error) {
-            console.log("[FraudDebug] login - error caught:", error?.message);
+
             const errorData = error?.body;
-            console.log("[FraudDebug] login - error.body:", errorData);
+
             if (errorData?.blocked === true) {
               fraudResponse = errorData;
-              console.log(
-                "[FraudDebug] login - BLOCKED! reason:",
-                fraudResponse?.reason,
-              );
+
             } else {
-              console.error(
-                "❌ [AuthContext] Fraud session error:",
-                error?.message,
-              );
+              console.error("[AuthContext] Fraud session error");
             }
           }
 
           if (fraudResponse?.blocked === true) {
-            console.error(
-              "🔒 [AuthContext] VPN/Proxy detected (login) - blocking user:",
-              fraudResponse.reason,
-            );
+            console.error("[AuthContext] VPN/Proxy detected (login) - blocking user");
             await handleVpnBlocked(fraudResponse, token);
             return;
           }
@@ -1387,14 +1180,11 @@ export function AuthProvider({ children }) {
             );
           }
         } catch (error) {
-          console.error(
-            "❌ [AuthContext] Error authenticating fraud session (non-blocking):",
-            error?.message,
-          );
+          console.error("[AuthContext] Error authenticating fraud session (non-blocking)");
         }
       })();
 
-      // IMPORTANT: Store user data in Redux profile immediately after login
+      // Store user data in Redux profile immediately after login
       // This ensures age and gender are available immediately for game fetching
       if (user && (user.age || user.ageRange || user.gender || user._id)) {
         dispatch({
@@ -1564,25 +1354,13 @@ export function AuthProvider({ children }) {
       // constants or stable setState functions — safe to use empty deps.
     },
     [dispatch],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const signIn = async (emailOrMobile, password, turnstileToken = null) => {
     try {
       let data = await login(emailOrMobile, password, turnstileToken);
 
       // Log the raw login response for debugging
-      console.log("🔍 [AuthContext] Login API response:", {
-        hasData: !!data,
-        dataType: typeof data,
-        dataKeys: data ? Object.keys(data) : [],
-        hasToken: !!data?.token,
-        hasUser: !!data?.user,
-        hasDataData: !!data?.data,
-        dataDataKeys: data?.data ? Object.keys(data.data) : [],
-        hasSuccess: !!data?.success,
-        successValue: data?.success,
-        fullResponse: data,
-      });
 
       // Check if biometric verification is required - MUST check this BEFORE error check
       const biometricRequired =
@@ -1590,17 +1368,7 @@ export function AuthProvider({ children }) {
         data?.data?.biometricRequired === true;
       const biometricToken = data?.biometricToken || data?.data?.biometricToken;
 
-      console.log("🔍 [AuthContext] Checking biometric requirement:", {
-        biometricRequired,
-        biometricToken: biometricToken ? "present" : "missing",
-        hasToken: !!data?.token,
-        hasUser: !!data?.user,
-      });
-
       if (biometricRequired) {
-        console.log(
-          "🔐 [AuthContext] Biometric verification required, triggering device biometric...",
-        );
 
         // Check if we're on a native platform (biometric only works on native)
         if (
@@ -1621,10 +1389,7 @@ export function AuthProvider({ children }) {
             });
 
             if (!biometricResult.success) {
-              console.error(
-                "❌ [AuthContext] Biometric verification failed:",
-                biometricResult.error,
-              );
+              console.error("[AuthContext] Biometric verification failed");
               return {
                 ok: false,
                 error:
@@ -1632,10 +1397,6 @@ export function AuthProvider({ children }) {
                   "Biometric verification failed. Please try again.",
               };
             }
-
-            console.log(
-              "✅ [AuthContext] Biometric verification successful, retrying login...",
-            );
 
             // Retry login after successful biometric verification
             // The backend should now allow login after device biometric is verified
@@ -1646,11 +1407,6 @@ export function AuthProvider({ children }) {
             );
 
             // Log the retry response
-            console.log("🔍 [AuthContext] Login retry response:", {
-              hasToken: !!retryData?.token,
-              hasUser: !!retryData?.user,
-              biometricRequired: retryData?.biometricRequired,
-            });
 
             // Check if retry was successful
             const retryHasToken = !!(
@@ -1659,9 +1415,7 @@ export function AuthProvider({ children }) {
             const retryHasUser = !!(retryData?.user || retryData?.data?.user);
 
             if (!retryHasToken || !retryHasUser) {
-              console.error(
-                "❌ [AuthContext] Login retry failed after biometric verification",
-              );
+              console.error("[AuthContext] Login retry failed after biometric verification");
               return {
                 ok: false,
                 error:
@@ -1674,10 +1428,7 @@ export function AuthProvider({ children }) {
             // Use the retry data for the rest of the flow
             data = retryData;
           } catch (biometricError) {
-            console.error(
-              "❌ [AuthContext] Error during biometric verification:",
-              biometricError,
-            );
+            console.error("[AuthContext] Error during biometric verification");
             return {
               ok: false,
               error:
@@ -1687,9 +1438,7 @@ export function AuthProvider({ children }) {
           }
         } else {
           // Not on native platform - return error asking user to complete biometric on mobile app
-          console.warn(
-            "⚠️ [AuthContext] Biometric required but not on native platform",
-          );
+          console.warn("[AuthContext] Biometric required but not on native platform");
           return {
             ok: false,
             error:
@@ -1704,7 +1453,7 @@ export function AuthProvider({ children }) {
       // Pattern 2: { success: false, body: {...}, error: {...} }
       // Pattern 3: { error: "...", message: "...", status: ... }
       // Pattern 4: { success: false, ... } without token/user
-      // IMPORTANT: Exclude biometricRequired responses from error check - they are handled above
+      // Exclude biometricRequired responses from error check - they are handled above
       const isBiometricResponse =
         data?.biometricRequired === true ||
         data?.data?.biometricRequired === true;
@@ -1723,7 +1472,7 @@ export function AuthProvider({ children }) {
             (data?.error || data?.message)));
 
       if (isErrorResponse) {
-        console.error("❌ [AuthContext] Login API returned error:", data);
+        console.error("[AuthContext] Login API returned error");
         const errorMessage =
           data?.error?.message ||
           data?.error ||
@@ -1744,15 +1493,7 @@ export function AuthProvider({ children }) {
       const hasUser = !!(data?.user || data?.data?.user);
 
       if (!hasToken || !hasUser) {
-        console.error(
-          "❌ [AuthContext] Login response missing token or user:",
-          {
-            hasToken,
-            hasUser,
-            dataKeys: data ? Object.keys(data) : [],
-            responseStructure: JSON.stringify(data, null, 2).substring(0, 500),
-          },
-        );
+        console.error("[AuthContext] Login response missing token or user");
         return {
           ok: false,
           error:
@@ -1792,7 +1533,7 @@ export function AuthProvider({ children }) {
           // Check if biometric is available before saving
           const availability = await checkBiometricAvailability();
           if (availability.isAvailable) {
-            // IMPORTANT: Check if we're logging in with a different account
+            // Check if we're logging in with a different account
             // If so, we need to delete old credentials first to avoid conflicts
             try {
               const { Preferences } = await import("@capacitor/preferences");
@@ -1805,36 +1546,18 @@ export function AuthProvider({ children }) {
                 storedUsername?.value &&
                 storedUsername.value !== emailOrMobile
               ) {
-                console.log(
-                  "🔄 [AuthContext] Different user detected, deleting old biometric credentials...",
-                );
-                console.log(
-                  "🔄 [AuthContext] Old username:",
-                  storedUsername.value,
-                );
-                console.log("🔄 [AuthContext] New username:", emailOrMobile);
 
                 const { deleteCredentials } =
                   await import("@/lib/biometricAuth");
                 const deleteResult = await deleteCredentials();
 
-                if (deleteResult.success) {
-                  console.log(
-                    "✅ [AuthContext] Old credentials deleted successfully",
-                  );
-                } else {
-                  console.warn(
-                    "⚠️ [AuthContext] Failed to delete old credentials:",
-                    deleteResult.error,
-                  );
+                if (!(deleteResult.success)) {
+                  console.warn("[AuthContext] Failed to delete old credentials");
                   // Continue anyway - setCredentials will overwrite if possible
                 }
               }
             } catch (prefError) {
-              console.warn(
-                "⚠️ [AuthContext] Could not check stored username:",
-                prefError,
-              );
+              console.warn("[AuthContext] Could not check stored username");
               // Continue anyway - try to save new credentials
             }
 
@@ -1851,9 +1574,7 @@ export function AuthProvider({ children }) {
 
             if (pendingCredentials === "true" && pendingCredentialsData) {
               try {
-                console.log(
-                  "🔄 [AuthContext] Retrying to save pending biometric credentials...",
-                );
+
                 const credentialsData = JSON.parse(pendingCredentialsData);
 
                 // Check if pending credentials match current user
@@ -1864,9 +1585,7 @@ export function AuthProvider({ children }) {
                   });
 
                   if (credentialResult.success) {
-                    console.log(
-                      "✅ [AuthContext] Pending credentials saved successfully!",
-                    );
+
                     // Clear pending flags
                     localStorage.removeItem("biometricCredentialsPending");
                     localStorage.removeItem("biometricCredentialsData");
@@ -1877,25 +1596,17 @@ export function AuthProvider({ children }) {
                       availability.biometryTypeName;
                     enableBiometricLocally(biometricType);
                   } else {
-                    console.warn(
-                      "⚠️ [AuthContext] Failed to save pending credentials:",
-                      credentialResult.error,
-                    );
+                    console.warn("[AuthContext] Failed to save pending credentials");
                     // If still fails, fall through to normal credential saving
                   }
                 } else {
-                  console.log(
-                    "🔄 [AuthContext] Pending credentials are for a different user, clearing them...",
-                  );
+
                   localStorage.removeItem("biometricCredentialsPending");
                   localStorage.removeItem("biometricCredentialsData");
                   // Fall through to normal credential saving
                 }
               } catch (parseError) {
-                console.error(
-                  "❌ [AuthContext] Error parsing pending credentials:",
-                  parseError,
-                );
+                console.error("[AuthContext] Error parsing pending credentials");
                 // Clear invalid pending credentials
                 localStorage.removeItem("biometricCredentialsPending");
                 localStorage.removeItem("biometricCredentialsData");
@@ -1905,23 +1616,6 @@ export function AuthProvider({ children }) {
 
             // If pending credentials weren't saved or don't exist, save current credentials
             if (!credentialResult || !credentialResult.success) {
-              console.log(
-                "💾 [AuthContext] Saving biometric credentials for current login...",
-              );
-              console.log("💾 [AuthContext] Raw login response structure:", {
-                hasData: !!data,
-                hasToken: !!data.token,
-                tokenType: typeof data.token,
-                tokenValue: data.token
-                  ? typeof data.token === "string"
-                    ? data.token.substring(0, 50)
-                    : String(data.token).substring(0, 50)
-                  : "null",
-                hasUser: !!data.user,
-                hasDataData: !!data.data,
-                dataKeys: data ? Object.keys(data) : "null",
-                nestedDataKeys: data?.data ? Object.keys(data.data) : "null",
-              });
 
               // Extract token and user using the SAME pattern as handleAuthSuccess
               // handleAuthSuccess does: const { token, user } = data;
@@ -1936,81 +1630,43 @@ export function AuthProvider({ children }) {
               }
 
               // Log the raw values before any processing
-              console.log("💾 [AuthContext] Token extraction:", {
-                rawToken: actualToken,
-                tokenType: typeof actualToken,
-                tokenIsString: typeof actualToken === "string",
-                tokenLength:
-                  actualToken?.length ||
-                  (typeof actualToken === "object" ? "N/A (object)" : 0),
-                hasUser: !!actualUser,
-                userType: typeof actualUser,
-                userKeys: actualUser
-                  ? Object.keys(actualUser).slice(0, 5)
-                  : "null",
-              });
 
               // Handle cases where token might be an object (shouldn't happen, but defensive coding)
               if (actualToken && typeof actualToken === "object") {
-                console.error(
-                  "❌ [AuthContext] Token is an object instead of string!",
-                  {
-                    tokenKeys: Object.keys(actualToken),
-                    tokenStringified: JSON.stringify(actualToken).substring(
-                      0,
-                      100,
-                    ),
-                  },
-                );
-                console.warn(
-                  "⚠️ [AuthContext] Attempting to extract token string from object...",
-                );
+                console.error("[AuthContext] Token is an object instead of string!");
+                console.warn("[AuthContext] Attempting to extract token string from object...");
                 // Try common patterns where token might be nested in an object
                 if (
                   actualToken.token &&
                   typeof actualToken.token === "string"
                 ) {
                   actualToken = actualToken.token;
-                  console.log(
-                    "✅ [AuthContext] Extracted token string from token.token",
-                  );
+
                 } else if (
                   actualToken.value &&
                   typeof actualToken.value === "string"
                 ) {
                   actualToken = actualToken.value;
-                  console.log(
-                    "✅ [AuthContext] Extracted token string from token.value",
-                  );
+
                 } else if (
                   actualToken.accessToken &&
                   typeof actualToken.accessToken === "string"
                 ) {
                   actualToken = actualToken.accessToken;
-                  console.log(
-                    "✅ [AuthContext] Extracted token string from token.accessToken",
-                  );
+
                 } else {
                   // Last resort: check if it's a stringified JSON that needs parsing
                   try {
                     const parsed = JSON.parse(JSON.stringify(actualToken));
                     if (typeof parsed === "string" && parsed.length > 0) {
                       actualToken = parsed;
-                      console.log(
-                        "⚠️ [AuthContext] Extracted token via JSON stringify/parse (last resort)",
-                      );
+
                     } else {
-                      console.error(
-                        "❌ [AuthContext] Cannot extract valid token from object:",
-                        actualToken,
-                      );
+                      console.error("[AuthContext] Cannot extract valid token from object");
                       actualToken = null;
                     }
                   } catch (e) {
-                    console.error(
-                      "❌ [AuthContext] Failed to extract token from object:",
-                      e,
-                    );
+                    console.error("[AuthContext] Failed to extract token from object");
                     actualToken = null;
                   }
                 }
@@ -2036,10 +1692,7 @@ export function AuthProvider({ children }) {
                     tokenString.trim().length > 0
                   ) {
                     actualToken = tokenString.trim();
-                    console.log(
-                      "✅ [AuthContext] Extracted token string from object:",
-                      actualToken.substring(0, 20) + "...",
-                    );
+
                   } else {
                     // Try JSON stringify as last resort (unlikely but handles edge cases)
                     try {
@@ -2050,31 +1703,20 @@ export function AuthProvider({ children }) {
                         stringified.length > 10
                       ) {
                         actualToken = stringified;
-                        console.log(
-                          "⚠️ [AuthContext] Using stringified token object as fallback",
-                        );
+
                       } else {
-                        console.error(
-                          "❌ [AuthContext] Cannot extract valid token string from object:",
-                          actualToken,
-                        );
+                        console.error("[AuthContext] Cannot extract valid token string from object");
                         actualToken = null;
                       }
                     } catch (e) {
-                      console.error(
-                        "❌ [AuthContext] Failed to stringify token object:",
-                        e,
-                      );
+                      console.error("[AuthContext] Failed to stringify token object");
                       actualToken = null;
                     }
                   }
                 } else {
                   // Convert to string if it's a number or other type
                   actualToken = String(actualToken);
-                  console.log(
-                    "✅ [AuthContext] Converted token to string:",
-                    typeof actualToken,
-                  );
+
                 }
               }
 
@@ -2084,25 +1726,8 @@ export function AuthProvider({ children }) {
                 typeof actualToken !== "string" ||
                 actualToken.trim().length === 0
               ) {
-                console.error(
-                  "❌ [AuthContext] Invalid token for credential storage after normalization:",
-                  {
-                    hasToken: !!actualToken,
-                    tokenType: typeof actualToken,
-                    tokenLength: actualToken?.length || 0,
-                    tokenPreview: actualToken
-                      ? typeof actualToken === "string"
-                        ? actualToken.substring(0, 30)
-                        : String(actualToken).substring(0, 30)
-                      : "null",
-                    hasDataToken: !!data.token,
-                    hasNestedToken: !!data.data?.token,
-                    dataTokenType: typeof data.token,
-                  },
-                );
-                console.warn(
-                  "⚠️ [AuthContext] Cannot save biometric credentials - invalid token",
-                );
+                console.error("[AuthContext] Invalid token for credential storage after normalization");
+                console.warn("[AuthContext] Cannot save biometric credentials - invalid token");
                 // Don't throw - just skip credential saving
               } else if (
                 !actualUser ||
@@ -2110,20 +1735,8 @@ export function AuthProvider({ children }) {
                 Object.keys(actualUser).length === 0 ||
                 !actualUser._id
               ) {
-                console.error(
-                  "❌ [AuthContext] Invalid user object for credential storage:",
-                  {
-                    hasUser: !!actualUser,
-                    userType: typeof actualUser,
-                    userKeys: actualUser ? Object.keys(actualUser) : "null",
-                    hasUserId: !!actualUser?._id,
-                    hasDataUser: !!data.user,
-                    hasNestedUser: !!data.data?.user,
-                  },
-                );
-                console.warn(
-                  "⚠️ [AuthContext] Cannot save biometric credentials - invalid user",
-                );
+                console.error("[AuthContext] Invalid user object for credential storage");
+                console.warn("[AuthContext] Cannot save biometric credentials - invalid user");
                 // Don't throw - just skip credential saving
               } else {
                 // Save credentials securely using native biometric storage
@@ -2140,12 +1753,8 @@ export function AuthProvider({ children }) {
                   !credentialPayload.user ||
                   Object.keys(credentialPayload.user).length === 0
                 ) {
-                  console.error(
-                    "❌ [AuthContext] Credential payload is invalid after creation",
-                  );
-                  console.warn(
-                    "⚠️ [AuthContext] Cannot save biometric credentials - invalid payload",
-                  );
+                  console.error("[AuthContext] Credential payload is invalid after creation");
+                  console.warn("[AuthContext] Cannot save biometric credentials - invalid payload");
                   // Don't throw - just skip credential saving
                 } else {
                   // Stringify and validate the result
@@ -2155,32 +1764,11 @@ export function AuthProvider({ children }) {
                     passwordString === "{}" ||
                     passwordString === "null"
                   ) {
-                    console.error(
-                      "❌ [AuthContext] Credential payload stringified to invalid value:",
-                      passwordString,
-                    );
-                    console.warn(
-                      "⚠️ [AuthContext] Cannot save biometric credentials - invalid stringified payload",
-                    );
+                    console.error("[AuthContext] Credential payload stringified to invalid value");
+                    console.warn("[AuthContext] Cannot save biometric credentials - invalid stringified payload");
                     passwordString = null; // Reset to null to prevent use
                     // Don't throw - just skip credential saving
                   } else {
-                    console.log(
-                      "💾 [AuthContext] Credential payload validated successfully",
-                    );
-                    console.log(
-                      "💾 [AuthContext] Token length:",
-                      actualToken.length,
-                    );
-                    console.log("💾 [AuthContext] User ID:", actualUser._id);
-                    console.log(
-                      "💾 [AuthContext] Password string length:",
-                      passwordString.length,
-                    );
-                    console.log(
-                      "💾 [AuthContext] Password string preview:",
-                      passwordString.substring(0, 100) + "...",
-                    );
 
                     credentialResult = await setCredentials({
                       username: emailOrMobile,
@@ -2205,26 +1793,15 @@ export function AuthProvider({ children }) {
                     key: "biometric_username",
                     value: emailOrMobile,
                   });
-                  console.log(
-                    "✅ [AuthContext] Updated biometric username in Preferences",
-                  );
+
                 } catch (prefError) {
-                  console.warn(
-                    "⚠️ [AuthContext] Failed to update username in Preferences:",
-                    prefError,
-                  );
+                  console.warn("[AuthContext] Failed to update username in Preferences");
                 }
               } else if (credentialResult) {
-                console.warn(
-                  "⚠️ [AuthContext] Failed to save biometric credentials to Keystore:",
-                  credentialResult.error,
-                );
-                console.warn(
-                  "⚠️ [AuthContext] Error code:",
-                  credentialResult.errorCode,
-                );
+                console.warn("[AuthContext] Failed to save biometric credentials to Keystore");
+                console.warn("[AuthContext] Error code");
 
-                // IMPORTANT: Save username to Preferences even if Keystore save failed
+                // Save username to Preferences even if Keystore save failed
                 // This is critical because credentials are saved to Preferences backup,
                 // and hasBiometricCredentials() checks for username in Preferences
                 // Without this, biometric login won't work even though credentials exist in backup
@@ -2235,22 +1812,15 @@ export function AuthProvider({ children }) {
                     key: "biometric_username",
                     value: emailOrMobile,
                   });
-                  console.log(
-                    "✅ [AuthContext] Saved biometric username to Preferences (Keystore save failed, but credentials exist in backup)",
-                  );
+
                 } catch (prefError) {
-                  console.warn(
-                    "⚠️ [AuthContext] Failed to update username in Preferences:",
-                    prefError,
-                  );
+                  console.warn("[AuthContext] Failed to update username in Preferences");
                 }
 
                 // If device authentication is required, store credentials for retry
                 // Only store if we have a valid passwordString
                 if (credentialResult.requiresDeviceAuth && passwordString) {
-                  console.warn(
-                    "⚠️ [AuthContext] Device authentication required - credentials will be saved on next login",
-                  );
+                  console.warn("[AuthContext] Device authentication required - credentials will be saved on next login");
                   localStorage.setItem("biometricCredentialsPending", "true");
                   localStorage.setItem(
                     "biometricCredentialsData",
@@ -2264,10 +1834,7 @@ export function AuthProvider({ children }) {
             }
           }
         } catch (biometricError) {
-          console.error(
-            "❌ [AuthContext] Error setting up biometric:",
-            biometricError,
-          );
+          console.error("[AuthContext] Error setting up biometric");
           // Don't fail login if biometric setup fails
         }
       }
@@ -2297,7 +1864,7 @@ export function AuthProvider({ children }) {
         }
 
         // Otherwise, it's an invalid response structure
-        console.error("❌ [AuthContext] Signup response missing token:", data);
+        console.error("[AuthContext] Signup response missing token");
         return {
           ok: false,
           error: {
@@ -2353,9 +1920,7 @@ export function AuthProvider({ children }) {
       // Verify token was saved
       const savedToken = localStorage.getItem("authToken");
       if (!savedToken) {
-        console.error(
-          "❌ [AuthContext] Token not found in localStorage after handleAuthSuccess",
-        );
+        console.error("[AuthContext] Token not found in localStorage after handleAuthSuccess");
         return {
           ok: false,
           error: {
@@ -2365,7 +1930,7 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // 🔥 FETCH ONBOARDING OPTIONS ONCE (RIGHT HERE)
+      // FETCH ONBOARDING OPTIONS ONCE (RIGHT HERE)
       await Promise.all([
         dispatch(fetchOnboardingOptions("age_range")),
         dispatch(fetchOnboardingOptions("gender")),
@@ -2378,16 +1943,13 @@ export function AuthProvider({ children }) {
 
       return result;
     } catch (error) {
-      console.error("❌ [AuthContext] Signup error:", error);
+      console.error("[AuthContext] Signup error");
       return { ok: false, error: error.body || { error: error.message } };
     }
   };
 
   const handleVpnBlocked = async (fraudResponse, authToken) => {
-    console.error(
-      "🔒 [AuthContext] VPN/Proxy blocked - signing out user:",
-      fraudResponse.reason,
-    );
+    console.error("[AuthContext] VPN/Proxy blocked - signing out user");
 
     const reason = fraudResponse?.reason || "vpn_detected";
     const message =
@@ -2425,37 +1987,24 @@ export function AuthProvider({ children }) {
     );
   };
 
-  // MODIFIED: signOut clears the profile state in the Redux store but KEEPS biometric credentials
+  // signOut clears the profile state in the Redux store but KEEPS biometric credentials
   // Biometric credentials are preserved so users can login with biometric after signout
   const signOut = async () => {
     // End Verisoul fraud prevention session before clearing data
     try {
       const storedSessionId = localStorage.getItem("verisoul_session_id");
       const currentToken = token || localStorage.getItem("authToken");
-      console.log(
-        "[FraudDebug] signOut – backend sessionId to unauthenticate:",
-        storedSessionId ? `${storedSessionId.slice(0, 8)}...` : "none",
-      );
 
       if (storedSessionId && currentToken) {
         await unauthenticateFraudSession(storedSessionId, currentToken);
-        console.log("✅ [AuthContext] Fraud session unauthenticated");
-        console.log(
-          "[FraudDebug] signOut – POST unauthenticate sent with backend sessionId",
-        );
+
       }
     } catch (error) {
-      console.error(
-        "❌ [AuthContext] Error unauthenticating fraud session (non-blocking):",
-        error,
-      );
+      console.error("[AuthContext] Error unauthenticating fraud session (non-blocking)");
     }
 
     // Clear Verisoul session ID
     clearVerisoulSessionId();
-    console.log(
-      "[FraudDebug] signOut – cleared localStorage verisoul_session_id",
-    );
 
     // Clear all Redux state first
     dispatch(clearProfile()); // Clear profile data
@@ -2467,14 +2016,14 @@ export function AuthProvider({ children }) {
     dispatch(resetDailyChallengeState()); // Clear daily challenge so new account doesn't see previous user's state
     dispatch(clearStreak()); // Clear streak data so new account starts fresh
     clearDealsCache(); // Clear in-memory deals page cache (not in localStorage, must be cleared explicitly)
-    resetAdjustCounters(); // Reset per-user Adjust milestone counters (industry standard: clear on logout)
+    resetAdjustCounters(); // Reset per-user Adjust milestone counters
 
     // Purge all Redux persist data to prevent QuotaExceededError
     // Use persistor.purge() which properly handles cleanup without serialization issues
     try {
       await persistor.purge();
     } catch (err) {
-      console.error("❌ Failed to purge persistor:", err);
+      console.error("Failed to purge persistor");
     }
 
     setUser(null);
@@ -2589,12 +2138,12 @@ export function AuthProvider({ children }) {
       // Note: biometricToken, biometricUser, biometric_username, biometric_password are preserved
       // for biometric login functionality
     } catch (err) {
-      console.error("❌ Failed to clear localStorage", err);
+      console.error("Failed to clear localStorage");
     }
     router.push("/login");
   };
 
-  // MODIFIED: This function now leverages our Redux thunk for cleaner logic
+  // This function now leverages our Redux thunk for cleaner logic
   const handleSocialAuthCallback = useCallback(
     async (socialToken) => {
       setIsLoading(true);
@@ -2677,7 +2226,7 @@ export function AuthProvider({ children }) {
       // handleAuthSuccess is memoized above; dispatch is stable.
     },
     [dispatch, handleAuthSuccess],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const updateUserInContext = (newUserData) => {
     setUser(newUserData);

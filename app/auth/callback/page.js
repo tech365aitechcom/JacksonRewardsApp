@@ -110,24 +110,11 @@ function AuthCallbackContent() {
         searchParams.get("message") ||
         searchParams.get("error");
 
-      console.log("📄 [AuthCallback] processAuth started →", {
-        isNative: Capacitor.isNativePlatform(),
-        hasToken: !!token,
-        hasError: !!hasError,
-        allParams: Object.fromEntries(searchParams),
-        allBackendMessages,
-      });
-
       // 1. Handle Native platform
       if (Capacitor.isNativePlatform()) {
         const source = searchParams.get("source");
 
-        if (source === "native") {
-          // Arrived here via router.replace() from the appUrlOpen deep link handler.
-          // Browser is already closed — skip the browser-close redirect and fall through
-          // to the normal web auth processing below (token is already in searchParams).
-          console.log("📄 [AuthCallback] Native source=native → processing auth directly (browser already closed)");
-        } else {
+        if (!(source === "native")) {
           // Arrived here because the OAuth browser loaded /auth/callback normally.
           // Need to close the browser and fire the deep link back to the app.
           let deepLink = "com.jackson.app://auth/callback";
@@ -135,23 +122,23 @@ function AuthCallbackContent() {
             deepLink += `?token=${encodeURIComponent(token)}`;
             if (provider) deepLink += `&provider=${encodeURIComponent(provider)}`;
             if (userId) deepLink += `&userId=${encodeURIComponent(userId)}`;
-            console.log("📄 [AuthCallback] Native browser → building deep link with token:", deepLink);
+
           } else {
             const message =
               allBackendMessages || "Authentication token not found.";
             deepLink += `?message=${encodeURIComponent(message)}`;
-            console.log("📄 [AuthCallback] Native browser ERROR → building error deep link:", deepLink);
+
           }
 
           try {
-            console.log("📄 [AuthCallback] Closing browser, then firing deep link in 500ms...");
+
             await Browser.close();
             setTimeout(() => {
-              console.log("📄 [AuthCallback] Firing deep link now:", deepLink);
+
               window.location.href = deepLink;
             }, 500);
           } catch (closeError) {
-            console.warn("📄 [AuthCallback] Browser.close() failed, firing deep link immediately:", closeError);
+            console.warn("[AuthCallback] Browser.close() failed, firing deep link immediately");
             window.location.href = deepLink;
           }
           return;
@@ -166,8 +153,6 @@ function AuthCallbackContent() {
           searchParams.get("error") ||
           "Authentication failed.";
 
-        console.log("❌ [AuthCallback] Web ERROR path → raw errorMessage:", errorMessage);
-
         // Improve message for suspended/pending accounts
         const lowerError = errorMessage.toLowerCase();
         if (
@@ -180,10 +165,9 @@ function AuthCallbackContent() {
         ) {
           errorMessage =
             "Your account is currently suspended or pending. Please contact support for assistance.";
-          console.log("❌ [AuthCallback] Web ERROR → mapped to account-status message:", errorMessage);
+
         }
 
-        console.log("❌ [AuthCallback] Web ERROR → setting error UI, will redirect to /login in 4s");
         setErrorMessage(errorMessage);
         setStatus("error");
         setTimeout(() => router.replace("/login"), 4000);
@@ -197,12 +181,10 @@ function AuthCallbackContent() {
       // which would block navigation for many seconds.
       if (token) {
         try {
-          console.log("✅ [Auth Callback] Token received, processing via Context...");
 
           const result = await handleSocialAuthCallback(token);
 
           if (result.ok) {
-            console.log("✅ [Auth Callback] Login successful, navigating...");
 
             // Show the success UI briefly, then navigate — identical timing to
             // the normal login page redirect after signIn() resolves.

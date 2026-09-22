@@ -163,7 +163,7 @@ const WelcomeOfferSection = () => {
         };
     }, [token, fetchBonusTasks]);
 
-    // OPTIMIZED: Memoize expensive calculations
+    // Memoize expensive calculations
     const gameData = useMemo(() => {
         const hasDownloadedGames = bonusTasksData?.games && Array.isArray(bonusTasksData.games) && bonusTasksData.games.length > 0;
         const allGames = hasDownloadedGames ? bonusTasksData.games : [];

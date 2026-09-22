@@ -9,9 +9,9 @@ const SoftInputPlugin = registerPlugin("SoftInputPlugin");
  * Switches to adjustResize on mount, back to adjustPan on unmount.
  *
  * Usage:
- *   import useSoftInputMode from "@/hooks/useSoftInputMode";
- *   // inside your component:
- *   useSoftInputMode("resize");
+ * import useSoftInputMode from "@/hooks/useSoftInputMode";
+ * // inside your component:
+ * useSoftInputMode("resize");
  */
 export default function useSoftInputMode(mode = "resize") {
   useEffect(() => {

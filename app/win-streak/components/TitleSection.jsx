@@ -4,13 +4,13 @@ import Image from "next/image";
 
 /**
  * TitleSection Component
- * 
+ *
  * Displays the header section of the 30-Day Win Streak screen with:
  * - Rotating badge with current streak day
  * - Close button for navigation
  * - Motivational tagline
  * - Info button for help
- * 
+ *
  * @param {number} currentStreak - Current streak day (1-30)
  * @param {function} onClose - Handler for close button
  * @param {function} onInfoClick - Handler for info icon

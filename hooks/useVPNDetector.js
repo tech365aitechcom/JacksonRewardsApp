@@ -52,19 +52,19 @@ export const useVPNDetector = (options = {}) => {
   const checkNativeVPN = useCallback(async () => {
     if (typeof window === "undefined") return null;
     if (!isNativeAppRef.current) {
-      console.log("[VPN] Not native app - skipping native VPN check");
+
       return null;
     }
 
     try {
-      console.log("[VPN] Checking native VPN status...");
+
       const { VpnDetector } = await import("capacitor-vpn-detector");
       if (!VpnDetector?.isVpnActive) {
         console.warn("[VPN] VpnDetector plugin not available");
         return null;
       }
       const result = await VpnDetector.isVpnActive();
-      console.log("[VPN] Native VPN check result:", result);
+
       return result?.value ?? null;
     } catch (e) {
       console.error("[VPN] Native VPN check error:", e);
@@ -75,19 +75,17 @@ export const useVPNDetector = (options = {}) => {
   const detectVPN = useCallback(async () => {
     if (isLoading) return;
     if (typeof window === "undefined") {
-      console.log("[VPN] Window undefined - skipping detection");
+
       return;
     }
 
     setIsLoading(true);
-    console.log("[VPN] Starting VPN detection...");
 
     try {
       const nativeResult = await checkNativeVPN();
-      console.log("[VPN] Native result:", nativeResult, "type:", typeof nativeResult);
 
       if (nativeResult === true) {
-        console.log("[VPN] ✅ VPN DETECTED via native!");
+
         setDetectionMethod("native");
         setIsVPNDetected(true);
         if (blockOnDetection) {
@@ -99,7 +97,6 @@ export const useVPNDetector = (options = {}) => {
         return;
       }
 
-      console.log("[VPN] No VPN detected - clearing blocked state");
       setIsVPNDetected(false);
       localStorage.removeItem("vpn_blocked");
       localStorage.removeItem("vpn_blocked_recent");
@@ -118,7 +115,7 @@ export const useVPNDetector = (options = {}) => {
 
     const timer = setTimeout(async () => {
       const alreadyBlocked = localStorage.getItem("vpn_blocked_recent") === "true";
-      
+
       if (alreadyBlocked) {
         await detectVPN();
         return;

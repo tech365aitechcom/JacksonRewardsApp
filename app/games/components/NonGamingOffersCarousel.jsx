@@ -39,7 +39,7 @@ const NonGamingOffersCarousel = ({ offers = [], className = "" }) => {
                 </h2>
             </div>
 
-            {/* 
+            {/*
         This is the card viewport. It is NOT scrollable.
         - `relative` is for positioning the absolute cards inside.
         - `overflow-hidden` clips the cards that move outside the bounds.

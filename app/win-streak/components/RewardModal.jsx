@@ -3,13 +3,13 @@ import React, { useEffect, useState } from "react";
 
 /**
  * RewardModal Component
- * 
+ *
  * Displays milestone reward popup with:
  * - Confetti animation
  * - Reward amount (coins + XP)
  * - Celebration message
  * - Claim button
- * 
+ *
  * @param {boolean} isVisible - Modal visibility state
  * @param {number} milestone - Milestone day (7, 14, 21, 30)
  * @param {number} coins - Coin reward amount

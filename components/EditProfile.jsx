@@ -11,7 +11,7 @@ export const EditProfile = () => {
   const { token } = useAuth();
   const dispatch = useDispatch();
   const { details: profile, detailsStatus: profileStatus } = useSelector((state) => state.profile);
-  console.log(profile)
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -52,8 +52,6 @@ export const EditProfile = () => {
       }
     }
   }, [profile, profileStatus]);
-
-
 
   const validateField = (field, value) => {
     const errors = {};
@@ -221,7 +219,6 @@ export const EditProfile = () => {
   if (profileStatus === 'failed' && !profile) {
     return <div className="bg-[#272052] flex h-screen justify-center items-center text-red-500">Could not load profile data to edit.</div>;
   }
-
 
   return (
     <div className="bg-[#272052] flex min-h-screen flex-row justify-center w-full relative overflow-auto scrollbar-hide">

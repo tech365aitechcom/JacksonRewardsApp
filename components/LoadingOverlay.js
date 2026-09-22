@@ -2,7 +2,7 @@
 
 import React from "react";
 
-// A spinner styled to match your app's theme
+// Full-screen loading overlay
 const Spinner = () => (
   <div className="border-gray-500 h-16 w-16 animate-spin rounded-full border-4 border-t-[#af7de6]" />
 );

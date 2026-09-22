@@ -28,7 +28,6 @@ const parsedCountries = defaultCountries.map(c => {
 const validateName = (name, fieldName = 'Name') => {
   const trimmedName = name.trim();
 
-
   if (!trimmedName) {
     return `${fieldName} is required.`;
   }
@@ -46,7 +45,6 @@ const validateName = (name, fieldName = 'Name') => {
 
   return "";
 };
-
 
 const SignUp = () => {
   const router = useRouter();
@@ -66,7 +64,6 @@ const SignUp = () => {
   const [isLoadings, setIsLoadings] = useState(false);
   const [isLoadingss, setIsLoadingss] = useState(false);
   const [firebaseIdToken, setFirebaseIdToken] = useState(null);
-
 
   const [error, setError] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -123,13 +120,12 @@ const SignUp = () => {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-
   // useEffect(() => {
-  //   let timer;
-  //   if (isOtpSent && countdown > 0 && !isMobileVerified) {
-  //     timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-  //   }
-  //   return () => clearTimeout(timer);
+  // let timer;
+  // if (isOtpSent && countdown > 0 && !isMobileVerified) {
+  // timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+  // }
+  // return () => clearTimeout(timer);
   // }, [isOtpSent, countdown, isMobileVerified]);
 
   // ============================================================
@@ -149,16 +145,16 @@ const SignUp = () => {
           setIsTurnstileLoading(true);
           const widgetId = window.turnstile.render(turnstileRef.current, {
             sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
-            callback: (token) => { setTurnstileToken(token); setIsTurnstileLoading(false); console.log('✅ Turnstile verified:', token); },
-            'error-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(false); console.error('❌ Turnstile error'); },
-            'expired-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(true); console.warn('⏰ Turnstile token expired'); },
+            callback: (token) => { setTurnstileToken(token); setIsTurnstileLoading(false);  },
+            'error-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(false); console.error("Turnstile error"); },
+            'expired-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(true); console.warn("Turnstile token expired"); },
             theme: 'dark',
             size: 'normal',
           });
           setIsTurnstileLoading(false);
           turnstileWidgetId.current = widgetId;
         } catch (err) {
-          console.error('Failed to render Turnstile widget:', err);
+          console.error("Failed to render Turnstile widget");
         }
       }
     };
@@ -207,7 +203,6 @@ const SignUp = () => {
     }
   };
 
-
   const handleInputChange = (field, value) => {
     // Clear errors when user starts typing
     setError({});
@@ -216,7 +211,6 @@ const SignUp = () => {
       [field]: value,
     }));
   };
-
 
   const handleOtpChange = (element, index) => {
     if (isNaN(element.value)) return false; // Only allow numbers
@@ -243,58 +237,57 @@ const SignUp = () => {
   };
 
   // const handleSendOtp = async () => {
-  //   setError({});
-  //   if (!formData.mobile.trim() || (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile))) {
-  //     setError({ mobile: "Please enter a valid 10-digit Indian mobile number." });
-  //     return;
-  //   }
-  //   setIsLoadingss(true);
-  //   try {
-  //     await sendOtp(`${countryCode}${formData.mobile}`);
-  //     setIsOtpSent(true);
-  //     setCountdown(60); // Reset timer
-  //     setTimeout(() => otpInputs.current[0]?.focus(), 100); // Focus the first OTP box
-  //   } catch (err) {
-  //     setError({ mobile: err.message || "Failed to send OTP. Please try again." });
-  //   } finally {
-  //     setIsLoadingss(false);
-  //   }
+  // setError({});
+  // if (!formData.mobile.trim() || (countryCode === "+91" && !/^[6-9]\d{9}$/.test(formData.mobile))) {
+  // setError({ mobile: "Please enter a valid 10-digit Indian mobile number." });
+  // return;
+  // }
+  // setIsLoadingss(true);
+  // try {
+  // await sendOtp(`${countryCode}${formData.mobile}`);
+  // setIsOtpSent(true);
+  // setCountdown(60); // Reset timer
+  // setTimeout(() => otpInputs.current[0]?.focus(), 100); // Focus the first OTP box
+  // } catch (err) {
+  // setError({ mobile: err.message || "Failed to send OTP. Please try again." });
+  // } finally {
+  // setIsLoadingss(false);
+  // }
   // };
 
   // const handleResendOtp = async () => {
-  //   if (countdown > 0) return;
-  //   setIsResending(true);
-  //   try {
-  //     await sendOtp(`${countryCode}${formData.mobile}`);
-  //     setFormData(prev => ({ ...prev, otp: new Array(4).fill("") })); // Clear old OTP
-  //     setCountdown(60);
-  //     setError({});
-  //     otpInputs.current[0]?.focus();
-  //   } catch (err) {
-  //     setError({ otp: err.message || "Failed to resend OTP." });
-  //   } finally {
-  //     setIsResending(false);
-  //   }
+  // if (countdown > 0) return;
+  // setIsResending(true);
+  // try {
+  // await sendOtp(`${countryCode}${formData.mobile}`);
+  // setFormData(prev => ({ ...prev, otp: new Array(4).fill("") })); // Clear old OTP
+  // setCountdown(60);
+  // setError({});
+  // otpInputs.current[0]?.focus();
+  // } catch (err) {
+  // setError({ otp: err.message || "Failed to resend OTP." });
+  // } finally {
+  // setIsResending(false);
+  // }
   // };
 
   // const handleVerifyOtp = async () => {
-  //   const otpCode = formData.otp.join('');
-  //   if (otpCode.length < 4) {
-  //     setError({ otp: "Please enter the full 4-digit code." });
-  //     return;
-  //   }
-  //   setIsLoadings(true);
-  //   try {
-  //     await verifyOtp(`${countryCode}${formData.mobile}`, otpCode);
-  //     setIsMobileVerified(true);
-  //     setError({});
-  //   } catch (err) {
-  //     setError({ otp: err.message || "An unknown verification error occurred." });
-  //   } finally {
-  //     setIsLoadings(false);
-  //   }
+  // const otpCode = formData.otp.join('');
+  // if (otpCode.length < 4) {
+  // setError({ otp: "Please enter the full 4-digit code." });
+  // return;
   // }
-
+  // setIsLoadings(true);
+  // try {
+  // await verifyOtp(`${countryCode}${formData.mobile}`, otpCode);
+  // setIsMobileVerified(true);
+  // setError({});
+  // } catch (err) {
+  // setError({ otp: err.message || "An unknown verification error occurred." });
+  // } finally {
+  // setIsLoadings(false);
+  // }
+  // }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -445,29 +438,29 @@ const SignUp = () => {
   };
 
   // const handleSendOtp = async () => {
-  //   setError({});
-  //   const fullNumber = `${countryCode}${formData.mobile}`;
+  // setError({});
+  // const fullNumber = `${countryCode}${formData.mobile}`;
 
-  //   setIsLoadingss(true);
-  //   try {
-  //     // 1. Check Backend if number is used
-  //     // const check = await fetch('/api/auth/check-availability', {
-  //     //   method: 'POST',
-  //     //   headers: { 'Content-Type': 'application/json' },
-  //     //   body: JSON.stringify({ mobile: fullNumber })
-  //     // });
-  //     // const checkData = await check.json();
-  //     // if (!check.ok) throw new Error(checkData.message);
+  // setIsLoadingss(true);
+  // try {
+  // // 1. Check Backend if number is used
+  // // const check = await fetch('/api/auth/check-availability', {
+  // // method: 'POST',
+  // // headers: { 'Content-Type': 'application/json' },
+  // // body: JSON.stringify({ mobile: fullNumber })
+  // // });
+  // // const checkData = await check.json();
+  // // if (!check.ok) throw new Error(checkData.message);
 
-  //     // 2. If free, send Firebase OTP
-  //     await sendFirebaseOtp(fullNumber);
-  //     setIsOtpSent(true);
-  //     setCountdown(180); // Start 3-minute timer
-  //   } catch (err) {
-  //     setError({ mobile: err.message });
-  //   } finally {
-  //     setIsLoadingss(false);
-  //   }
+  // // 2. If free, send Firebase OTP
+  // await sendFirebaseOtp(fullNumber);
+  // setIsOtpSent(true);
+  // setCountdown(180); // Start 3-minute timer
+  // } catch (err) {
+  // setError({ mobile: err.message });
+  // } finally {
+  // setIsLoadingss(false);
+  // }
   // };
   const handleSendOtp = async () => {
     setError({});
@@ -520,7 +513,7 @@ const SignUp = () => {
       setFirebaseIdToken(idToken);
       setIsMobileVerified(true);
     } catch (err) {
-      console.error("OTP verify error:", err);
+      console.error("OTP verify error");
       const msg = err?.message || "";
       if (msg.toLowerCase().includes("session") || msg.toLowerCase().includes("no otp")) {
         setError({ otp: "Session expired. Please tap Resend OTP and try again." });
@@ -547,16 +540,16 @@ const SignUp = () => {
                 setIsTurnstileLoading(true);
                 const widgetId = window.turnstile.render(turnstileRef.current, {
                   sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
-                  callback: (token) => { setTurnstileToken(token); setIsTurnstileLoading(false); console.log('✅ Turnstile verified:', token); },
-                  'error-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(false); console.error('❌ Turnstile error'); },
-                  'expired-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(true); console.warn('⏰ Turnstile token expired'); },
+                  callback: (token) => { setTurnstileToken(token); setIsTurnstileLoading(false);  },
+                  'error-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(false); console.error("Turnstile error"); },
+                  'expired-callback': () => { setTurnstileToken(null); setIsTurnstileLoading(true); console.warn("Turnstile token expired"); },
                   theme: 'dark',
                   size: 'normal',
                 });
                 turnstileWidgetId.current = widgetId;
                 setIsTurnstileLoading(false);
               } catch (err) {
-                console.error('Failed to render Turnstile widget on script load:', err);
+                console.error("Failed to render Turnstile widget on script load");
               }
             }
           }, 200);
@@ -905,7 +898,7 @@ const SignUp = () => {
                 {/* ============================================================
                   CLOUDFLARE TURNSTILE WIDGET - MANUAL RENDERING
                   ============================================================
-                  
+
                   HOW IT WORKS:
                   1. Widget container is rendered with a ref
                   2. Widget is manually rendered via useEffect when script loads
@@ -913,12 +906,12 @@ const SignUp = () => {
                   4. Widget starts analyzing user behavior in the background
                   5. When verified → callback fires automatically
                   6. Token is stored in state and sent to backend with form
-                  
+
                   Widget Modes:
                   - "Managed" (default): Automatically decides if challenge needed
                   - "Non-interactive": Never shows challenge, fully invisible
                   - "Invisible": Completely hidden, always automatic
-                  
+
                   Most users will NEVER see a challenge - it's automatic!
                   ============================================================ */}
                 <div className="w-full flex flex-col items-center justify-center mt-2">

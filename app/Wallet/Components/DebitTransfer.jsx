@@ -67,7 +67,7 @@ export const DebitTransfer = ({ isOpen, onClose, methods, fundingSources, token 
         }));
     };
 
-    // ✅ FIX: Better keyboard handling - ensure button stays visible with 3x more scroll
+    // Better keyboard handling - ensure button stays visible with 3x more scroll
     const handleInputFocus = () => {
         // Use multiple timeouts to handle different keyboard animation speeds
         setTimeout(() => {
@@ -112,7 +112,6 @@ export const DebitTransfer = ({ isOpen, onClose, methods, fundingSources, token 
             }
         }, 500);
     };
-
 
     // Handle swipe-to-close functionality
     const handleTouchStart = (e) => {
@@ -160,7 +159,7 @@ export const DebitTransfer = ({ isOpen, onClose, methods, fundingSources, token 
     }, [isOpen, onClose]);
 
     const handleSubmitDebitCard = async () => {
-        // CRITICAL FIX: Prevent double submission
+        // Prevent double submission
         if (isSubmitting) {
             return;
         }

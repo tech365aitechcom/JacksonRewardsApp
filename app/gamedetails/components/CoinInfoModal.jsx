@@ -67,7 +67,6 @@ export const CoinInfoModal = ({ isVisible, onClose }) => {
                         </div>
                     </div>
 
-
                 </main>
             </div>
         </div>

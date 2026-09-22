@@ -8,10 +8,10 @@ const StreakSection = () => {
     const [showTooltip, setShowTooltip] = useState(false);
     const tooltipRef = useRef(null);
 
-    // OPTIMIZED: Memoize selector to prevent unnecessary re-renders
+    // Memoize selector to prevent unnecessary re-renders
     const currentStreak = useSelector((state) => state.streak.currentStreak);
 
-    // OPTIMIZED: Memoize event handlers
+    // Memoize event handlers
     const toggleTooltip = useCallback(() => {
         setShowTooltip(!showTooltip);
     }, [showTooltip]);
@@ -20,7 +20,7 @@ const StreakSection = () => {
         router.push('/win-streak');
     }, [router]);
 
-    // OPTIMIZED: Memoize streak data calculations
+    // Memoize streak data calculations
     const streakData = useMemo(() => {
         const hasStreak = currentStreak > 0;
         const dayText = hasStreak ? `Day ${currentStreak} of 30` : '30 Days Streak';

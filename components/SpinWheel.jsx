@@ -128,13 +128,13 @@ export default function SpinWheel() {
     useEffect(() => {
         if (vipData.isVipActive) return;
         if (token && isInitialized && pendingReward > 0 && pendingSpinId && !isAdReady && !isAdLoading && !isShowingAd) {
-            console.log("[SpinWheel] 🔄 Component mounted with pending reward, ensuring ad is loaded");
+
             const timer = setTimeout(async () => {
                 try {
                     await loadAd();
-                    console.log("[SpinWheel] ✅ Ad loaded for pending reward on mount");
+
                 } catch (error) {
-                    console.log("[SpinWheel] ⚠️ Failed to load ad for pending reward on mount:", error.message);
+
                 }
             }, 1000); // Small delay to ensure everything is initialized
 
@@ -170,12 +170,6 @@ export default function SpinWheel() {
     }, [adError]);
 
     // Log platform info once for debugging native vs web behavior
-    useEffect(() => {
-        console.log("[SpinWheel] 🧩 Platform debug:", {
-            isWeb,
-            isNativePlatform: Capacitor.isNativePlatform?.(),
-        });
-    }, [isWeb]);
 
     // Handle page visibility changes to fix navigation issues – non-VIP only (VIP never loads ads)
     useEffect(() => {
@@ -183,11 +177,11 @@ export default function SpinWheel() {
 
         const handleVisibilityChange = async () => {
             if (!document.hidden && pendingReward > 0 && pendingSpinId && !isAdReady && !isAdLoading && !isShowingAd) {
-                console.log("[SpinWheel] 📱 Page became visible, refreshing ad state");
+
                 try {
                     await loadAd();
                 } catch (error) {
-                    console.log("[SpinWheel] ⚠️ Visibility change refresh failed:", error.message);
+
                 }
             }
         };
@@ -233,11 +227,11 @@ export default function SpinWheel() {
 
         const refreshInterval = setInterval(async () => {
             if (pendingReward > 0 && pendingSpinId && !isAdReady && !isAdLoading && !isShowingAd) {
-                console.log("[SpinWheel] 🔄 Periodic ad state refresh triggered");
+
                 try {
                     await loadAd();
                 } catch (error) {
-                    console.log("[SpinWheel] ⚠️ Periodic refresh failed:", error.message);
+
                 }
             }
         }, 5000); // Check every 5 seconds
@@ -266,15 +260,10 @@ export default function SpinWheel() {
 
         // Validate pending reward from previous session
         if (pendingReward > 0 && pendingSpinId) {
-            console.log("[SpinWheel] 🔍 Validating pending reward from previous session:", {
-                pendingReward,
-                pendingSpinId,
-                isAdWatched
-            });
 
             // If ad was already watched in previous session, clear the pending state
             if (isAdWatched) {
-                console.log("[SpinWheel] 🧹 Ad was already watched in previous session, clearing pending state");
+
                 clearPendingReward();
             }
         }
@@ -325,7 +314,7 @@ export default function SpinWheel() {
     };
 
     const handleSpin = async () => {
-        console.log("[SpinWheel] ▶ handleSpin() called");
+
         if (!token) {
             setError("Please log in to spin");
             setShowResult(true);
@@ -343,12 +332,6 @@ export default function SpinWheel() {
             // Play sound effect when user clicks spin
             playSpinSound();
 
-            console.log("[SpinWheel] 🔄 Starting spin. Current state:", {
-                spins,
-                canSpin,
-                cooldownRemaining,
-            });
-
             setIsSpinning(true);
             setShowResult(false);
             setPendingReward(0);
@@ -359,13 +342,11 @@ export default function SpinWheel() {
 
             // Call API to perform spin - always call API, even if no spins left
             // Backend will return error message if no spins available
-            console.log("[SpinWheel] 🌐 Calling performSpin API...");
+
             const spinResponse = await performSpin(token);
-            console.log("[SpinWheel] 📥 performSpin response:", spinResponse);
 
             if (spinResponse.success && spinResponse.data) {
                 const spinData = spinResponse.data;
-                console.log("[SpinWheel] 📊 Spin data:", spinData);
 
                 // Wait for animation to complete (3 seconds)
                 setTimeout(() => {
@@ -376,11 +357,6 @@ export default function SpinWheel() {
                     // - status: "pending" = Ad-based mode, requires redemption
                     const isPending = spinData.status === "pending";
                     const isCompleted = spinData.status === "completed";
-                    console.log("[SpinWheel] 📊 Spin status flags:", {
-                        status: spinData.status,
-                        isPending,
-                        isCompleted,
-                    });
 
                     if (spinData.reward) {
                         const rewardAmount = spinData.reward.amount || 0;
@@ -400,11 +376,7 @@ export default function SpinWheel() {
                         if (isPending && spinData.spinId) {
                             // Ad-based spin: Store pending reward for manual redemption
                             // User must tap the "Redeem" button to watch ad and claim
-                            console.log("[SpinWheel] 🎯 Pending ad-based spin detected. Storing pending reward & spinId", {
-                                finalReward,
-                                baseReward: rewardAmount,
-                                spinId: spinData.spinId,
-                            });
+
                             setPendingReward(rewardAmount); // Store base amount for redemption
                             setPendingSpinId(spinData.spinId);
                         } else if (isCompleted) {
@@ -433,7 +405,7 @@ export default function SpinWheel() {
                             clearPendingReward();
                         }
                     } else {
-                        console.log("[SpinWheel] ⚠️ No reward in spinData.reward. Clearing pending state.");
+
                         clearPendingReward();
                     }
 
@@ -453,7 +425,7 @@ export default function SpinWheel() {
             } else {
                 // Handle backend error response - ONLY show backend message
                 const backendMessage = spinResponse.message || spinResponse.error || "Spin failed";
-                console.warn("[SpinWheel] ❌ Spin failed with backend message:", backendMessage);
+                console.warn("[SpinWheel]  Spin failed with backend message:", backendMessage);
                 setIsSpinning(false);
 
                 // ONLY display the message from backend API (no hardcoded text)
@@ -475,7 +447,7 @@ export default function SpinWheel() {
             // The ApiError is thrown at api.js:33 with the backend message
             // ApiError structure: { message: "Not eligible for this spin wheel", status: 403, body: {...} }
             let errorMessage = err.message || "Failed to spin. Please try again.";
-            console.error("[SpinWheel] ❌ Exception during spin:", {
+            console.error("[SpinWheel]  Exception during spin:", {
                 message: err?.message,
                 stack: err?.stack,
                 name: err?.name,
@@ -498,17 +470,6 @@ export default function SpinWheel() {
     };
 
     const handleWatchToRedeem = async (retryCount = 0) => {
-        console.log("[SpinWheel] ▶ handleWatchToRedeem() called", {
-            tokenPresent: !!token,
-            pendingReward,
-            pendingSpinId,
-            isInitialized,
-            isAdReady,
-            isShowingAd,
-            retryCount,
-            isVipActive: vipData.isVipActive,
-            currentTier: vipData.currentTier,
-        });
 
         if (!token) {
             setError("Please log in to redeem");
@@ -524,18 +485,14 @@ export default function SpinWheel() {
 
         // VIP users get ad-free reward claiming
         if (vipData.isVipActive) {
-            console.log("[SpinWheel] 🎯 VIP user detected - skipping ads for reward claiming");
+
             try {
                 setIsRedeeming(true);
                 setError(null);
 
                 // Direct redemption without ads for VIP users
-                console.log("[SpinWheel] 🌐 Calling redeemSpinReward API for VIP user...", {
-                    pendingSpinId,
-                    pendingReward,
-                });
+
                 const redeemResponse = await redeemSpinReward(pendingSpinId, token);
-                console.log("[SpinWheel] 📥 redeemSpinReward response (VIP):", redeemResponse);
 
                 if (redeemResponse.success && redeemResponse.data) {
                     const redeemData = redeemResponse.data;
@@ -590,7 +547,7 @@ export default function SpinWheel() {
                     throw new Error(redeemResponse.error || "VIP redemption failed");
                 }
             } catch (err) {
-                console.error("[SpinWheel] ❌ VIP redemption error:", err);
+                console.error("[SpinWheel]  VIP redemption error:", err);
                 const finalMessage = err.message || "Failed to claim VIP reward. Please try again.";
                 setError(finalMessage);
                 setResult(`❌ ${finalMessage}`);
@@ -604,7 +561,7 @@ export default function SpinWheel() {
 
         // Check if ad SDK is initialized
         if (!isInitialized) {
-            console.log("[SpinWheel] ⚠️ Ad SDK not initialized, trying to initialize first...");
+
             setError("Initializing ad system...");
             try {
                 // Short wait for hook to finish initializing (reduced from 2s so reward credits faster)
@@ -613,7 +570,7 @@ export default function SpinWheel() {
                     throw new Error("Ad SDK failed to initialize");
                 }
             } catch (initError) {
-                console.error("[SpinWheel] ❌ SDK initialization failed:", initError);
+                console.error("[SpinWheel]  SDK initialization failed:", initError);
                 setError("Ad system not available. Please try again.");
                 setResult("❌ Ad system initialization failed");
                 setShowResult(true);
@@ -624,10 +581,10 @@ export default function SpinWheel() {
 
         // Force reload ad if not ready (fixes navigation issue)
         if (!isAdReady) {
-            console.log("[SpinWheel] 🔄 Ad not ready, forcing reload to fix navigation issue...");
+
             try {
                 const reloadResult = await loadAd();
-                console.log("[SpinWheel] 📊 Forced reload result:", reloadResult);
+
                 if (!reloadResult) {
                     setError("Failed to reload ad. Please try again.");
                     setResult("❌ Ad reload failed");
@@ -638,7 +595,7 @@ export default function SpinWheel() {
                 // Brief wait for ad state to update (reduced so reward credits faster)
                 await new Promise(resolve => setTimeout(resolve, 250));
             } catch (reloadError) {
-                console.error("[SpinWheel] ❌ Ad reload failed:", reloadError);
+                console.error("[SpinWheel]  Ad reload failed:", reloadError);
                 setError("Ad reload failed. Please try again.");
                 setResult(`❌ Ad reload failed: ${reloadError.message}`);
                 setShowResult(true);
@@ -653,27 +610,19 @@ export default function SpinWheel() {
             clearAdError();
 
             // Always behave like WatchAdCard: load an ad, then show it, then redeem
-            console.log("[SpinWheel] 🌐 Starting ad load before redeem...");
-            console.log("[SpinWheel] 📋 Ad system state:", {
-                isInitialized,
-                isAdReady,
-                isAdLoading,
-                adError,
-            });
 
             let loaded = false;
 
             try {
                 loaded = await loadAd();
-                console.log("[SpinWheel] 📊 loadAd() result:", loaded);
 
                 // If load completed but ad still not ready, short wait for state update (reduced for faster credit)
                 if (loaded && !isAdReady) {
-                    console.log("[SpinWheel] ⏳ Ad loaded but not ready, waiting for state update...");
+
                     await new Promise(resolve => setTimeout(resolve, 400));
 
                     if (!isAdReady) {
-                        console.log("[SpinWheel] ⚠️ Ad still not ready after delay, forcing retry");
+
                         const retryLoad = await loadAd();
                         if (!retryLoad) {
                             throw new Error("Ad failed to become ready after retry");
@@ -682,7 +631,7 @@ export default function SpinWheel() {
                     }
                 }
             } catch (loadError) {
-                console.error("[SpinWheel] ❌ Ad load failed:", loadError);
+                console.error("[SpinWheel]  Ad load failed:", loadError);
 
                 // Check if it's a timeout or network error
                 if (loadError.message && (
@@ -691,13 +640,12 @@ export default function SpinWheel() {
                     loadError.message.includes('connection') ||
                     loadError.message.includes('socket')
                 )) {
-                    console.log("[SpinWheel] 🔄 Ad load timeout detected, attempting direct reward credit...");
 
                     // For load timeout errors, credit the reward directly without showing ad
                     try {
                         const directCreditResponse = await redeemSpinReward(pendingSpinId, token);
                         if (directCreditResponse.success) {
-                            console.log("[SpinWheel] ✅ Direct reward credit successful (ad load timeout)");
+
                             setResult(`✅ ${pendingReward}💰 added to your wallet! (Ad unavailable - reward credited directly)`);
                             setShowResult(true);
 
@@ -720,14 +668,14 @@ export default function SpinWheel() {
                             return;
                         }
                     } catch (directCreditError) {
-                        console.error("[SpinWheel] ❌ Direct reward credit failed:", directCreditError);
+                        console.error("[SpinWheel]  Direct reward credit failed:", directCreditError);
                         // Fall through to general error handling
                     }
                 }
 
                 // For other load errors or if direct credit failed
                 const errorMsg = loadError.message || 'Unknown ad load error';
-                console.error("[SpinWheel] ❌ Ad load error details:", {
+                console.error("[SpinWheel]  Ad load error details:", {
                     message: errorMsg,
                     name: loadError.name,
                     stack: loadError.stack,
@@ -745,22 +693,21 @@ export default function SpinWheel() {
                 return;
             }
 
-            console.log("[SpinWheel] 🎬 Calling showAd() before redeem...");
             let adReward = null;
 
             try {
                 adReward = await showAd({
                     onReward: (rewardData) => {
-                        console.log("[SpinWheel] 💰 Rewarded ad completed (onReward):", rewardData);
+
                     },
                     onError: (errorMsg) => {
-                        console.error("[SpinWheel] ❌ Error while showing rewarded ad:", errorMsg);
+                        console.error("[SpinWheel]  Error while showing rewarded ad:", errorMsg);
                         // Don't set error here as it might conflict with timeout handling
                         // The promise rejection will handle error display
                     },
                 });
             } catch (adError) {
-                console.error("[SpinWheel] ❌ Ad display failed:", adError);
+                console.error("[SpinWheel]  Ad display failed:", adError);
 
                 // Check if it's a timeout error and provide fallback
                 if (adError.message && (
@@ -768,7 +715,6 @@ export default function SpinWheel() {
                     adError.message.includes('network') ||
                     adError.message.includes('connection')
                 )) {
-                    console.log("[SpinWheel] 🔄 Ad timeout detected, attempting fallback reward credit...");
 
                     // For timeout errors, still try to credit the reward after a short delay
                     // This ensures users get their rewards even if ads fail due to network issues
@@ -776,7 +722,7 @@ export default function SpinWheel() {
                         try {
                             const fallbackResponse = await redeemSpinReward(pendingSpinId, token);
                             if (fallbackResponse.success) {
-                                console.log("[SpinWheel] ✅ Fallback reward credit successful");
+
                                 setResult(`✅ ${pendingReward}💰 added to your wallet! (Ad timeout - reward credited automatically)`);
                                 setShowResult(true);
 
@@ -797,7 +743,7 @@ export default function SpinWheel() {
                                 setTimeout(() => setShowResult(false), 5000);
                             }
                         } catch (fallbackError) {
-                            console.error("[SpinWheel] ❌ Fallback reward credit failed:", fallbackError);
+                            console.error("[SpinWheel]  Fallback reward credit failed:", fallbackError);
                             setError("Ad failed and reward credit failed. Please try again.");
                             setResult(`❌ Ad timeout and credit failed: ${fallbackError.message}`);
                             setShowResult(true);
@@ -813,23 +759,16 @@ export default function SpinWheel() {
                 throw adError;
             }
 
-            console.log("[SpinWheel] 📊 showAd() returned:", adReward);
             if (!adReward) {
                 // Ad was closed or failed; do not redeem
-                console.warn("[SpinWheel] ⚠️ No ad reward returned, skipping redeem");
+                console.warn("[SpinWheel]  No ad reward returned, skipping redeem");
                 setIsRedeeming(false);
                 return;
             }
 
-            console.log("[SpinWheel] ✅ Ad completed successfully, proceeding with reward redemption");
-
             // Credit reward immediately after ad (single API call – no extra delay)
-            console.log("[SpinWheel] 🌐 Calling redeemSpinReward API...", {
-                pendingSpinId,
-                pendingReward,
-            });
+
             const redeemResponse = await redeemSpinReward(pendingSpinId, token);
-            console.log("[SpinWheel] 📥 redeemSpinReward response:", redeemResponse);
 
             if (redeemResponse.success && redeemResponse.data) {
                 const redeemData = redeemResponse.data;
@@ -875,7 +814,7 @@ export default function SpinWheel() {
                 throw new Error(redeemResponse.error || "Redemption failed");
             }
         } catch (err) {
-            console.error("[SpinWheel] ❌ Error in handleWatchToRedeem:", err);
+            console.error("[SpinWheel]  Error in handleWatchToRedeem:", err);
 
             // Check if it's a timeout or network error and we should retry
             const isRetryableError = err.message && (
@@ -887,7 +826,6 @@ export default function SpinWheel() {
 
             if (isRetryableError && retryCount < 2) {
                 // Retry up to 2 times for network/timeout errors
-                console.log(`[SpinWheel] 🔄 Retrying ad redemption due to network error (attempt ${retryCount + 1}/3):`, err.message);
 
                 setResult(`⚠️ Network issue, retrying... (${retryCount + 1}/3)`);
                 setShowResult(true);
@@ -954,14 +892,7 @@ export default function SpinWheel() {
                 <button
                     type="button"
                     onClick={() => {
-                        console.log("[SpinWheel] ▶ Overlay 'Watch to Redeem' clicked (transparent hit area)", {
-                            pendingReward,
-                            pendingSpinId,
-                            isAdWatched,
-                            isRedeeming,
-                            isShowingAd,
-                            isAdLoading,
-                        });
+
                         if (!isRedeeming && !isShowingAd && !isAdLoading) {
                             handleWatchToRedeem();
                         }
@@ -1091,7 +1022,6 @@ export default function SpinWheel() {
                 `}</style>
             </div>
             */}
-
 
             <div className="absolute top-[20px] left-0 w-full h-[563px] aspect-[0.68] z-10">
                 <img
@@ -1434,14 +1364,7 @@ export default function SpinWheel() {
 
             <button
                 onClick={() => {
-                    console.log("[SpinWheel] ▶ Watch to Redeem button clicked (transparent main button)", {
-                        pendingReward,
-                        pendingSpinId,
-                        isAdWatched,
-                        isRedeeming,
-                        isShowingAd,
-                        isAdLoading,
-                    });
+
                     handleWatchToRedeem();
                 }}
                 disabled={pendingReward === 0 || !pendingSpinId || isAdWatched || isRedeeming || isShowingAd || isAdLoading}
@@ -1468,7 +1391,6 @@ export default function SpinWheel() {
             )}
 
             {/* Header with App Version and Back Button */}
-
 
             {/* Pending Reward Indicator */}
             {/* {pendingReward > 0 && (

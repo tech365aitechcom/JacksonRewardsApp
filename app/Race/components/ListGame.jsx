@@ -209,7 +209,6 @@ export const ListGame = () => {
             allGames.push(...downloadedGames);
         }
 
-
         return allGames;
     }, [allSectionGames, inProgressGames, gamesBySection]);
 
@@ -258,8 +257,6 @@ export const ListGame = () => {
     const handleRaceButtonClick = useCallback(() => {
         router.push('/Race');
     }, [router]);
-
-
 
     // Reuse existing game data from homepage - no need to fetch again
     // The games are already loaded in the homepage GameCard component
