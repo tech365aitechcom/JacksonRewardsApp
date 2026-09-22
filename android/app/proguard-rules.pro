@@ -19,3 +19,19 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Facebook Login classes are referenced by the optional Facebook auth handler
+# in @capacitor-firebase/authentication, but this app does not include the
+# Facebook Login SDK (Facebook login is not used). Safe to suppress.
+-dontwarn com.facebook.CallbackManager$Factory
+-dontwarn com.facebook.CallbackManager
+-dontwarn com.facebook.FacebookCallback
+-dontwarn com.facebook.infer.annotation.Nullsafe$Mode
+-dontwarn com.facebook.infer.annotation.Nullsafe
+-dontwarn com.facebook.login.LoginManager
+-dontwarn com.facebook.login.widget.LoginButton
+
+# kotlinx.parcelize annotations are compile-time only; Stripe references them
+# but they are not needed at runtime.
+-dontwarn kotlinx.parcelize.Parceler
+-dontwarn kotlinx.parcelize.Parcelize
