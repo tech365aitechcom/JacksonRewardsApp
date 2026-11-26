@@ -1,5 +1,6 @@
 import React from 'react';
-import { getTotalPromisedPoints } from "@/lib/gameDataNormalizer";
+import { getTotalPromisedPoints, getSdkProvider } from "@/lib/gameDataNormalizer";
+import { handleGameDownload } from "@/lib/gameDownloadUtils";
 
 const GameItemCard = ({
     game,
@@ -226,6 +227,11 @@ const GameItemCard = ({
                     aria-label={`Download ${cleanGameName} game`}
                     onClick={(e) => {
                         e.stopPropagation(); // Prevent card click
+                        // Client (Adjust) games must go through the launch-ticket flow
+                        if (getSdkProvider(game.fullData || game) === 'adjust') {
+                            handleGameDownload(game.fullData || game);
+                            return;
+                        }
                         if (game.downloadUrl || game.redirectUrl) {
                             const url = game.downloadUrl || game.redirectUrl;
                             const userId = getUserId();

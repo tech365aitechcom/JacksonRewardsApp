@@ -11,6 +11,7 @@ import { InstructionsTextSection } from "./components/InstructionsTextSection";
 import { LevelsSection } from "./components/LevelsSection";
 import { Coin } from "./components/coin";
 import { Breakdown } from "./components/Breakdown";
+import { ClientGameTasks } from "./components/ClientGameTasks";
 import { HomeIndicator } from "@/components/HomeIndicator";
 import { SessionStatus } from "./components/SessionStatus";
 import { LoadingOverlay } from "@/components/AndroidOptimizedLoader";
@@ -49,7 +50,7 @@ const OptimizedGameImage = ({ game, isLoaded, onLoad, onError, className }) => {
 import { useAuth } from "@/contexts/AuthContext";
 
 // Utility imports
-import { handleGameDownload, getUserId } from "@/lib/gameDownloadUtils";
+import { handleGameDownload, getUserId, getDirectGameId } from "@/lib/gameDownloadUtils";
 import sessionManager from "@/lib/sessionManager";
 import { transferGameEarnings, getBatchStatus } from "@/lib/api";
 import { fetchGameById, fetchUserData } from "@/lib/redux/slice/gameSlice";
@@ -530,6 +531,11 @@ function GameDetailsContent() {
         fetchBatchStatus();
     }, [displayGame?.id, userId, token]);
 
+    // Client (Adjust) games: server credits milestones, app only shows tasks
+    const isClientGame = !!displayGame && getSdkProvider(displayGame) === 'adjust';
+    const clientGameId = isClientGame ? getDirectGameId(displayGame) : null;
+    const [clientTotals, setClientTotals] = useState(null);
+
     // Event handlers
     const handleBack = () => router.back();
 
@@ -542,10 +548,13 @@ function GameDetailsContent() {
                 const downloadUrl = normalizeGameUrl(gameToDownload) || gameToDownload?.url || gameToDownload?.details?.downloadUrl;
                 const gameWithUrl = downloadUrl ? { ...gameToDownload, url: downloadUrl } : gameToDownload;
 
-                await handleGameDownload(gameWithUrl);
+                const launched = await handleGameDownload(gameWithUrl);
 
                 // Track game download milestone (Adjust) — counter seeded from server at login
-                try { onGameDownload(incrementAndGet("gameDownload")); } catch { /* never block download flow */ }
+                // Skipped when a client-game launch failed (nothing was opened)
+                if (launched !== false) {
+                    try { onGameDownload(incrementAndGet("gameDownload")); } catch { /* never block download flow */ }
+                }
 
                 // Refresh downloaded games list after a short delay to allow server to update
                 // This ensures the button updates to "Start Playing" after download
@@ -584,6 +593,8 @@ function GameDetailsContent() {
     // Handle reward claiming with session lock
     // Accepts optional coins/XP to claim specific amounts (for progressive group claims)
     const handleClaimRewards = async (claimData = {}) => {
+        // Client (Adjust) games are credited by the server - never self-report
+        if (isClientGame) return;
         // If no session exists, try to create one before claiming
         let sessionToUse = currentSession;
         if (!sessionToUse) {
@@ -995,6 +1006,7 @@ function GameDetailsContent() {
                             </>
                         )}
                     </div>
+                    {(!isClientGame || clientTotals) && (
                     <div className="flex w-full items-center justify-center mt-3 relative">
                         <div className="flex flex-row items-center justify-center gap-1.5 bg-[linear-gradient(180deg,rgba(158,173,247,0.6)_0%,rgba(113,106,231,0.6)_100%)] rounded-[10px] py-1.5 px-2.5 w-full">
                             <span className="[font-family:'Poppins',Helvetica] font-medium text-white text-[14px] flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -1002,7 +1014,7 @@ function GameDetailsContent() {
                                 <span className="flex items-center gap-0.5 whitespace-nowrap">
                                     <span className="font-semibold text-[14px] whitespace-nowrap">
                                         {(() => {
-                                            const n = displayGame?.totalPromisedCoins ?? displayGame?.rewards?.coins ?? displayGame?.rewards?.gold ?? displayGame?.besitosRawData?.amount ?? displayGame?.amount ?? 0;
+                                            const n = isClientGame ? clientTotals?.coins : displayGame?.totalPromisedCoins ?? displayGame?.rewards?.coins ?? displayGame?.rewards?.gold ?? displayGame?.besitosRawData?.amount ?? displayGame?.amount ?? 0;
                                             const num = Number(n);
                                             return Number.isFinite(num) ? (num === Math.round(num) ? String(Math.round(num)) : num.toFixed(2)) : '0';
                                         })()}
@@ -1013,11 +1025,12 @@ function GameDetailsContent() {
                                         src="/assets/animaapp/ltgoa7L3/img/image-3937-7-2x.png"
                                     />
                                 </span>
+                                {(!isClientGame || Number(clientTotals?.xp) > 0) && (<>
                                 <span className="whitespace-nowrap">and</span>
                                 <span className="flex items-center gap-0.5 whitespace-nowrap">
                                     <span className="font-semibold text-[14px] whitespace-nowrap">
                                         {(() => {
-                                            const n = displayGame?.totalPromisedXP ?? displayGame?.rewards?.xp ?? 0;
+                                            const n = isClientGame ? clientTotals?.xp : displayGame?.totalPromisedXP ?? displayGame?.rewards?.xp ?? 0;
                                             const num = Number(n);
                                             return Number.isFinite(num) ? String(Math.round(num)) : '0';
                                         })()}
@@ -1028,9 +1041,11 @@ function GameDetailsContent() {
                                         src="/assets/animaapp/ltgoa7L3/img/pic-7.svg"
                                     />
                                 </span>
+                                </>)}
                             </span>
                         </div>
                     </div>
+                    )}
                 </div>
 
                 {/* Reward Summary */}
@@ -1048,6 +1063,11 @@ function GameDetailsContent() {
                     />
                 </div> */}
 
+                {isClientGame ? (
+                    <div className="animate-fade-in">
+                        <ClientGameTasks gameId={clientGameId} onTotals={setClientTotals} />
+                    </div>
+                ) : (<>
                 <div className="animate-fade-in">
                     <LevelsSection
                         game={displayGame}
@@ -1079,6 +1099,7 @@ function GameDetailsContent() {
                         sessionXP={sessionData.sessionXP}
                     />
                 </div>
+                </>)}
 
                 <div className="animate-fade-in mb-2">
                     <DailyChallenge
